@@ -26,14 +26,15 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"] #, "3.13t", "3.14-dev"] # waiting for pyproj support
+        python-version: ["3.12", "3.13", "3.13t", "3.14", "3.14t"]
 
     permissions:
       contents: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           lfs: false
           persist-credentials: false
@@ -42,7 +43,7 @@ jobs:
         run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
 
       - name: Cache git LFS
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .git/lfs
           key: git-lfs-v1-${{ matrix.python-version }}-${{ hashFiles('.lfs-assets-id') }}
@@ -58,13 +59,9 @@ jobs:
           git lfs prune --verify-remote
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
@@ -73,12 +70,12 @@ jobs:
 
       - name: Test with pytest
         run: |
-          uv run pytest -vv -n=auto --durations=25 --cov --cov-report=html roseau
+          uv run pytest -vv --durations=25 --cov --cov-report=html roseau
         env:
           ROSEAU_LOAD_FLOW_LICENSE_KEY: ${{ secrets.ROSEAU_LOAD_FLOW_LICENSE_KEY }}
 
       - name: Archive code coverage results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: ${{ always() }}
         with:
           name: code-coverage-report-${{ runner.os }}-python-${{ matrix.python-version }}

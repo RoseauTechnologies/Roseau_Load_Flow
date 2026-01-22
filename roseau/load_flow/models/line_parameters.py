@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from enum import StrEnum
 from importlib import resources
 from pathlib import Path
-from typing import Final, Literal, NoReturn, Self, TypeAlias, TypeVar
+from typing import Any, Final, Literal, NoReturn, Self
 
 import numpy as np
 import numpy.linalg as nplin
@@ -13,6 +13,7 @@ import pandas as pd
 from numpy.typing import NDArray
 
 from roseau.load_flow.constants import EPSILON_0, EPSILON_R, MU_0, OMEGA, PI, RHO, SQRT3, TAN_D, F
+from roseau.load_flow.converters import kron_reduction
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.sym import A_INV, A
 from roseau.load_flow.types import Insulator, LineType, Material
@@ -26,7 +27,7 @@ from roseau.load_flow.typing import (
     JsonDict,
 )
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, find_stack_level
+from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, warn_external
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +43,8 @@ _DEFAULT_INSULATOR = {
     LineType.UNDERGROUND: Insulator.PVC,
 }
 
-MaterialArray: TypeAlias = NDArray[np.object_]
-InsulatorArray: TypeAlias = NDArray[np.object_]
-_StrEnumType = TypeVar("_StrEnumType", bound=StrEnum)
+type MaterialArray = NDArray[np.object_]
+type InsulatorArray = NDArray[np.object_]
 
 
 class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
@@ -366,11 +366,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 ypn = bpn * 1j  # Phase-to-neutral shunt admittance (Siemens/km)
 
                 if np.isclose(zpn, 0) and np.isclose(zn, 0):
-                    warnings.warn(
+                    warn_external(
                         f"The line model {id!r} does not have neutral elements. It will be modelled as a 3 wires line "
                         f"instead.",
                         category=UserWarning,
-                        stacklevel=find_stack_level(),
                     )
                 else:
                     z_line = np.pad(z_line, (0, 1), mode="constant", constant_values=zpn)
@@ -404,7 +403,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return z_line, y_shunt
 
     def _zy_to_sym(
-        self, operation: str, exc_code: RoseauLoadFlowExceptionCode
+        self, operation: str, exc_code: RoseauLoadFlowExceptionCode, kron: bool
     ) -> tuple[tuple[complex, complex], tuple[complex, complex]]:
         """Convert the Z and Y matrices to a symmetrical model.
 
@@ -418,29 +417,42 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=exc_code)
-
-        z_012 = A_INV @ self._z_line[:3, :3] @ A
-        y_012 = A_INV @ self._y_shunt[:3, :3] @ A
-        z0 = z_012.item(0, 0)
-        y0 = y_012.item(0, 0)
-        z1 = z_012.item(1, 1)
-        y1 = y_012.item(1, 1)
+        if n_phases != 4:
+            kron = False
+        z_line = kron_reduction(self._z_line) if kron else self._z_line[:3, :3]
+        z_012 = A_INV @ z_line @ A
+        z0, z1, _ = z_012.diagonal().tolist()
+        if self.with_shunt:
+            y_shunt = self._y_shunt[:3, :3]
+            y_012 = A_INV @ y_shunt @ A
+            y0, y1, _ = y_012.diagonal().tolist()
+        else:
+            y0 = y1 = 0.0j
         return (z0, y0), (z1, y1)
 
-    def to_sym(self) -> dict[str, complex]:
+    def to_sym(self, *, eliminate_neutral: bool = False) -> dict[str, complex]:
         """Return the symmetrical components of a three-phase line parameters.
 
         An error is raised if the line parameters are not three-phase.
 
+        Args:
+            eliminate_neutral:
+                If True, perform Kron's reduction to eliminate the neutral conductor before computing
+                the symmetrical components. This option is only relevant for 4-wire lines. By
+                default, the neutral is kept and its parameters are returned.
+
         Returns:
             The symmetrical components of the line impedance and shunt admittance. These are
-            ``z0, y0, z1, y1`` and optionally ``zn, zpn, bn, bpn`` if the line has a neutral.
+            ``z0, y0, z1, y1`` and optionally ``zn, zpn, bn, bpn`` if the line has a neutral and
+            ``eliminate_neutral`` is False.
         """
         (z0, y0), (z1, y1) = self._zy_to_sym(
-            operation="compute symmetrical components from", exc_code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+            operation="compute symmetrical components from",
+            exc_code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL,
+            kron=eliminate_neutral,
         )
         result = {"z0": z0, "z1": z1, "y0": y0, "y1": y1}
-        if self._z_line.shape[0] == 4:
+        if not eliminate_neutral and self._z_line.shape[0] == 4:
             result["zn"] = self._z_line.item(3, 3)
             result["yn"] = self._y_shunt.item(3, 3)
             pn_indices = (0, 1, 2, 3, 3, 3), (3, 3, 3, 0, 1, 2)  # phase-neutral components indices
@@ -825,10 +837,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TYPE_NAME_SYNTAX) from None
         if insulator is not None:
             # TODO: add insulator support
-            warnings.warn(
+            warn_external(
                 f"The insulator is currently ignored in the Coiffier model, got '{insulator.upper()}'.",
                 category=UserWarning,
-                stacklevel=find_stack_level(),
             )
         r = RHO[material] / section
         if line_type == LineType.OVERHEAD:
@@ -898,6 +909,75 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     # Constructors from other software
     #
     @classmethod
+    def _parse_power_factory_params(
+        cls,
+        id,
+        inom: float | Q_[float] | None,
+        cohl: Literal[0, "Cable", 1, "OHL"],
+        conductor: Literal["Al", "Cu", "Ad", "As", "Ds"] | None,
+        insulation: Literal[0, "PVC", 1, "XLPE", 2, "Mineral", 3, "Paper", 4, "EPR"] | None,
+        section: float | Q_[float] | None,
+    ) -> dict[str, Any]:
+        cohl_norm = str(cohl).upper()
+        if cohl_norm == "CABLE" or cohl_norm == "0":
+            line_type = LineType.UNDERGROUND
+        elif cohl_norm == "OHL" or cohl_norm == "1":
+            line_type = LineType.OVERHEAD
+        else:
+            msg = f"Expected cohl='Cable' or 'OHL', got {cohl!r} for line parameters {id!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
+
+        mlei_norm = conductor.upper() if conductor is not None else None
+        if mlei_norm is None:
+            material = None
+        elif mlei_norm in ("AL", "ALUMINIUM", "ALUMINUM"):
+            material = Material.AL
+        elif mlei_norm in ("CU", "COPPER"):
+            material = Material.CU
+        elif mlei_norm in ("AD", "ALDREY"):
+            material = Material.AM
+        elif mlei_norm in ("AS", "ALUMINIUM-STEEL", "ALUMINUM-STEEL"):
+            material = Material.AA
+        elif mlei_norm in ("DS", "ALDREY-STEEL"):
+            material = Material.LA
+        else:
+            msg = f"Expected conductor='Al', 'Cu', 'Ad', 'As' or 'Ds', got {conductor!r} for line parameters {id!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MATERIAL)
+
+        imiso_norm = str(insulation).upper() if insulation is not None else None
+        if imiso_norm is None:
+            insulator = None
+        elif imiso_norm == "PVC" or imiso_norm == "0":
+            insulator = Insulator.PVC
+        elif imiso_norm == "XLPE" or imiso_norm == "1":
+            insulator = Insulator.XLPE
+        elif imiso_norm == "MINERAL" or imiso_norm == "2":
+            insulator = Insulator.NONE  # not supported yet
+        elif imiso_norm == "PAPER" or imiso_norm == "3":
+            insulator = Insulator.IP
+        elif imiso_norm == "EPR" or imiso_norm == "4":
+            insulator = Insulator.EPR
+        else:
+            msg = (
+                f"Expected insulation='PVC', 'XLPE', 'MINERAL', 'PAPER' or 'EPR', got {insulation!r} "
+                f"for line parameters {id!r}."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_INSULATOR)
+
+        ampacity = inom * 1e3 if inom is not None else None
+
+        return {
+            "line_type": line_type,
+            "material": material,
+            "insulator": insulator,
+            "section": section,
+            "ampacity": ampacity,
+        }
+
+    @classmethod
     @ureg_wraps(
         None,
         (
@@ -924,7 +1004,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             "mm²",
         ),
     )
-    def from_power_factory(  # noqa: C901
+    def from_power_factory(
         cls,
         id: Id,
         *,
@@ -1037,56 +1117,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
 
-        cohl_norm = str(cohl).upper()
-        if cohl_norm == "CABLE" or cohl_norm == "0":
-            line_type = LineType.UNDERGROUND
-        elif cohl_norm == "OHL" or cohl_norm == "1":
-            line_type = LineType.OVERHEAD
-        else:
-            msg = f"Expected cohl='Cable' or 'OHL', got {cohl!r} for line parameters {id!r}."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_TYPE)
-
-        mlei_norm = conductor.upper() if conductor is not None else None
-        if mlei_norm is None:
-            material = None
-        elif mlei_norm in ("AL", "ALUMINIUM", "ALUMINUM"):
-            material = Material.AL
-        elif mlei_norm in ("CU", "COPPER"):
-            material = Material.CU
-        elif mlei_norm in ("AD", "ALDREY"):
-            material = Material.AM
-        elif mlei_norm in ("AS", "ALUMINIUM-STEEL", "ALUMINUM-STEEL"):
-            material = Material.AA
-        elif mlei_norm in ("DS", "ALDREY-STEEL"):
-            material = Material.LA
-        else:
-            msg = f"Expected conductor='Al', 'Cu', 'Ad', 'As' or 'Ds', got {conductor!r} for line parameters {id!r}."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_MATERIAL)
-
-        imiso_norm = str(insulation).upper() if insulation is not None else None
-        if imiso_norm is None:
-            insulator = None
-        elif imiso_norm == "PVC" or imiso_norm == "0":
-            insulator = Insulator.PVC
-        elif imiso_norm == "XLPE" or imiso_norm == "1":
-            insulator = Insulator.XLPE
-        elif imiso_norm == "MINERAL" or imiso_norm == "2":
-            insulator = Insulator.NONE  # not supported yet
-        elif imiso_norm == "PAPER" or imiso_norm == "3":
-            insulator = Insulator.IP
-        elif imiso_norm == "EPR" or imiso_norm == "4":
-            insulator = Insulator.EPR
-        else:
-            msg = (
-                f"Expected insulation='PVC', 'XLPE', 'MINERAL', 'PAPER' or 'EPR', got {insulation!r} "
-                f"for line parameters {id!r}."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_INSULATOR)
-
-        ampacities = inom * 1e3 if inom is not None else None
+        params = cls._parse_power_factory_params(
+            id=id, inom=inom, cohl=cohl, conductor=conductor, insulation=insulation, section=section
+        )
 
         z_line, y_shunt = cls._sym_to_zy_simple(
             n=nphase, z0=r0 + 1j * x0, z1=r1 + 1j * x1, y0=1j * b0 * 1e-6, y1=1j * b1 * 1e-6
@@ -1108,13 +1141,40 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 id=id,
                 z_line=z_line,
                 y_shunt=y_shunt,
-                ampacities=ampacities,
-                line_type=line_type,
-                materials=material,
-                insulators=insulator,
-                sections=section,
+                ampacities=params["ampacity"],
+                line_type=params["line_type"],
+                materials=params["material"],
+                insulators=params["insulator"],
+                sections=params["section"],
             )
         return obj
+
+    @classmethod
+    def _parse_open_dss_params(
+        cls,
+        id: Id,
+        normamps: FloatScalarOrArrayLike1D | None = None,
+        linetype: str | None = None,
+    ) -> dict[str, Any]:
+        # Convert OpenDSS line type to RLF line type
+        if linetype is None:
+            line_type = None
+        else:
+            line_type_upper = linetype.upper()
+            if line_type_upper == "OH":
+                line_type = LineType.OVERHEAD
+            elif line_type_upper == "UG":
+                line_type = LineType.UNDERGROUND
+            else:
+                # TODO other line types
+                # ['OH', 'UG', 'UG_TS', 'UG_CN', 'SWT_LDBRK', 'SWT_FUSE', 'SWT_SECT',
+                #  'SWT_REC', 'SWT_DISC', 'SWT_BRK', 'SWT_ELBOW', 'BUSBAR']
+                logger.warning(f"Line type {linetype} from OpenDSS is not supported, it is ignored.")
+                line_type = None
+        return {
+            "line_type": line_type,
+            "ampacities": normamps,
+        }
 
     @classmethod
     @ureg_wraps(None, (None, None, None, "ohm/km", "ohm/km", "ohm/km", "ohm/km", "nF/km", "nF/km", "Hz", "A", None))
@@ -1226,26 +1286,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         z, yc = cls._sym_to_zy_simple(n=n_cond, z0=z0, y0=yc0, z1=z1, y1=yc1)
         cls._check_z_line_matrix(id=id, z_line=z)
 
-        # Convert OpenDSS line type to RLF line type
-        if linetype is None:
-            line_type = None
-        else:
-            line_type_upper = linetype.upper()
-            if line_type_upper == "OH":
-                line_type = LineType.OVERHEAD
-            elif line_type_upper == "UG":
-                line_type = LineType.UNDERGROUND
-            else:
-                # TODO other line types
-                # ['OH', 'UG', 'UG_TS', 'UG_CN', 'SWT_LDBRK', 'SWT_FUSE', 'SWT_SECT',
-                #  'SWT_REC', 'SWT_DISC', 'SWT_BRK', 'SWT_ELBOW', 'BUSBAR']
-                logger.warning(f"Line type {linetype} from OpenDSS is not supported, it is ignored.")
-                line_type = None
+        params = cls._parse_open_dss_params(id=id, normamps=normamps, linetype=linetype)
 
         # Create the RLF line parameters with off-diagonal resistance allowed
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-            obj = cls(id=id, z_line=z, y_shunt=yc, ampacities=normamps, line_type=line_type)
+            obj = cls(id=id, z_line=z, y_shunt=yc, ampacities=params["ampacities"], line_type=params["line_type"])
         return obj
 
     #
@@ -1367,7 +1413,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         section: float | Q_[float] | None = None,
         section_neutral: float | Q_[float] | None = None,
         id: Id | None = None,
-        nb_phases: int = 3,
+        nb_phases: int | None = None,
     ) -> Self:
         """Create line parameters from a catalogue.
 
@@ -1408,13 +1454,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 that this parameter is not used in the data filtering.
 
             nb_phases:
-                The number of phases of the line between 1 and 4, defaults to 3. It represents the
-                size of the ``z_line`` and ``y_shunt`` matrices.
+                The number of phases of the line between 1 and 4. It represents the size of the
+                ``z_line`` and ``y_shunt`` matrices. Default is 4 for LV lines (name in the form
+                ``"3x...+..."``) and 3 otherwise.
 
         Returns:
             The created line parameters.
         """
-        if nb_phases not in {1, 2, 3, 4}:
+        if nb_phases not in {None, 1, 2, 3, 4}:
             msg = f"Expected nb_phases to be one of (1, 2, 3, 4), got {nb_phases!r} instead."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
@@ -1459,6 +1506,8 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         ampacity_neutral = catalogue_data.at[idx, "ampacity_neutral"]
         if pd.isna(ampacity_neutral):
             ampacity_neutral = None
+        if nb_phases is None:
+            nb_phases = 4 if "3x" in name and "+" in name else 3
         nb_phases_m1 = nb_phases - 1
         z_line = (r + x * 1j) * np.eye(nb_phases, dtype=np.complex128)
         z_line[nb_phases_m1, nb_phases_m1] = rn + 1j * xn
@@ -1644,11 +1693,10 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             # Check that the off-diagonal element have a zero real part
             off_diagonal_elements = matrix[~np.eye(*matrix.shape, dtype=np.bool_)]
             if not np.allclose(off_diagonal_elements.real, 0):
-                warnings.warn(
+                warn_external(
                     f"The {matrix_name} matrix of line type {self.id!r} has off-diagonal elements "
                     f"with a non-zero real part.",
                     category=UserWarning,
-                    stacklevel=find_stack_level(),
                 )
 
             # Check that the real coefficients are non-negative

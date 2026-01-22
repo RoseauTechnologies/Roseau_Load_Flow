@@ -1,9 +1,10 @@
 import cmath
 import logging
+import math
 import re
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, Literal, NoReturn, Self, TypeVar
+from typing import Final, Literal, NoReturn, Self
 
 import numpy as np
 import pandas as pd
@@ -17,7 +18,6 @@ from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
 
 logger = logging.getLogger(__name__)
 
-_StrEnumT = TypeVar("_StrEnumT", bound=StrEnum)
 _triu_i = np.triu_indices(3, 1)
 _tril_i = np.tril_indices(3, -1)
 
@@ -46,10 +46,11 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 A unique ID of the line parameters, typically its canonical name.
 
             z_line:
-                 The Z of the line (Ohm/km).
+                The positive-sequence series impedance (z1) of the line (Ohm/km).
 
             y_shunt:
-                The Y of the line (Siemens/km). This field is optional if the line has no shunt part.
+                The positive-sequence shunt admittance (y1) of the line (Siemens/km). This field is
+                optional if the line has no shunt part.
 
             ampacity:
                 The ampacity of the line (A). The ampacity is optional, it is
@@ -75,9 +76,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 from the catalogue.
 
             section:
-                The section of the conductor. The section is optional, it is informative only and is not used in
-                the load flow. This field gets automatically filled when the line parameters are created from a
-                geometric model or from the catalogue.
+                The section of the conductor. The section is optional, it is informative only and is
+                not used in the load flow. This field gets automatically filled when the line
+                parameters are created from a geometric model or from the catalogue.
         """
         super().__init__(id)
         self._z_line = self._check_value(id=id, value=z_line, name="z_line")
@@ -181,46 +182,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     @ureg_wraps(None, (None, "A"))
     def ampacity(self, value: Float | Q_[Float] | None) -> None:
         self._ampacity = self._check_positive_float(value=value, name="ampacity", unit="A")
-
-    @classmethod
-    @ureg_wraps(None, (None, None, "ohm/km", "ohm/km", "S/km", "S/km", "A"))
-    def from_sym(
-        cls,
-        id: Id,
-        *,
-        z0: Complex | Q_[Complex] | None = None,
-        z1: Complex | Q_[Complex],
-        y0: Complex | Q_[Complex] | None = None,
-        y1: Complex | Q_[Complex],
-        ampacity: Float | Q_[Float] | None = None,
-    ) -> Self:
-        """Create line parameters from a symmetric model.
-
-        Args:
-            id:
-                A unique ID of the line parameters, typically its canonical name.
-
-            z0:
-                Impedance - zero sequence - :math:`r_0+x_0\\cdot j` (ohms/km).
-                Not used in this positive-sequence line model.
-
-            z1:
-                Impedance - direct sequence - :math:`r_1+x_1\\cdot j` (ohms/km).
-
-            y0:
-                Admittance - zero sequence - :math:`g_0+b_0\\cdot j` (Siemens/km).
-                Not used in this positive-sequence line model.
-
-            y1:
-                Conductance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km).
-
-            ampacity
-                An optional ampacity for the line parameters (A). It is not used in the load flow.
-
-        Returns:
-            The created line parameters.
-        """
-        return cls(id=id, z_line=z1, y_shunt=y1, ampacity=ampacity)
 
     @classmethod
     @ureg_wraps(None, (None, None, None, None, None, None, None, "mm**2", "mm**2", "m", "m", "A"))
@@ -345,6 +306,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         _, (z1, y1) = lp_m._zy_to_sym(
             operation="create `rlfs.LineParameters` from multi-phase",
             exc_code=RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE,
+            kron=True,
         )
         if y1.real < 0:  # might produce a value with a small negative real part
             y1 = 1j * y1.imag
@@ -386,18 +348,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         )
 
     @classmethod
-    @ureg_wraps(
-        None, (None, None, "ohm/km", "ohm/km", "ohm/km", "ohm/km", "µS/km", "µS/km", "kA", None, None, None, "mm**2")
-    )
+    @ureg_wraps(None, (None, None, "ohm/km", "ohm/km", "µS/km", "kA", None, None, None, "mm**2"))
     def from_power_factory(
         cls,
         id: Id,
         *,
-        r0: Float | Q_[Float] | None = None,
         r1: Float | Q_[Float],
-        x0: Float | Q_[Float] | None = None,
         x1: Float | Q_[Float],
-        b0: Float | Q_[Float] | None = None,
         b1: Float | Q_[Float],
         inom: Float | Q_[Float] | None = None,
         cohl: Literal[0, "Cable", 1, "OHL"] = "Cable",
@@ -407,27 +364,18 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     ) -> Self:
         """Create a line parameters object from PowerFactory "TypLne" data.
 
+        Note that only positive-sequence parameters are used, zero-sequence parameters (`r0`, `x0`,
+        `b0`) and neutral parameters (`rn`, `xn`, `bn`, `rpn`, `xpn`, `bpn`) are not needed.
+
         Args:
             id:
                 A unique ID of the line parameters.
 
-            r0:
-                PwF parameter `rline0` (AC-Resistance R0'). Zero sequence resistance in (ohms/km).
-                Not used in this positive-sequence line model.
-
             r1:
                 PwF parameter `rline` (AC-Resistance R1'). Direct sequence resistance in (ohms/km).
 
-            x0:
-                PwF parameter `xline0` (Reactance X0'). Zero sequence reactance in (ohms/km).
-                Not used in this positive-sequence line model.
-
             x1:
                 PwF parameter `xline` (Reactance X1'). Direct sequence reactance in (ohms/km).
-
-            b0:
-                PwF parameter `bline0` (Susceptance B0'). Zero sequence susceptance in (µS/km).
-                Not used in this positive-sequence line model.
 
             b1:
                 PwF parameter `bline` (Susceptance B'). Direct sequence susceptance in (µS/km).
@@ -461,41 +409,37 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         Returns:
             The created line parameters.
         """
-        lp_m = MultiLineParameters.from_power_factory(
-            id=id,
-            r0=r0 if r0 is not None else r1,
-            r1=r1,
-            x0=x0 if x0 is not None else x1,
-            x1=x1,
-            b0=b0 if b0 is not None else b1,
-            b1=b1,
-            inom=inom,
-            cohl=cohl,
-            conductor=conductor,
-            insulation=insulation,
-            section=section,
-            nphase=3,
-            nneutral=0,
+        params = MultiLineParameters._parse_power_factory_params(
+            id=id, inom=inom, cohl=cohl, conductor=conductor, insulation=insulation, section=section
         )
-        return cls.from_roseau_load_flow(lp_m)
+        return cls(
+            id=id,
+            z_line=r1 + 1j * x1,
+            y_shunt=1j * b1 * 1e-6,
+            ampacity=params["ampacity"],
+            line_type=params["line_type"],
+            material=params["material"],
+            insulator=params["insulator"],
+            section=params["section"],
+        )
 
     @classmethod
-    @ureg_wraps(None, (None, None, "ohm/km", "ohm/km", "ohm/km", "ohm/km", "nF/km", "nF/km", "Hz", "A", None))
+    @ureg_wraps(None, (None, None, "ohm/km", "ohm/km", "nF/km", "Hz", "A", None))
     def from_open_dss(
         cls,
         id: Id,
         *,
         r1: Float | Q_[Float],
-        r0: Float | Q_[Float] | None = None,
         x1: Float | Q_[Float],
-        x0: Float | Q_[Float] | None = None,
         c1: Float | Q_[Float] = 3.4,  # default value used in OpenDSS
-        c0: Float | Q_[Float] | None = None,
         basefreq: Float | Q_[Float] = F,
         normamps: Float | Q_[Float] | None = None,
         linetype: str | None = None,
     ) -> Self:
         """Create a line parameters object from OpenDSS "LineCode" data.
+
+        Note that only positive-sequence parameters are used, zero-sequence parameters (`r0`, `x0`,
+        `c0`) are not needed.
 
         Args:
             id:
@@ -504,23 +448,11 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             r1:
                 OpenDSS parameter: `R1`. Positive-sequence resistance in (ohm/km).
 
-            r0:
-                OpenDSS parameter: `R0`. Positive-sequence resistance in (ohm/km).
-                Not used in this positive-sequence line model.
-
             x1:
                 OpenDSS parameter: `X1`. Positive-sequence reactance in (ohm/km).
 
-            x0:
-                OpenDSS parameter: `X0`. Positive-sequence reactance in (ohm/km).
-                Not used in this positive-sequence line model.
-
             c1:
                 OpenDSS parameter: `C1`. Positive-sequence capacitance in (nF/km).
-
-            c0:
-                OpenDSS parameter: `C0`. Positive-sequence capacitance in (nF/km).
-                Not used in this positive-sequence line model.
 
             basefreq:
                 OpenDSS parameter: `BaseFreq`. Frequency at which impedances are specified (Hz).
@@ -546,10 +478,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 id="linecode-240sq",
                 r1=Q_(0.127, "ohm/km"),
                 x1=Q_(0.072, "ohm/km"),
-                r0=Q_(0.342, "ohm/km"),
-                x0=Q_(0.089, "ohm/km"),
                 c1=Q_(3.4, "nF/km"),  # default value used in OpenDSS code
-                c0=Q_(1.6, "nF/km"),  # default value used in OpenDSS code
             )
 
             # DSS command: `New LineCode.16sq NPhases=1 R1=0.350, X1=0.025, R0=0.366, X0=0.025, C1=1.036, C0=0.488 Units=kft NormAmps=400`
@@ -557,27 +486,18 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 id="linecode-16sq",
                 r1=Q_(0.350, "ohm/kft"),
                 x1=Q_(0.025, "ohm/kft"),
-                r0=Q_(0.366, "ohm/kft"),
-                x0=Q_(0.025, "ohm/kft"),
                 c1=Q_(1.036, "nF/kft"),
-                c0=Q_(0.488, "nF/kft"),
                 normamps=Q_(400, "A"),
             )
         """
-        lp_m = MultiLineParameters.from_open_dss(
+        params = MultiLineParameters._parse_open_dss_params(id=id, normamps=normamps, linetype=linetype)
+        return cls(
             id=id,
-            r1=r1,
-            r0=r0 if r0 is not None else r1,
-            x1=x1,
-            x0=x0 if x0 is not None else x1,
-            c1=c1,
-            c0=c0 if c0 is not None else c1,
-            basefreq=basefreq,
-            normamps=normamps,
-            linetype=linetype,
-            nphases=3,
+            z_line=r1 + 1j * x1,
+            y_shunt=1j * 2 * math.pi * basefreq * c1 * 1e-9,
+            ampacity=np.array(params["ampacities"]).item(0),  # make it scalar if needed
+            line_type=params["line_type"],
         )
-        return cls.from_roseau_load_flow(lp_m)
 
     #
     # Catalogue Mixin
@@ -588,9 +508,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
     @classmethod
     def catalogue_data(cls) -> pd.DataFrame:
-        # TODO: Delete from the catalogue of RLF lines with a different neutral section to only keep one version of
-        #  each. Currently, all the lines have the same phase section and neutral section
-
         return MultiLineParameters.catalogue_data().drop(
             columns=[
                 "resistance_neutral",
@@ -924,7 +841,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             return float(value)
 
     @staticmethod
-    def _check_str_enum(value: _StrEnumT | str | None, enum_class: type[_StrEnumT], error_code) -> _StrEnumT | None:
+    def _check_str_enum[SE: StrEnum](value: SE | str | None, enum_class: type[SE], error_code) -> SE | None:
         if pd.isna(value):
             return None
         try:

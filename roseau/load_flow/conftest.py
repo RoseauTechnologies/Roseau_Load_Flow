@@ -112,8 +112,6 @@ def patch_engine_impl(request: pytest.FixtureRequest, extra_dir: Path | None = N
                 for f in filenames:
                     if not f.endswith(".py"):
                         continue
-                    if f in ("constants.py", "types.py") and base_module == "roseau.load_flow.utils":
-                        continue  # TODO: Remove when deprecated modules are removed
                     module = importlib.import_module(f"{base_module}.{f.removesuffix('.py')}")
                     for _, klass in inspect.getmembers(
                         module,
@@ -129,6 +127,19 @@ def patch_engine_impl(request: pytest.FixtureRequest, extra_dir: Path | None = N
 
     yield mpatch
     mpatch.undo()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def patch_warn_external():
+    # Exclude test files from skipped files in warn_external
+    from roseau.load_flow.utils import helpers
+
+    paths = tuple(
+        str(p)
+        for p in Path(roseau.load_flow.__file__).resolve().parent.parent.rglob("**/*.py")
+        if "tests" not in p.parts
+    )
+    helpers._get_skip_file_prefixes = lambda: paths
 
 
 @pytest.fixture(autouse=True)

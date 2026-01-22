@@ -28,7 +28,7 @@ from fractions import Fraction
 from inspect import Parameter, Signature, signature
 from itertools import zip_longest
 from types import GenericAlias
-from typing import TYPE_CHECKING, Any, TypeAlias, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -47,19 +47,16 @@ ureg.define("volt_ampere_reactive = 1 * volt_ampere = VAr")
 
 if TYPE_CHECKING:
     # Copy types from pint and add complex
-    Scalar: TypeAlias = int | float | Decimal | Fraction | complex | np.number[Any]
-    Array: TypeAlias = np.ndarray[Any, Any]
-    UnitLike = str | dict[str, Scalar] | UnitsContainer | Unit
-
-    NpNumT = TypeVar("NpNumT", bound=np.number[Any])
-    MagBound = Scalar | Array | Sequence[Scalar | Array] | Sequence[Sequence[Scalar | Array]]
-    MagT = TypeVar("MagT", bound=MagBound)
-    MagT_co = TypeVar("MagT_co", covariant=True, bound=MagBound)
+    type Scalar = int | float | Decimal | Fraction | complex | np.number[Any]
+    type Array = np.ndarray[Any, Any]
+    type UnitLike = str | dict[str, Scalar] | UnitsContainer | Unit
+    type Magnitude = Scalar | Array | Sequence[Scalar | Array] | Sequence[Sequence[Scalar | Array]]
+    M_co = TypeVar("M_co", covariant=True, bound=Magnitude)
 
     # Redefine Q_ with support for complex and better type hints
-    class Q_(NumpyQuantity[MagT_co]):  # type: ignore # noqa: N801
+    class Q_(NumpyQuantity[M_co]):  # type: ignore # noqa: N801
         @overload  # Known magnitude type
-        def __new__(cls, value: MagT, units: UnitLike | None = None) -> "Q_[MagT]": ...
+        def __new__[M: Magnitude](cls, value: M, units: UnitLike | None = None) -> "Q_[M]": ...
 
         @overload  # Unknown magnitude type
         def __new__(cls, value: str, units: UnitLike | None = None) -> "Q_[Any]": ...
@@ -80,20 +77,20 @@ if TYPE_CHECKING:
         ) -> "Q_[NDArray[np.complex128]]": ...
 
         @overload  # numpy number sequence becomes array with same dtype
-        def __new__(
-            cls, value: Sequence[NpNumT | Sequence[NpNumT]], units: UnitLike | None = None
-        ) -> "Q_[NDArray[NpNumT]]": ...
+        def __new__[N: np.number](
+            cls, value: Sequence[N | Sequence[N]], units: UnitLike | None = None
+        ) -> "Q_[NDArray[N]]": ...
 
         @overload  # quantity gets passed through (copied) when units are None
-        def __new__(cls, value: "Q_[MagT]", units: None = None) -> "Q_[MagT]": ...
+        def __new__[M: Magnitude](cls, value: "Q_[M]", units: None = None) -> "Q_[M]": ...
 
         @overload  # quantity may get altered when units are not None (conversion)
         def __new__(cls, value: "Q_[Any]", units: UnitLike | None = None) -> "Q_[Any]": ...
 
-        def __new__(cls, value: MagT_co, units: UnitLike | None = None) -> "Q_[MagT_co]":  # type: ignore
+        def __new__(cls, value: M_co, units: UnitLike | None = None) -> "Q_[M_co]":  # type: ignore
             return super().__new__(cls, value, units)  # type: ignore
 
-        def __init__(self, value: MagT_co, units: UnitLike | None = None) -> None:
+        def __init__(self, value: M_co, units: UnitLike | None = None) -> None:
             super().__init__(value, units)  # type: ignore  # for PyCharm only, it does not recognize __new__ alone
 
         def __getattr__(self, name: str) -> Any: ...  # attributes of the magnitude are accessible on the quantity
@@ -102,11 +99,14 @@ else:
     ureg.Quantity.__class_getitem__ = classmethod(GenericAlias)
     globals()["Q_"] = ureg.Quantity  # Use globals() to trick PyCharm
 
-FuncT = TypeVar("FuncT", bound=Callable)
-OptionalUnits: TypeAlias = str | Unit | None | tuple[str | Unit | None, ...] | list[str | Unit | None]
+type OptionalUnits = str | Unit | None | tuple[str | Unit | None, ...] | list[str | Unit | None]
 
 
-def ureg_wraps(ret: OptionalUnits, args: OptionalUnits, strict: bool = True) -> Callable[[FuncT], FuncT]:
+class _IdentityFunction(Protocol):
+    def __call__[F: Callable](self, fn: F, /) -> F: ...
+
+
+def ureg_wraps(ret: OptionalUnits, args: OptionalUnits, strict: bool = True) -> _IdentityFunction:
     """Wraps a function to become pint-aware.
 
     Args:
@@ -130,7 +130,7 @@ def _parse_wrap_args(args: Iterable[str | Unit | None]) -> Callable:
     # Check for references in args, remove None values
     unit_args_ndx = {ndx for ndx, arg in enumerate(args_as_uc) if arg is not None}
 
-    def _converter(ureg: "UnitRegistry", sig: "Signature", values: "list[Any]", kw: "dict[Any]"):
+    def _converter(ureg: "UnitRegistry", sig: "Signature", values: "list[Any]", kw: "dict[str, Any]"):
         len_initial_values = len(values)
 
         # pack kwargs
@@ -171,7 +171,7 @@ def _apply_defaults(sig: Signature, args: tuple[Any], kwargs: dict[str, Any]) ->
     return list(args), kwargs
 
 
-def wraps(ureg: UnitRegistry, ret: OptionalUnits, args: OptionalUnits) -> Callable[[FuncT], FuncT]:
+def wraps(ureg: UnitRegistry, ret: OptionalUnits, args: OptionalUnits) -> _IdentityFunction:
     """Wraps a function to become pint-aware.
 
     Use it when a function requires a numerical value but in some specific

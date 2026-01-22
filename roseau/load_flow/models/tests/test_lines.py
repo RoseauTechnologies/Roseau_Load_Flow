@@ -98,7 +98,7 @@ def test_line_parameters_shortcut():
     assert np.allclose(line.y_shunt.m_as("S"), 0.05 * y_shunt)
 
 
-def test_line_ground(recwarn):
+def test_line_ground():
     bus1 = Bus(id="bus1", phases="abc")
     bus2 = Bus(id="bus2", phases="abc")
     z_line = 0.01 * np.eye(3, dtype=complex)
@@ -108,16 +108,13 @@ def test_line_ground(recwarn):
     ground = Ground(id="ground")
 
     # Create a line with a useless ground
-    recwarn.clear()
-    line_without_shunt = Line(
-        id="line", bus1=bus1, bus2=bus2, parameters=lp_without_shunt, length=Q_(50, "m"), ground=ground
-    )
-    assert len(recwarn) == 1
-    assert recwarn[0].category is UserWarning
-    assert (
-        recwarn[0].message.args[0]
-        == "The ground element must not be provided for line 'line' as it does not have a shunt admittance."
-    )
+    with pytest.warns(
+        UserWarning,
+        match="The ground element must not be provided for line 'line' as it does not have a shunt admittance.",
+    ):
+        line_without_shunt = Line(
+            id="line", bus1=bus1, bus2=bus2, parameters=lp_without_shunt, length=Q_(50, "m"), ground=ground
+        )
     assert line_without_shunt.ground is None
 
     # assign a line parameter with shunt to a line without ground
@@ -231,6 +228,38 @@ def test_res_violated():
     line.side2._res_currents = -12 * PosSeq
     assert (line.res_violated == [True, True, False]).all()
     np.testing.assert_allclose(line.res_loading.m, [12 / 11, 12 / 11, 12 / 13])
+
+
+def test_res_state():
+    bus1 = Bus(id="bus1", phases="abc")
+    bus2 = Bus(id="bus2", phases="abc")
+    lp = LineParameters(id="lp", z_line=np.eye(3, dtype=complex))
+    line = Line(id="line", bus1=bus1, bus2=bus2, parameters=lp, length=Q_(50, "m"))
+
+    bus1._res_potentials = 230 * PosSeq
+    bus2._res_potentials = 225 * PosSeq
+    line.side1._res_currents = 50 * PosSeq
+    line.side2._res_currents = -50 * PosSeq
+
+    # No ampacity
+    assert line._res_state_getter() == "unknown"
+
+    # With ampacity
+    lp._ampacities = np.array([100, 100, 100], dtype=np.float64)
+    assert line._res_state_getter() == "normal"
+    line.side1._res_currents = 80 * PosSeq
+    assert line._res_state_getter() == "high"
+    line.side1._res_currents = 120 * PosSeq
+    assert line._res_state_getter() == "very-high"
+
+    line.side1._res_currents = 50 * PosSeq
+    assert line._res_state_getter() == "normal"
+    line.side2._res_currents = 120 * PosSeq * (1, 0.5, 0.5)  # Only one violation
+    assert line._res_state_getter() == "very-high"
+
+    # Change max loading
+    line._max_loading = 1.2
+    assert line._res_state_getter() == "high"
 
 
 @pytest.mark.parametrize(

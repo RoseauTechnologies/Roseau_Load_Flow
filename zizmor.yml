@@ -8,5 +8,6 @@ rules:
         astral-sh/*: ref-pin
   cache-poisoning:
     ignore:
-      # ignore ci.yml as there is no release in this workflow
+      # ignore ci.yml and pre-commit.yml as there is no release in these workflows
       - ci.yml
+      - pre-commit.yml

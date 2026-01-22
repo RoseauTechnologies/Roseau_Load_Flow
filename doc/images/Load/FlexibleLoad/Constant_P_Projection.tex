@@ -8,7 +8,7 @@
   ]
   % Styles
   \tikzset{fleche/.style={->, -{Latex}}}%
-  \tikzset{interdit/.style={pattern=north east lines, pattern color=red}}%
+  \tikzset{interdit/.style={fill=red!75!white, draw=black}}%
   \tikzset{point/.pic={\filldraw[#1] (0,0) circle[radius=0.05];}, point/.default=black}%
 
   % Parameters
@@ -19,12 +19,6 @@
   \pgfmathsetmacro{\qth}{\r * sin(\angth)}%
   \pgfmathsetmacro{\startangle}{-10}%
   \pgfmathsetmacro{\endangle}{90-\startangle}%
-
-  % Axes
-  \pgfmathsetmacro{\tmp}{\r*cos(90-\startangle)};%
-  \draw[fleche] (\tmp,0) -- (\R,0) node[below right] {$P$};%
-  \pgfmathsetmacro{\tmp}{\r*sin(\startangle)};%
-  \draw[fleche] (0,\tmp) -- (0,\R) node[above right] {$Q$};%
 
   % Circle
   \draw (\startangle:\r) arc[start angle=\startangle, end angle=\endangle, radius=\r];%
@@ -43,6 +37,12 @@
   \pgfmathsetmacro{\tmp}{\r*sin(\startangle)};%
   \fill[interdit] (\pth,\qth) arc[start angle=\angth, end angle=\startangle, radius=\r] --
   (\pth,\tmp);%
+
+  % Axes
+  \pgfmathsetmacro{\tmp}{\r*cos(90-\startangle)};%
+  \draw[fleche] (\tmp,0) -- (\R,0) node[below right] {$P$};%
+  \pgfmathsetmacro{\tmp}{\r*sin(\startangle)};%
+  \draw[fleche] (0,\tmp) -- (0,\R) node[above right] {$Q$};%
 
   % Point P^{\theo}
   \path (\pth,0) pic[pic type=point];%

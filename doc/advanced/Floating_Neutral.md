@@ -65,7 +65,7 @@ plot_voltage_phasors(unbalanced_load, ax=axes[2])
 plt.show()
 ```
 
-```{image} /_static/Advanced/Floating_Neutral_Auto.png
+```{image} /_static/Advanced/Floating_Neutral_Auto.webp
 ---
 alt: Floating neutral created automatically due to missing neutral in the bus
 align: center
@@ -116,7 +116,7 @@ plot_voltage_phasors(floating_load, ax=axes[2])
 plt.show()
 ```
 
-```{image} /_static/Advanced/Floating_Neutral_Manual.png
+```{image} /_static/Advanced/Floating_Neutral_Manual.webp
 ---
 alt: Floating neutral created manually by setting `connect_neutral=False`
 align: center
@@ -195,7 +195,7 @@ plot_voltage_phasors(load_tr_floating, ax=axes[1, 1])
 plt.show()
 ```
 
-```{image} /_static/Advanced/Floating_Neutral_Transformer.png
+```{image} /_static/Advanced/Floating_Neutral_Transformer.webp
 ---
 alt: Floating neutral on the LV side of a transformer
 align: center

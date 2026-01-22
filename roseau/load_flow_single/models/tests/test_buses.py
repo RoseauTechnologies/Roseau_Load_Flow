@@ -222,6 +222,51 @@ def test_res_violated():
     assert bus.res_violated
 
 
+def test_res_state():
+    bus = Bus(id="bus")
+    bus._res_voltage = 400 + 0j
+
+    # No nominal voltage
+    assert bus._res_state_getter() == "unknown"
+
+    # No limits
+    bus.nominal_voltage = 400
+    assert bus._res_state_getter() == "unknown"
+
+    # Only max voltage
+    bus.max_voltage_level = 1.05
+    bus._res_voltage = (400 + 0j) * 1.06
+    assert bus._res_state_getter() == "very-high"
+    bus._res_voltage = (400 + 0j) * 1.04
+    assert bus._res_state_getter() == "high"
+    bus._res_voltage = (400 + 0j) * 1.02
+    assert bus._res_state_getter() == "normal"
+
+    # Only min voltage
+    bus.max_voltage_level = None
+    bus.min_voltage_level = 0.95
+    bus._res_voltage = (400 + 0j) * 0.94
+    assert bus._res_state_getter() == "very-low"
+    bus._res_voltage = (400 + 0j) * 0.96
+    assert bus._res_state_getter() == "low"
+    bus._res_voltage = (400 + 0j) * 0.98
+    assert bus._res_state_getter() == "normal"
+
+    # Both min and max voltage
+    bus.min_voltage_level = 0.95
+    bus.max_voltage_level = 1.05
+    bus._res_voltage = (400 + 0j) * 1.06
+    assert bus._res_state_getter() == "very-high"
+    bus._res_voltage = (400 + 0j) * 1.04
+    assert bus._res_state_getter() == "high"
+    bus._res_voltage = (400 + 0j) * 1.0
+    assert bus._res_state_getter() == "normal"
+    bus._res_voltage = (400 + 0j) * 0.96
+    assert bus._res_state_getter() == "low"
+    bus._res_voltage = (400 + 0j) * 0.94
+    assert bus._res_state_getter() == "very-low"
+
+
 def test_propagate_limits():  # noqa: C901
     b1_mv = Bus(id="b1_mv")
     b2_mv = Bus(id="b2_mv")

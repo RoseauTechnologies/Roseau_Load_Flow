@@ -2,10 +2,10 @@ import json
 import logging
 import re
 import textwrap
-import warnings
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
+from heapq import heappop, heappush
 from importlib import resources
 from pathlib import Path
 from typing import Any, ClassVar, Generic, NoReturn, Self, overload
@@ -20,15 +20,12 @@ from typing_extensions import TypeVar
 from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
-from roseau.load_flow.utils.exceptions import find_stack_level
-from roseau.load_flow.utils.helpers import abstractattrs
+from roseau.load_flow.utils.helpers import abstractattrs, warn_external
 from roseau.load_flow.utils.tool_data import ToolData
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork, CyElement
 
 logger = logging.getLogger(__name__)
 
-_T = TypeVar("_T")
-_E = TypeVar("_E", bound="AbstractElement")
 _E_co = TypeVar("_E_co", bound="AbstractElement", covariant=True)
 _N_co = TypeVar("_N_co", bound="AbstractNetwork", covariant=True)
 _CyE_co = TypeVar("_CyE_co", bound=CyElement, default=CyElement, covariant=True)
@@ -250,7 +247,7 @@ class JsonMixin(metaclass=ABCMeta):
         return path
 
 
-class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
+class CatalogueMixin[T](metaclass=ABCMeta):
     """A mixin class for objects which can be built from a catalogue. It adds the `from_catalogue` class method."""
 
     @classmethod
@@ -261,7 +258,7 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def catalogue_data(cls) -> _T:
+    def catalogue_data(cls) -> T:
         """Get the catalogue data."""
         raise NotImplementedError
 
@@ -305,7 +302,7 @@ class CatalogueMixin(Generic[_T], metaclass=ABCMeta):
         """
         vector = pd.Series(strings)
         if isinstance(value, re.Pattern):
-            result = vector.str.fullmatch(value, case=False)
+            result = vector.str.fullmatch(value.pattern, case=False, flags=value.flags)
         else:
             try:
                 result = vector.str.fullmatch(value, case=False) | (vector.str.casefold() == value.casefold())
@@ -530,7 +527,7 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         """Refresh the results of the element."""
         raise NotImplementedError
 
-    def _res_getter(self, value: _T | None, warning: bool) -> _T:
+    def _res_getter[T](self, value: T | None, warning: bool) -> T:
         """A safe getter for load flow results.
 
         Args:
@@ -551,13 +548,12 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
         if warning and self._network is not None and not self._network._results_valid:
-            warnings.warn(
+            warn_external(
                 message=(
                     f"The results of {type(self).__name__} {self.id!r} may be outdated. Please re-run a load flow to "
                     "ensure the validity of results."
                 ),
                 category=UserWarning,
-                stacklevel=find_stack_level(),
             )
         self._fetch_results = False
         return value
@@ -592,7 +588,7 @@ class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
         raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.SEVERAL_NETWORKS)
 
 
-class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E_co]):
+class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E_co]):  # noqa: UP046
     """An abstract class of an electrical network."""
 
     _DEFAULT_SOLVER: Solver = "newton_goldstein"
@@ -765,10 +761,12 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         return result
 
     @staticmethod
-    def _elements_as_dict(elements: MapOrSeq[_E], error_code: RoseauLoadFlowExceptionCode) -> dict[Id, _E]:
+    def _elements_as_dict[E: AbstractElement](
+        elements: MapOrSeq[E], error_code: RoseauLoadFlowExceptionCode
+    ) -> dict[Id, E]:
         """Convert a sequence or a mapping of elements to a dictionary of elements with their IDs as keys."""
         typ = error_code.name.removeprefix("BAD_").removesuffix("_ID").replace("_", " ")
-        elements_dict: dict[Id, _E] = {}
+        elements_dict: dict[Id, E] = {}
         if isinstance(elements, Mapping):
             for element_id, element in elements.items():
                 if element.id != element_id:
@@ -858,7 +856,9 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
     def _remove_parameters(self, element_type: str, params_id: Id) -> None:
         del self._parameters[element_type][params_id]
 
-    def _add_element_to_dict(self, element: _E, to: dict[Id, _E], disconnectable: bool = False) -> None:
+    def _add_element_to_dict[E: AbstractElement](
+        self, element: E, to: dict[Id, E], disconnectable: bool = False
+    ) -> None:
         if element.id in to and (old := to[element.id]) is not element:
             element._disconnect()  # Don't leave it lingering in other elements _connected_elements
             old_type = type(old).__name__
@@ -996,16 +996,188 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LOAD_FLOW_NOT_RUN)
 
         if not self._results_valid:
-            warnings.warn(
+            warn_external(
                 message=(
                     "The results of this network may be outdated. Please re-run a load flow to "
                     "ensure the validity of results."
                 ),
                 category=UserWarning,
-                stacklevel=find_stack_level(),
             )
             return False
         return True
+
+    def _get_nominal_voltages(self) -> dict[Id, float]:  # noqa: C901
+        """Get approximate nominal voltages for all buses in the network (even if not defined).
+
+        This function attempts to infer nominal voltages for all buses in the network by propagating
+        known nominal voltages through connected feeders and transformers. If there are no defined
+        nominal voltages, it uses the HV voltage of the transformer with the highest voltage or the
+        voltage of the starting source as a reference.
+
+        These voltages are used to determine voltage levels for plotting purposes only.
+        """
+        import roseau.load_flow as rlf
+        import roseau.load_flow_single as rlfs
+
+        assert isinstance(self, (rlf.ElectricalNetwork, rlfs.ElectricalNetwork))
+
+        nominal_voltages: dict[Id, float] = {}
+        nb_buses = len(self.buses)
+
+        for bus in self.buses.values():
+            if bus._nominal_voltage is not None:
+                nominal_voltages[bus.id] = bus._nominal_voltage
+
+        if len(nominal_voltages) == nb_buses:
+            # all nominal voltages are defined, return them
+            return nominal_voltages
+
+        # Propagate nominal voltages of each feeder first (shortcut version)
+        for bus_id, nominal_voltage in list(nominal_voltages.items()):
+            for feeder_bus_id in self.buses[bus_id].get_connected_buses():
+                if feeder_bus_id not in nominal_voltages:
+                    nominal_voltages[feeder_bus_id] = nominal_voltage
+
+        if len(nominal_voltages) == nb_buses:
+            # all nominal voltages are defined, return them
+            return nominal_voltages
+
+        # Determine reference bus for voltage propagation
+        if nominal_voltages:
+            # We have at least one nominal voltage defined, use it as reference
+            reference_bus = self.buses[next(iter(nominal_voltages))]
+            reference_nominal_voltage = nominal_voltages[reference_bus.id]
+        elif self.transformers:
+            # Use the highest voltage transformer HV side as reference
+            starting_transformer = max(self.transformers.values(), key=lambda t: t.parameters._uhv)
+            reference_bus = starting_transformer.bus_hv
+            reference_nominal_voltage = starting_transformer.parameters._uhv
+        else:
+            # Use the first source bus as reference
+            if isinstance(self, rlf.ElectricalNetwork):
+                starting_potentials, starting_source = self._get_starting_potentials(all_phases=set("abcn"))
+                reference_bus = starting_source.bus
+                reference_nominal_voltage = abs(starting_potentials["a"] - starting_potentials["b"])
+            else:
+                starting_voltage, starting_source = self._get_starting_voltage()
+                reference_bus = starting_source.bus
+                reference_nominal_voltage = abs(starting_voltage)
+
+        # Propagate voltages by traversing the entire network
+        buses = [(reference_bus, reference_nominal_voltage)]
+        seen_buses: set[Id] = set()
+        while buses:
+            current_bus, current_vn = buses.pop()
+            if current_bus.id in seen_buses:
+                continue
+            seen_buses.add(current_bus.id)
+            if current_bus.id not in nominal_voltages:
+                nominal_voltages[current_bus.id] = current_vn
+            for e in current_bus._connected_elements:
+                if isinstance(e, (rlf.Transformer, rlfs.Transformer)):
+                    if e.bus_hv.id == current_bus.id:
+                        other_bus = e.bus_lv
+                        other_vn = (
+                            nominal_voltages[other_bus.id]
+                            if other_bus.id in nominal_voltages
+                            else current_vn * e.parameters._ulv / e.parameters._uhv
+                        )
+                    else:
+                        other_bus = e.bus_hv
+                        other_vn = (
+                            nominal_voltages[other_bus.id]
+                            if other_bus.id in nominal_voltages
+                            else current_vn * e.parameters._uhv / e.parameters._ulv
+                        )
+                    buses.append((other_bus, other_vn))
+                elif isinstance(e, (rlf.Line, rlf.Switch, rlfs.Line, rlfs.Switch)):
+                    other_bus = e.bus2 if e.bus1.id == current_bus.id else e.bus1
+                    other_vn = nominal_voltages.get(other_bus.id, current_vn)
+                    buses.append((other_bus, other_vn))
+
+        assert len(nominal_voltages) == nb_buses, "Failed to infer nominal voltages for all buses."
+        return nominal_voltages
+
+    @abstractmethod
+    def _get_starting_bus_id(self) -> Id:
+        raise NotImplementedError
+
+    def _shortest_paths(
+        self,
+        source: Id,
+        *,
+        weight: Callable[[str, Id], float | None],
+        pred: dict[Id, list[Id]] | None = None,
+        adj: dict[Id, dict[Id, list[tuple[str, Id]]]] | None = None,
+    ) -> dict[Id, float]:
+        """Compute the shortest paths from a source bus to all buses in the network.
+
+        The network is represented as an undirected multigraph where edges correspond to lines,
+        transformers, and closed switches. The length of lines is used as the weight for the edges,
+        while transformers and closed switches have a length of 0. Open switches are ignored.
+
+        The algorithm used is Dijkstra's algorithm.
+
+        Args:
+            source:
+                The ID of the source bus. All distances are computed from this bus.
+
+            weight:
+                A callable that takes the element type and element ID and returns the weight for the edge.
+                If the callable returns None, the edge is ignored.
+
+            pred:
+                An optional dictionary to store the predecessors of each bus in the shortest paths.
+                If provided, it will be filled with the predecessors during the computation.
+
+            adj:
+                An optional adjacency representation of the network. If provided, it will be filled
+                with the adjacency information during the computation.
+
+        Returns:
+            The distances from the source bus to all other buses in the network.
+        """
+        if adj is None:
+            adj = {}
+        for n in self._elements_by_type["bus"]:
+            adj.setdefault(n, {})
+        for et in ("line", "transformer", "switch"):
+            for e in self._elements_by_type[et].values():
+                u, v = e.bus1.id, e.bus2.id  # type: ignore
+                edge_data = (et, e.id)
+                adj[u].setdefault(v, []).append(edge_data)
+                adj[v].setdefault(u, []).append(edge_data)
+        if pred is not None:
+            pred.setdefault(source, [])
+
+        distances: dict[Id, float] = {}
+        seen: dict[Id, float] = {source: 0.0}
+
+        # middle item is a counter used to avoid comparing nodes (which may not be comparable)
+        heap: list[tuple[float, int, Id]] = [(0.0, 0, source)]
+        while heap:
+            (v_dist, c, v) = heappop(heap)
+            if v in distances:
+                continue
+            distances[v] = v_dist
+            for u, edges in adj[v].items():
+                cost = min((w for (et, eid) in edges if (w := weight(et, eid)) is not None), default=None)
+                if cost is None:
+                    continue
+                vu_dist = v_dist + cost
+                if u in distances:
+                    u_dist = distances[u]
+                    if pred is not None and vu_dist == u_dist:
+                        pred[u].append(v)
+                elif u not in seen or vu_dist < seen[u]:
+                    seen[u] = vu_dist
+                    heappush(heap, (vu_dist, c + 1, u))
+                    if pred is not None:
+                        pred[u] = [v]
+                elif pred is not None and vu_dist == seen[u]:
+                    pred[u].append(v)
+
+        return distances
 
     #
     # DGS interface

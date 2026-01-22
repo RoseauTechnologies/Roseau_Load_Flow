@@ -7,7 +7,7 @@ import logging
 import re
 from collections.abc import Generator, Iterable, Mapping
 from math import nan
-from typing import TYPE_CHECKING, Any, Final, Literal, Self, TypeVar, final
+from typing import TYPE_CHECKING, Any, Final, Literal, Self, final
 
 import geopandas as gpd
 import numpy as np
@@ -50,8 +50,6 @@ if TYPE_CHECKING:
     from networkx import MultiGraph
 
 logger = logging.getLogger(__name__)
-
-_AT = TypeVar("_AT", bound=AbstractTerminal)
 
 
 @final
@@ -418,6 +416,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 parameters_id=transformer.parameters.id,
                 max_loading=transformer._max_loading,
                 sn=transformer.parameters._sn,
+                tap=transformer._tap,
                 geom=geom_mapping(transformer.geometry),
             )
         for switch in self.switches.values():
@@ -835,9 +834,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["connection_id"])
 
     # Voltages results
-    def _iter_terminal_res_voltages(
-        self, terminals: Mapping[Id, _AT], voltage_type: Literal["pp", "pn", "auto"]
-    ) -> Generator[tuple[_AT, ComplexArray, list[str]]]:
+    def _iter_terminal_res_voltages[AT: AbstractTerminal](
+        self, terminals: Mapping[Id, AT], voltage_type: Literal["pp", "pn", "auto"]
+    ) -> Generator[tuple[AT, ComplexArray, list[str]]]:
         if voltage_type == "auto":
             for e in terminals.values():
                 yield e, e._res_voltages_getter(warning=False), e.voltage_phases
@@ -1167,7 +1166,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         starting_source = None
         potentials = {"n": 0j}
         # if there are multiple voltage sources, start from the higher one (the last one in the sorted below)
-        for source in sorted(self.sources.values(), key=lambda x: abs(x._voltages).mean()):
+        for source in sorted(
+            self.sources.values(), key=lambda x: abs(x._voltages).mean() / (1 if "n" in x.phases else SQRT3)
+        ):
             source_voltages = source._voltages.tolist()
             starting_source = source
             if "n" in source.phases:
@@ -1194,13 +1195,19 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         assert starting_source is not None, "No voltage source found in the network."
         if len(potentials) < len(all_phases):
             # We failed to determine all the potentials (the sources are strange), fallback to something simple
-            v = abs(starting_source._voltages).mean()
+            v = abs(starting_source._voltages).mean().item()
+            if "n" not in starting_source.phases:
+                v /= SQRT3
             potentials["a"] = v
             potentials["b"] = v * ALPHA2
             potentials["c"] = v * ALPHA
             potentials["n"] = 0.0
 
         return potentials, starting_source
+
+    def _get_starting_bus_id(self) -> Id:
+        _, starting_source = self._get_starting_potentials(all_phases=set())
+        return starting_source.bus.id
 
     @staticmethod
     def _check_ref(elements: Iterable[Element]) -> None:

@@ -83,6 +83,33 @@ def test_res_violated():
     np.testing.assert_allclose(transformer.res_loading.m, 80 * 230 * 3 / 50_000)
 
 
+def test_res_state():
+    bus1 = Bus(id="bus1", phases="abc")
+    bus2 = Bus(id="bus2", phases="abcn")
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="tp", vg="Yzn11", sn=50e3, uhv=20e3, ulv=400, p0=145, i0=0.018, psc=1350, vsc=0.04
+    )
+    tr = Transformer(id="transformer", bus_hv=bus1, bus_lv=bus2, parameters=tp)
+
+    def current(s, u):
+        return s / (np.sqrt(3) * u)
+
+    tr.side_hv._res_potentials = 20e3 / np.sqrt(3) * PosSeq
+    tr.side_lv._res_potentials = 400 / np.sqrt(3) * PosSeq
+    tr.side_hv._res_currents = current(30e3, 20e3) * PosSeq
+    tr.side_lv._res_currents = current(-30e3, 400) * PosSeq
+
+    assert tr._res_state_getter() == "normal"
+    tr.side_hv._res_currents = current(45e3, 20e3) * PosSeq
+    assert tr._res_state_getter() == "high"
+    tr.side_hv._res_currents = current(60e3, 20e3) * PosSeq
+    assert tr._res_state_getter() == "very-high"
+
+    # Change max loading
+    tr._max_loading = 1.2
+    assert tr._res_state_getter() == "high"
+
+
 def test_transformer_results():
     bus_hv = Bus(id="bus_hv", phases="abc")
     bus_lv = Bus(id="bus_lv", phases="abcn")
@@ -123,23 +150,23 @@ def test_brought_out_neutral():
     tr2 = Transformer(id="tr2", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp2)
     assert tr2.phases_lv == "abc"
 
-    # Warn on old behavior
+    # Warn on missing brought out neutral
     with pytest.warns(
-        FutureWarning,
+        UserWarning,
         match=(
             r"Transformer 'tr3' with vector group 'Yd5' does not have a brought out neutral on the "
             r"HV side. The neutral phase 'n' is ignored. If you meant to use a brought out neutral, "
-            r"use vector group 'YNd5'. This will raise an error in the future."
+            r"use vector group 'YNd5'."
         ),
     ):
         tr3 = Transformer(id="tr3", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp1, phases_hv="abcn", phases_lv="abc")
     assert tr3.phases_hv == "abc"
     with pytest.warns(
-        FutureWarning,
+        UserWarning,
         match=(
             r"Transformer 'tr4' with vector group 'Dy11' does not have a brought out neutral on the "
             r"LV side. The neutral phase 'n' is ignored. If you meant to use a brought out neutral, "
-            r"use vector group 'Dyn11'. This will raise an error in the future."
+            r"use vector group 'Dyn11'."
         ),
     ):
         tr4 = Transformer(id="tr4", bus_hv=bus_hv, bus_lv=bus_lv, parameters=tp2, phases_hv="abc", phases_lv="abcn")

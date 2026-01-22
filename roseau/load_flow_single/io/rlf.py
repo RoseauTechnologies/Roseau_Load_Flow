@@ -1,13 +1,12 @@
 import cmath
 import logging
-import warnings
-from typing import Literal, TypeAlias
+from typing import Literal
 
 import numpy as np
 
 import roseau.load_flow as rlf
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_single.io.common import NetworkElements
 from roseau.load_flow_single.models import (
     AbstractLoad,
@@ -26,19 +25,19 @@ from roseau.load_flow_single.models import (
 
 logger = logging.getLogger(__name__)
 
-OnIncompatibleType: TypeAlias = Literal["ignore", "warn", "raise-critical", "raise"]
+type OnIncompatibleType = Literal["ignore", "warn", "raise-critical", "raise"]
 
 
 def _handle_incompatibility(msg: str, on_incompatible: OnIncompatibleType, critical: bool = True) -> None:
     if on_incompatible == "ignore":
         pass
     elif on_incompatible == "warn":
-        warnings.warn(msg, UserWarning, stacklevel=find_stack_level())
+        warn_external(msg, UserWarning)
     elif on_incompatible == "raise-critical":
         if critical:
             raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
         else:
-            warnings.warn(msg, UserWarning, stacklevel=find_stack_level())
+            warn_external(msg, UserWarning)
     elif on_incompatible == "raise":
         raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
     else:

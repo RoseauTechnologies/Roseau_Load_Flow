@@ -1,5 +1,4 @@
 import logging
-import warnings
 from collections.abc import Iterable, Iterator
 
 import pandas as pd
@@ -17,7 +16,7 @@ from roseau.load_flow.io.dgs.constants import (
 from roseau.load_flow.io.dgs.loads import LOAD_POWER_FUNCTIONS
 from roseau.load_flow.io.dgs.utils import DGSData, clean_id
 from roseau.load_flow.typing import Id
-from roseau.load_flow.utils import find_stack_level
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_single.io.dgs.pwf import STA_CUBIC_FID_INDEX, STA_CUBIC_OBJ_ID_INDEX
 from roseau.load_flow_single.models import AbstractLoad, Bus, PowerLoad
 
@@ -71,7 +70,7 @@ def elm_lod_all_to_loads(
                 f"Unbalanced loads are not supported, {load_type} load {load_id!r} is unbalanced. "
                 f"It will be processed as balanced."
             )
-            warnings.warn(msg, stacklevel=find_stack_level())
+            warn_external(msg)
 
         if load_type == "MV":
             # Seems like MV Loads in PF just inherit the phase of the bus sometimes

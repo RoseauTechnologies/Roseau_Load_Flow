@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -100,7 +102,7 @@ def test_short_circuit():
     assert "ground" in en.grounds
 
 
-def test_voltage_limits(recwarn):
+def test_voltage_limits():
     # Default values
     bus = Bus(id="bus", phases="abc")
     assert bus.nominal_voltage is None
@@ -125,9 +127,9 @@ def test_voltage_limits(recwarn):
     assert bus.max_voltage == Q_(434.6, "V")
 
     # Can be reset to None
-    bus.nominal_voltage = None
     bus.min_voltage_level = None
     bus.max_voltage_level = None
+    bus.nominal_voltage = None
     assert bus.min_voltage_level is None
     assert bus.max_voltage_level is None
     assert bus.min_voltage is None
@@ -145,9 +147,9 @@ def test_voltage_limits(recwarn):
 
     # NaNs are converted to None
     for na in (np.nan, float("nan"), pd.NA):
-        bus.nominal_voltage = na
         bus.min_voltage_level = na
         bus.max_voltage_level = na
+        bus.nominal_voltage = na
         assert bus.nominal_voltage is None
         assert bus.min_voltage_level is None
         assert bus.max_voltage_level is None
@@ -158,43 +160,42 @@ def test_voltage_limits(recwarn):
     bus.nominal_voltage = None
     bus.min_voltage_level = None
     bus.max_voltage_level = None
-    recwarn.clear()
-    bus.min_voltage_level = 0.95
-    assert len(recwarn) == 1
-    assert (
-        recwarn[0].message.args[0]
-        == "The min voltage level of the bus 'bus' is useless without a nominal voltage. Please define a nominal "
-        "voltage for this bus."
-    )
+    with pytest.warns(
+        UserWarning,
+        match=(
+            "The min voltage level of the bus 'bus' is useless without a nominal voltage. Please "
+            "define a nominal voltage for this bus."
+        ),
+    ):
+        bus.min_voltage_level = 0.95
     assert bus.min_voltage_level == Q_(0.95, "")
     assert bus.min_voltage is None
-    recwarn.clear()
-    bus.max_voltage_level = 1.05
-    assert len(recwarn) == 1
-    assert (
-        recwarn[0].message.args[0]
-        == "The max voltage level of the bus 'bus' is useless without a nominal voltage. Please define a nominal "
-        "voltage for this bus."
-    )
+    with pytest.warns(
+        UserWarning,
+        match=(
+            "The max voltage level of the bus 'bus' is useless without a nominal voltage. Please "
+            "define a nominal voltage for this bus."
+        ),
+    ):
+        bus.max_voltage_level = 1.05
     assert bus.max_voltage_level == Q_(1.05, "")
     assert bus.max_voltage is None
 
     # Erasing a nominal voltage with a min or max voltage level emits a warning
     bus.nominal_voltage = Q_(400, "V")
-    recwarn.clear()
-    bus.nominal_voltage = None
-    assert len(recwarn) == 1
-    assert (
-        recwarn[0].message.args[0]
-        == "The nominal voltage of the bus 'bus' is required to use `min_voltage_level` and `max_voltage_level`."
-    )
+    with pytest.warns(
+        UserWarning,
+        match="The nominal voltage of the bus 'bus' is required to use `min_voltage_level` and `max_voltage_level`.",
+    ):
+        bus.nominal_voltage = None
+
     bus.nominal_voltage = Q_(400, "V")
     bus.min_voltage_level = None
     bus.max_voltage_level = None
-    recwarn.clear()
-    bus.nominal_voltage = None
-    assert len(recwarn) == 0
+    with warnings.catch_warnings(action="error"):
+        bus.nominal_voltage = None
 
+    bus.nominal_voltage = Q_(400, "V")
     # Bad values
     bus.min_voltage_level = 0.95
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -285,6 +286,51 @@ def test_res_violated():
     bus.max_voltage_level = 1.1
     bus._res_potentials[0] = 300 + 0j
     assert (bus.res_violated == [True, False, True]).all()
+
+
+def test_res_state():
+    bus = Bus(id="bus", phases="abc")
+    bus._res_potentials = 230 * PositiveSequence
+
+    # No nominal voltage
+    assert bus._res_state_getter() == "unknown"
+
+    # No limits
+    bus.nominal_voltage = 230 * np.sqrt(3)
+    assert bus._res_state_getter() == "unknown"
+
+    # Only max voltage
+    bus.max_voltage_level = 1.05
+    bus._res_potentials = 230 * 1.06 * PositiveSequence
+    assert bus._res_state_getter() == "very-high"
+    bus._res_potentials = 230 * 1.04 * PositiveSequence
+    assert bus._res_state_getter() == "high"
+    bus._res_potentials = 230 * 1.02 * PositiveSequence
+    assert bus._res_state_getter() == "normal"
+
+    # Only min voltage
+    bus.max_voltage_level = None
+    bus.min_voltage_level = 0.95
+    bus._res_potentials = 230 * 0.94 * PositiveSequence
+    assert bus._res_state_getter() == "very-low"
+    bus._res_potentials = 230 * 0.96 * PositiveSequence
+    assert bus._res_state_getter() == "low"
+    bus._res_potentials = 230 * 0.98 * PositiveSequence
+    assert bus._res_state_getter() == "normal"
+
+    # Both min and max voltage
+    bus.min_voltage_level = 0.95
+    bus.max_voltage_level = 1.05
+    bus._res_potentials = 230 * 1.06 * PositiveSequence
+    assert bus._res_state_getter() == "very-high"
+    bus._res_potentials = 230 * 1.04 * PositiveSequence
+    assert bus._res_state_getter() == "high"
+    bus._res_potentials = 230 * 1.0 * PositiveSequence
+    assert bus._res_state_getter() == "normal"
+    bus._res_potentials = 230 * 0.96 * PositiveSequence
+    assert bus._res_state_getter() == "low"
+    bus._res_potentials = 230 * 0.94 * PositiveSequence
+    assert bus._res_state_getter() == "very-low"
 
 
 def test_propagate_limits():  # noqa: C901
@@ -594,28 +640,3 @@ def test_to_from_dict_roundtrip():
     bus2 = Bus.from_dict(bus_dict)
     bus2_dict = bus2.to_dict(include_results=False)
     assert_json_close(bus_dict, bus2_dict)
-
-
-def test_deprecated_potentials():
-    # Constructor
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"Argument 'potentials' for Bus\(\) is deprecated. It has been renamed to 'initial_potentials'",
-    ):
-        bus = Bus(id="bus", phases="an", potentials=[230, 0])  # type: ignore
-    np.testing.assert_allclose(bus.initial_potentials.m, [230, 0])
-
-    # Property getter
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'",
-    ):
-        _ = bus.potentials
-
-    # Property setter
-    with pytest.warns(
-        DeprecationWarning,
-        match=r"'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'",
-    ):
-        bus.potentials = [220, 0]
-    np.testing.assert_allclose(bus.initial_potentials.m, [220, 0])

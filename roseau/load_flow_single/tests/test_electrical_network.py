@@ -3,7 +3,6 @@ import itertools as it
 import json
 import re
 import warnings
-from pathlib import Path
 
 import geopandas as gpd
 import networkx as nx
@@ -36,36 +35,6 @@ from roseau.load_flow_single.models import (
     VoltageSource,
 )
 from roseau.load_flow_single.network import ElectricalNetwork
-
-
-# The following networks are generated using the scripts/generate_test_networks.py script
-@pytest.fixture
-def all_elements_network_path(test_networks_path) -> Path:
-    return test_networks_path / "all_elements_network.json"
-
-
-@pytest.fixture
-def all_elements_network(all_elements_network_path) -> ElectricalNetwork:
-    """Load the network from the JSON file (without results)."""
-    return ElectricalNetwork.from_json(path=all_elements_network_path, include_results=False)
-
-
-@pytest.fixture
-def all_elements_network_with_results(all_elements_network_path) -> ElectricalNetwork:
-    """Load the network from the JSON file (with results, no need to invoke the solver)."""
-    return ElectricalNetwork.from_json(path=all_elements_network_path, include_results=True)
-
-
-@pytest.fixture
-def small_network(test_networks_path) -> ElectricalNetwork:
-    """Load the network from the JSON file (without results)."""
-    return ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=False)
-
-
-@pytest.fixture
-def small_network_with_results(test_networks_path) -> ElectricalNetwork:
-    """Load the network from the JSON file (with results, no need to invoke the solver)."""
-    return ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=True)
 
 
 def strip_q(value):
@@ -933,6 +902,63 @@ def test_propagate_voltages():
     assert np.allclose(source_bus.initial_voltage.m, expected_voltages)
 
 
+def test_propagate_nominal_voltages(all_elements_network):
+    en = all_elements_network
+    # Test that it works even if some nominal voltages are missing
+    assert en.buses["bus0"].nominal_voltage is None
+    assert en.buses["bus4"].nominal_voltage is None
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20000.0,
+        "bus2": 400,
+        "bus3": 400,
+        "bus0": 20000.0,
+        "bus4": 400,
+    }
+
+    # No nominal voltages in the network
+    for bus in en.buses.values():
+        bus._min_voltage_level = None
+        bus._max_voltage_level = None
+        bus._nominal_voltage = None
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20000.0,
+        "bus2": 400,
+        "bus3": 400,
+        "bus0": 20000.0,
+        "bus4": 400,
+    }
+
+    # No transformer
+    bus1 = Bus(id="bus1")
+    bus2 = Bus(id="bus2")
+    VoltageSource(id="vs", bus=bus1, voltage=20e3)
+    Switch(id="sw", bus1=bus1, bus2=bus2)
+    en = ElectricalNetwork.from_element(bus1)
+    assert not en.transformers, "This test requires a network without transformers"
+    nominal_voltages = en._get_nominal_voltages()
+    npt.assert_allclose(list(nominal_voltages.values()), 20e3)
+
+    # With transformer and one nominal voltage at the source
+    bus1 = Bus(id="bus1", nominal_voltage=20.5e3)
+    bus2 = Bus(id="bus2")
+    bus3 = Bus(id="bus3")
+    VoltageSource(id="vs", bus=bus1, voltage=21e3)
+    Switch(id="sw", bus1=bus1, bus2=bus2)
+    tp = TransformerParameters.from_open_and_short_circuit_tests(
+        id="t1", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, p0=200, i0=1.5e-2, psc=1e3, vsc=4e-2
+    )
+    Transformer(id="t1", bus_hv=bus2, bus_lv=bus3, parameters=tp)
+    en = ElectricalNetwork.from_element(bus1)
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20.5e3,  # the expected vn from the source bus (not the transformer or the source)
+        "bus2": 20.5e3,
+        "bus3": 410.0,
+    }
+
+
 def test_catalogue_data():
     # The catalogue data path exists
     catalogue_path = ElectricalNetwork.catalogue_path()
@@ -1083,6 +1109,7 @@ def test_to_graph(small_network: ElectricalNetwork):
             "parameters_id": line.parameters.id,
             "max_loading": line.max_loading.m,
             "ampacity": ampacity,
+            "length": line.length.m,
             "geom": line.geometry.__geo_interface__ if line.geometry is not None else None,
         }
 
@@ -1094,6 +1121,7 @@ def test_to_graph(small_network: ElectricalNetwork):
             "parameters_id": transformer.parameters.id,
             "max_loading": transformer.max_loading.m,
             "sn": transformer.sn.m,
+            "tap": transformer.tap,
             "geom": transformer.geometry.__geo_interface__ if transformer.geometry is not None else None,
         }
 

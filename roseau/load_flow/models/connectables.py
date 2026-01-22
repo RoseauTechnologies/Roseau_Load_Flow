@@ -1,5 +1,4 @@
 import logging
-import warnings
 from abc import ABC, abstractmethod
 from functools import cached_property
 from typing import ClassVar
@@ -14,7 +13,7 @@ from roseau.load_flow.models.terminals import AbstractTerminal
 from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict, Side
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import SIDE_DESC, abstractattrs, ensure_startsupper, find_stack_level, one_or_more_repr
+from roseau.load_flow.utils import SIDE_DESC, abstractattrs, ensure_startsupper, one_or_more_repr, warn_external
 from roseau.load_flow_engine.cy_engine import CyBranch
 
 logger = logging.getLogger(__name__)
@@ -106,13 +105,12 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         if connect_neutral is not None:
             connect_neutral = bool(connect_neutral)  # to allow np.bool
         if connect_neutral and "n" not in phases:
-            warnings.warn(
+            warn_external(
                 message=(
                     f"{ensure_startsupper(f'{side_desc}neutral')} connection requested for "
                     f"{self.element_type} {id!r} with no neutral phase."
                 ),
                 category=UserWarning,
-                stacklevel=find_stack_level(),
             )
             connect_neutral = None
         # Also check they are in the bus phases
@@ -121,7 +119,10 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         missing_ok = phases_not_in_bus == {"n"} and len(phases) > 2 and not connect_neutral
         if phases_not_in_bus and not missing_ok:
             ph, be = one_or_more_repr(sorted(phases_not_in_bus), "phase")
-            msg = f"{ensure_startsupper(f'{side_desc}{ph}')} of {self.element_type} {id!r} {be} not in phases {bus.phases!r} of its bus {bus.id!r}."
+            msg = (
+                f"{ensure_startsupper(f'{side_desc}{ph}')} of {self.element_type} {id!r} {be} not "
+                f"in phases {bus.phases!r} of its bus {bus.id!r}."
+            )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         return connect_neutral
@@ -247,27 +248,6 @@ class AbstractDisconnectable(AbstractConnectable[_CyE_co], ABC):
     def is_disconnected(self) -> bool:
         """Is this element disconnected from the network?"""
         return self._is_disconnected
-
-    @property
-    def bus(self) -> Bus | None:
-        """The bus of the element, or None if it is disconnected.
-
-        .. deprecated:: 0.13.0
-
-            Accessing the bus of a disconnected element will change in the future to return the bus
-            it was connected to before disconnection instead of `None`. If you rely on this behavior
-            to check if the element is disconnected, please use the `is_disconnected` property instead.
-        """
-        if self._is_disconnected:
-            warnings.warn(
-                f"Accessing the bus of the disconnected {self._element_info} will change in the "
-                f"future to return the bus it was connected to before disconnection instead of None. "
-                f"If you rely on this behavior to check if the element is disconnected, please use "
-                f"`is_disconnected` instead.",
-                stacklevel=find_stack_level(),
-            )
-            return None
-        return self._bus
 
     def disconnect(self) -> None:
         """Disconnect this element from the network. It cannot be used afterwards."""

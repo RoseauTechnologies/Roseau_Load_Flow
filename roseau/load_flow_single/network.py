@@ -284,6 +284,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 id=line.id,
                 type="line",
                 parameters_id=line.parameters.id,
+                length=line._length,
                 max_loading=line._max_loading,
                 ampacity=line.parameters._ampacity,
                 geom=geom_mapping(line.geometry),
@@ -297,6 +298,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 parameters_id=transformer.parameters.id,
                 max_loading=transformer._max_loading,
                 sn=transformer.parameters._sn,
+                tap=transformer._tap,
                 geom=geom_mapping(transformer.geometry),
             )
         for switch in self.switches.values():
@@ -663,6 +665,10 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             if abs(source._voltage) > abs(starting_source._voltage):
                 starting_source = source
         return starting_source._voltage, starting_source
+
+    def _get_starting_bus_id(self) -> Id:
+        _, starting_source = self._get_starting_voltage()
+        return starting_source.bus.id
 
     @classmethod
     def _check_ref(cls, elements: Iterable[Element]) -> None:

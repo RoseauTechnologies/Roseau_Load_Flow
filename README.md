@@ -25,7 +25,7 @@ In addition to the following **unique** set of features:
 
 <!-- end rlf-pitch -->
 
-This project is compatible with Python version 3.11 and newer. The
+This project is compatible with Python version 3.12 and newer. The
 [installation instructions](https://roseau-load-flow.roseautechnologies.com/en/latest/Installation.html) will guide you
 through the installation process. If you are new to _Roseau Load Flow_, we recommend you start with the
 [getting started tutorial](https://roseau-load-flow.roseautechnologies.com/en/latest/usage/Getting_Started.html). You
@@ -51,15 +51,21 @@ Read more at [License](https://roseau-load-flow.roseautechnologies.com/en/latest
 _Roseau Load Flow_ ships with a sample of 20 low-voltage and 20 medium-voltage feeder networks. Each network is provided
 with its summer and winter load points.
 
-To go further, you can also use
-[these 150 distribution networks](https://www.data.gouv.fr/fr/datasets/departs-hta-representatifs-pour-lanalyse-des-reseaux-de-distribution-francais/),
-published by [Mines Paris Tech](https://www.minesparis.psl.eu/) in _Roseau Load Flow_ format. Supplied with their
-respective coefficients, these representative networks can be used to simulate the entire French distribution network.
+<!-- start representative-networks -->
+
+We also maintain a set of 150 MV feeders representative of the French distribution system at
+https://github.com/RoseauTechnologies/Representative_French_Power_Grids. Each feeder is modeled with its downstream LV
+networks. The repository also contains the cluster size that indicates how representative is each network of the French
+distribution system. These networks are the result of the study
+[Representative MV feeders for the analysis of French distribution networks](https://www.roseautechnologies.com/en/electrical-model-of-the-french-distribution-network/),
+made and published by [Mines Paris Tech](https://www.minesparis.psl.eu/).
+
+<!-- end representative-networks -->
 
 <!-- end rlf-networks -->
 
 <div align="center">
-  <img alt="Catalogue of networks" src="https://github.com/RoseauTechnologies/Roseau_Load_Flow/blob/main/doc/_static/Network/Catalogue.png?raw=True" />
+  <img alt="Catalogue of networks" src="https://github.com/RoseauTechnologies/Roseau_Load_Flow/blob/main/doc/_static/Network/Catalogue.webp?raw=True" />
 </div>
 
 ## Bug reports / Feature requests

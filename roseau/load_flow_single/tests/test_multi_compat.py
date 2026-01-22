@@ -8,7 +8,7 @@ from roseau.load_flow import RoseauLoadFlowException, RoseauLoadFlowExceptionCod
 
 def test_import():
     # Ensure that RLF and RLFS have nearly the same interface
-    rlf_dir = set(dir(rlf)) - {"ConductorType", "InsulatorType"}
+    rlf_dir = set(dir(rlf)) - {"ConductorType", "InsulatorType", "__warningregistry__"}
     rlfs_dir = set(dir(rlfs))
 
     assert rlf_dir - rlfs_dir == {

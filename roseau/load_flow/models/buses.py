@@ -1,20 +1,18 @@
 import logging
-import warnings
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any, Final, Self
 
 import numpy as np
 import pandas as pd
 from shapely.geometry.base import BaseGeometry
-from typing_extensions import deprecated
 
 from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.terminals import AbstractTerminal
-from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict
+from roseau.load_flow.typing import BoolArray, ComplexArray, ComplexArrayLike1D, FloatArray, Id, JsonDict, ResultState
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import deprecate_renamed_parameter, find_stack_level
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_engine.cy_engine import CyBus
 
 logger = logging.getLogger(__name__)
@@ -28,9 +26,6 @@ class Bus(AbstractTerminal[CyBus]):
 
     element_type: Final = "bus"
 
-    @deprecate_renamed_parameter(
-        old_name="potentials", new_name="initial_potentials", version="0.12.0", category=DeprecationWarning
-    )
     def __init__(
         self,
         id: Id,
@@ -126,17 +121,6 @@ class Bus(AbstractTerminal[CyBus]):
             self._cy_element.initialize_potentials(self._initial_potentials)
 
     @property
-    @deprecated("'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'.")
-    def potentials(self) -> Q_[ComplexArray]:
-        """Deprecated alias to `initial_potentials`."""
-        return self.initial_potentials
-
-    @potentials.setter
-    @deprecated("'Bus.potentials' is deprecated. It has been renamed to 'initial_potentials'.")
-    def potentials(self, value: ComplexArrayLike1D) -> None:
-        self.initial_potentials = value
-
-    @property
     def nominal_voltage(self) -> Q_[float] | None:
         """The phase-to-phase nominal voltage of the bus (V) if it is set."""
         return None if self._nominal_voltage is None else Q_(self._nominal_voltage, "V")
@@ -148,13 +132,12 @@ class Bus(AbstractTerminal[CyBus]):
             value = None
         if value is None:
             if self._max_voltage_level is not None or self._min_voltage_level is not None:
-                warnings.warn(
+                warn_external(
                     message=(
                         f"The nominal voltage of the bus {self.id!r} is required to use `min_voltage_level` and "
                         f"`max_voltage_level`."
                     ),
                     category=UserWarning,
-                    stacklevel=find_stack_level(),
                 )
         else:
             if value <= 0:
@@ -182,13 +165,12 @@ class Bus(AbstractTerminal[CyBus]):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
             if self._nominal_voltage is None:
-                warnings.warn(
+                warn_external(
                     message=(
                         f"The min voltage level of the bus {self.id!r} is useless without a nominal voltage. Please "
                         f"define a nominal voltage for this bus."
                     ),
                     category=UserWarning,
-                    stacklevel=find_stack_level(),
                 )
 
         self._min_voltage_level = value
@@ -221,13 +203,12 @@ class Bus(AbstractTerminal[CyBus]):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_VOLTAGES)
             if self._nominal_voltage is None:
-                warnings.warn(
+                warn_external(
                     message=(
                         f"The max voltage level of the bus {self.id!r} is useless without a nominal voltage. Please "
                         f"define a nominal voltage for this bus."
                     ),
                     category=UserWarning,
-                    stacklevel=find_stack_level(),
                 )
         self._max_voltage_level = value
 
@@ -424,6 +405,30 @@ class Bus(AbstractTerminal[CyBus]):
             return None
         voltages_abs = abs(self._res_voltages_pn_getter(warning=warning))
         return SQRT3 * voltages_abs / self._nominal_voltage
+
+    def _res_state_getter(self) -> ResultState:
+        """The state of the bus based on its voltage levels and limits."""
+        u_array = self._res_voltage_levels_getter(warning=False)
+        if u_array is None:
+            return "unknown"
+        u_min = self._min_voltage_level
+        u_max = self._max_voltage_level
+        if u_min is None and u_max is None:
+            return "unknown"
+        u = u_array.tolist()
+        u_low, u_high = min(u), max(u)
+
+        if u_max is not None:
+            if u_high > u_max:
+                return "very-high"
+            elif u_high > 0.75 * u_max + 0.25:
+                return "high"
+        if u_min is not None:
+            if u_low < u_min:
+                return "very-low"
+            elif u_low < 0.75 * u_min + 0.25:
+                return "low"
+        return "normal"
 
     @property
     def res_voltage_levels(self) -> Q_[FloatArray] | None:

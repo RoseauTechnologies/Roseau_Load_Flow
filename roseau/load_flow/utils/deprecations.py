@@ -3,18 +3,13 @@
 # under the MIT license.
 # polars source code is available at https://github.com/pola-rs/polars
 import inspect
-import warnings
 from collections.abc import Callable, Mapping, Sequence
 from functools import wraps
-from typing import ParamSpec, TypeVar
 
-from roseau.load_flow.utils.exceptions import find_stack_level
-
-P = ParamSpec("P")
-T = TypeVar("T")
+from roseau.load_flow.utils.helpers import warn_external
 
 
-def deprecate_renamed_parameters(
+def deprecate_renamed_parameters[**P, T](
     replaced_names: Mapping[str, str], *, version: str, category: type[Warning] = FutureWarning
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to mark function parameters as deprecated due to being renamed.
@@ -36,13 +31,12 @@ def deprecate_renamed_parameters(
                             f"{func_name}() got both {old_name!r} and {new_name!r} as arguments; "
                             f"{old_name!r} is deprecated, use {new_name!r} instead."
                         )
-                    warnings.warn(
+                    warn_external(
                         message=(
                             f"Argument {old_name!r} for {func_name}() is deprecated. It has been "
                             f"renamed to {new_name!r}."
                         ),
                         category=category,
-                        stacklevel=find_stack_level(),
                     )
                     kwargs[new_name] = kwargs.pop(old_name)
             return function(*args, **kwargs)
@@ -53,7 +47,7 @@ def deprecate_renamed_parameters(
     return decorate
 
 
-def deprecate_renamed_parameter(
+def deprecate_renamed_parameter[**P, T](
     old_name: str, new_name: str, *, version: str, category: type[Warning] = FutureWarning
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to mark a function parameter as deprecated due to being renamed.
@@ -66,7 +60,7 @@ def deprecate_renamed_parameter(
     return deprecate_renamed_parameters({old_name: new_name}, version=version, category=category)
 
 
-def deprecate_nonkeyword_arguments(
+def deprecate_nonkeyword_arguments[**P, T](
     allowed_args: Sequence[str] | None = None, message: str | None = None, *, version: str
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to deprecate the use of non-keyword arguments of a function.
@@ -127,7 +121,7 @@ def deprecate_nonkeyword_arguments(
         @wraps(function)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             if len(args) > num_allowed_args:
-                warnings.warn(message=msg, category=FutureWarning, stacklevel=find_stack_level())
+                warn_external(message=msg, category=FutureWarning)
             return function(*args, **kwargs)
 
         wrapper.__signature__ = new_sig  # type: ignore
@@ -136,7 +130,7 @@ def deprecate_nonkeyword_arguments(
     return decorate
 
 
-def deprecate_parameter_as_multi_positional(
+def deprecate_parameter_as_multi_positional[**P, T](
     old_name: str, *, version: str
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to mark a function argument as deprecated due to being made multi-positional.
@@ -155,13 +149,12 @@ def deprecate_parameter_as_multi_positional(
             except KeyError:
                 return function(*args, **kwargs)
 
-            warnings.warn(
+            warn_external(
                 message=(
                     f"Passing {old_name!r} as a keyword argument is deprecated. Pass it as a "
                     "positional argument instead."
                 ),
                 category=FutureWarning,
-                stacklevel=find_stack_level(),
             )
 
             if not isinstance(arg_value, Sequence) or isinstance(arg_value, str):

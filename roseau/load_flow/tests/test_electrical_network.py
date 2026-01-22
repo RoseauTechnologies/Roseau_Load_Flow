@@ -123,16 +123,7 @@ def test_connect_and_disconnect():
     assert load.is_disconnected
     assert repr(load) == "<PowerLoad: id='power load', bus='load bus', phases='abcn'> (disconnected)"
     assert load.network is None
-    with pytest.warns(
-        UserWarning,
-        match=(
-            r"Accessing the bus of the disconnected load 'power load' will change in the future to "
-            r"return the bus it was connected to before disconnection instead of None. If you rely "
-            r"on this behavior to check if the element is disconnected, please use `is_disconnected` "
-            r"instead"
-        ),
-    ):
-        assert load.bus is None
+    assert load.bus is load_bus
     with pytest.raises(RoseauLoadFlowException) as e:
         load.to_dict()
     assert e.value.msg == "The load 'power load' is disconnected and cannot be used anymore."
@@ -156,16 +147,7 @@ def test_connect_and_disconnect():
     assert vs.is_disconnected
     assert vs.network is None
     assert repr(vs) == "<VoltageSource: id='vs', bus='source', phases='abcn'> (disconnected)"
-    with pytest.warns(
-        UserWarning,
-        match=(
-            r"Accessing the bus of the disconnected source 'vs' will change in the future to "
-            r"return the bus it was connected to before disconnection instead of None. If you rely "
-            r"on this behavior to check if the element is disconnected, please use `is_disconnected` "
-            r"instead"
-        ),
-    ):
-        assert vs.bus is None
+    assert vs.bus is source_bus
     with pytest.raises(RoseauLoadFlowException) as e:
         vs.to_dict()
     assert e.value.msg == "The source 'vs' is disconnected and cannot be used anymore."
@@ -755,7 +737,7 @@ def test_buses_voltages(small_network_with_results):
         pd.DataFrame.from_records(voltage_records)
         .astype(
             {
-                "bus_id": str,
+                "bus_id": object,
                 "phase": VoltagePhaseDtype,
                 "voltage": complex,
                 "voltage_level": float,
@@ -835,7 +817,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
                 {"bus_id": "bus1", "phase": "n", "potential": 0j},
             ]
         )
-        .astype({"phase": PhaseDtype, "potential": complex})
+        .astype({"bus_id": object, "phase": PhaseDtype, "potential": complex})
         .set_index(["bus_id", "phase"]),
     )
     # Buses voltages results
@@ -867,6 +849,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .astype(
             {
+                "bus_id": object,
                 "phase": VoltagePhaseDtype,
                 "voltage": complex,
                 "voltage_level": float,
@@ -901,6 +884,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .astype(
             {
+                "transformer_id": object,
                 "phase": PhaseDtype,
                 "current_hv": complex,
                 "current_lv": complex,
@@ -963,6 +947,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .astype(
             {
+                "line_id": object,
                 "phase": PhaseDtype,
                 "current1": complex,
                 "current2": complex,
@@ -999,6 +984,7 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
         )
         .astype(
             {
+                "switch_id": object,
                 "phase": PhaseDtype,
                 "current1": complex,
                 "current2": complex,
@@ -1034,7 +1020,14 @@ def test_single_phase_network(single_phase_network: ElectricalNetwork):
             ]
         )
         .astype(
-            {"phase": PhaseDtype, "type": LoadTypeDtype, "current": complex, "power": complex, "potential": complex}
+            {
+                "load_id": object,
+                "phase": PhaseDtype,
+                "type": LoadTypeDtype,
+                "current": complex,
+                "power": complex,
+                "potential": complex,
+            }
         )
         .set_index(["load_id", "phase"]),
     )
@@ -1911,6 +1904,19 @@ def test_propagate_voltages():
         load_bus.initial_potentials.m, 100 * np.array([1, np.exp(-2j * np.pi / 3), np.exp(2j * np.pi / 3), 0])
     )
 
+    # Delta vs Wye
+    bus = Bus("Bus", phases="abcn")
+    src_y = VoltageSource("Y src", bus=bus, phases="an", voltages=230)
+    VoltageSource("D src", bus=bus, phases="bc", voltages=300)
+    PotentialRef(id="pref", element=bus)
+    en = ElectricalNetwork.from_element(bus)
+    main_v, main_src = en._get_starting_potentials(set("abcn"))
+    assert main_src is src_y  # Y has lower V input but higher Vphase-phase value than D
+    assert main_v["a"] == 230
+    src_y.disconnect()  # now the voltages of the delta source are used
+    main_v, main_src = en._get_starting_potentials(set("abcn"))
+    npt.assert_allclose(abs(main_v["a"] - main_v["b"]), 300)
+
 
 def test_short_circuits():
     vn = 400 / np.sqrt(3)
@@ -2098,6 +2104,7 @@ def test_to_graph(all_element_network: ElectricalNetwork):
             "parameters_id": transformer.parameters.id,
             "max_loading": max_loading,
             "sn": transformer.sn.magnitude,
+            "tap": transformer.tap,
             "geom": transformer.geometry.__geo_interface__ if transformer.geometry is not None else None,
         }
 
@@ -2151,6 +2158,50 @@ def test_to_graph(all_element_network: ElectricalNetwork):
     # Test serialization to JSON
     json_data = nx.node_link_data(g, edges="edges")
     json.dumps(json_data, ensure_ascii=False)
+
+
+def test_propagate_nominal_voltages(all_element_network, small_network):
+    en = all_element_network
+    # Test that it works even if some nominal voltages are missing
+    assert en.buses["bus0"].nominal_voltage is None
+    assert en.buses["bus4"].nominal_voltage is None
+    assert en.buses["bus6"].nominal_voltage is None
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20000.0,
+        "bus2": 400,
+        "bus3": 400,
+        "bus5": 400,
+        "bus0": 20000.0,
+        "bus4": 400,
+        "bus6": 400,
+    }
+
+    # No nominal voltages in the network
+    for bus in en.buses.values():
+        bus._min_voltage_level = None
+        bus._max_voltage_level = None
+        bus._nominal_voltage = None
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20000.0,
+        "bus2": 410,  # not exactly 400V but close enough for determining the voltage level
+        "bus3": 410,
+        "bus5": 410,
+        "bus0": 20000.0,
+        "bus4": 410,
+        "bus6": 410,
+    }
+
+    # No transformer
+    en = small_network
+    assert not en.transformers, "This test requires a network without transformers"
+    for bus in en.buses.values():
+        bus._min_voltage_level = None
+        bus._max_voltage_level = None
+        bus._nominal_voltage = None
+    nominal_voltages = en._get_nominal_voltages()
+    npt.assert_allclose(list(nominal_voltages.values()), 20e3 * np.sqrt(3))
 
 
 def test_serialization(all_element_network, all_element_network_with_results):
