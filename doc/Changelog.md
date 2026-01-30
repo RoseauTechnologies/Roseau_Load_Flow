@@ -19,6 +19,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`439` Fix repr string of `rlf.GroundConnection`
+
 ## Version 0.14.0
 
 - {gh-pr}`435` {gh-issue}`436` Add `rlf.converters.kron_reduction` function to perform Kron reduction on any nxn matrix
