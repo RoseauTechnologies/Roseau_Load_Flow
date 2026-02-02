@@ -287,12 +287,13 @@ class ElectricalNetwork(AbstractNetwork[Element]):
     def switches_frame(self) -> gpd.GeoDataFrame:
         """The :attr:`switches` of the network as a geo dataframe."""
         index = []
-        data = {"phases": [], "bus1_id": [], "bus2_id": [], "geometry": []}
+        data = {"phases": [], "bus1_id": [], "bus2_id": [], "closed": [], "geometry": []}
         for switch in self.switches.values():
             index.append(switch.id)
             data["phases"].append(switch.phases)
             data["bus1_id"].append(switch.bus1.id)
             data["bus2_id"].append(switch.bus2.id)
+            data["closed"].append(switch.closed)
             data["geometry"].append(switch.geometry)
         index = pd.Index(index, name="id")
         return gpd.GeoDataFrame(data=data, index=index, geometry="geometry", crs=self.crs)
@@ -427,6 +428,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                     id=switch.id,
                     type="switch",
                     phases=switch.phases,
+                    closed=switch.closed,
                     geom=geom_mapping(switch.geometry),
                 )
         return graph

@@ -603,8 +603,8 @@ def test_frames(small_network: ElectricalNetwork):
     # Switches
     switches_gdf = small_network.switches_frame
     assert isinstance(switches_gdf, gpd.GeoDataFrame)
-    assert switches_gdf.shape == (0, 4)
-    assert switches_gdf.columns.tolist() == ["phases", "bus1_id", "bus2_id", "geometry"]
+    assert switches_gdf.shape == (0, 5)
+    assert switches_gdf.columns.tolist() == ["phases", "bus1_id", "bus2_id", "closed", "geometry"]
     assert switches_gdf.index.name == "id"
 
     # Loads
@@ -2115,6 +2115,7 @@ def test_to_graph(all_element_network: ElectricalNetwork):
             "type": "switch",
             "phases": switch.phases,
             "geom": switch.geometry.__geo_interface__ if switch.geometry is not None else None,
+            "closed": switch.closed,
         }
 
     # Test parallel branches
