@@ -17,9 +17,9 @@ myst:
 
 ## Definition
 
-The ground element represents an earth connection where the earth is represented as an ideal conductor. A ground can be
-used to connect several elements. A ground is mandatory in a line model with shunt elements. The symbol of a ground
-element is:
+The `Ground` element represents the Earth as an infinite perfect conductor. Connections to the ground can be made with
+ideal or impedant connections using the `GroundConnection` element. A ground is mandatory in a line model with shunt
+elements. The symbol of a ground element is:
 
 ```{image} /_static/Ground.svg
 ---
@@ -40,13 +40,94 @@ defining a ground element. If you want to do so, you must add a `PotentialRef` e
 
 ## Available Results
 
-The following results are available for all grounds:
+The following results are available for a `Ground` element:
 
 | Result Accessor | Default Unit | Type    | Description                 |
 | --------------- | ------------ | ------- | --------------------------- |
 | `res_potential` | $V$          | complex | The potential of the ground |
 
+and the following results are available for a `GroundConnection` element:
+
+| Result Accessor | Default Unit | Type    | Description                                       |
+| --------------- | ------------ | ------- | ------------------------------------------------- |
+| `res_current`   | $A$          | complex | The current flowing through the ground connection |
+
 ## Usage
+
+In _Roseau Load Flow_, a `Ground` element is used with:
+
+1. A line with shunt components (mandatory).
+2. A ground connection (using the `GroundConnection` element) to connect a phase of a bus or other terminal element to
+   the ground.
+3. A potential reference (using the `PotentialRef` element) to set the potential of the ground to 0V.
+
+```python
+import functools as ft
+import numpy as np
+import roseau.load_flow as rlf
+
+# Define two grounds elements
+gnd = rlf.Ground(id="Gnd")
+
+# Define three buses
+bus1 = rlf.Bus(id="Bus1", phases="abcn")
+bus2 = rlf.Bus(id="Bus2", phases="abcn")
+
+# Define a voltage source on bus1
+vs = rlf.VoltageSource(id="Src", bus=bus1, voltages=rlf.Q_(400, "V"))
+
+# Define the parameters of the lines
+parameters = rlf.LineParameters(
+    id="LP",
+    z_line=rlf.Q_((0.12 + 0.1j) * np.eye(4), "ohm/km"),
+    y_shunt=rlf.Q_(2e-4j * np.eye(4), "S/km"),
+)
+
+# Define a line between bus1 and bus2 (using gnd for the shunt connections)
+line = rlf.Line(
+    id="Line",
+    bus1=bus1,
+    bus2=bus2,
+    parameters=parameters,
+    length=rlf.Q_(2, "km"),
+    ground=gnd,
+)
+
+# Add an unbalanced load on bus2
+load = rlf.PowerLoad(id="Load", bus=bus2, powers=rlf.Q_([5.0, 2.5, 0], "kVA"))
+
+# Connect the neutral of bus1 to the ground
+gc = rlf.GroundConnection(id="GC", ground=gnd, element=bus1, phase="n")
+
+# Set the potential of the ground element gnd to 0V
+pref = rlf.PotentialRef(id="PRef", element=gnd)
+
+# Create a network and solve a load flow
+en = rlf.ElectricalNetwork.from_element(bus1)
+en.solve_load_flow()
+
+# Get the ground potentials
+# The potential of gnd is 0 as defined by the potential reference element
+en.res_grounds.transform([np.abs, ft.partial(np.angle, deg=True)])
+# | ground_id   |   ('potential', 'absolute') |   ('potential', 'angle') |
+# |:------------|----------------------------:|-------------------------:|
+# | Gnd         |                           0 |                        0 |
+
+# As requested, the potential of the neutral of bus1 is zero
+en.res_buses.transform([np.abs, ft.partial(np.angle, deg=True)])
+# |               |   ('potential', 'absolute') |   ('potential', 'angle') |
+# |:--------------|----------------------------:|-------------------------:|
+# | ('Bus1', 'a') |                         230 |                        0 |
+# | ('Bus1', 'b') |                         230 |                     -120 |
+# | ('Bus1', 'c') |                         230 |                      120 |
+# | ('Bus1', 'n') |                           0 |                  21.4768 |
+# | ('Bus2', 'a') |                     224.443 |                 -1.13582 |
+# | ('Bus2', 'b') |                     227.364 |                 -120.528 |
+# | ('Bus2', 'c') |                     230.009 |                  119.997 |
+# | ('Bus2', 'n') |                     6.18435 |                  10.2185 |
+```
+
+## Advanced Usage
 
 In _Roseau Load Flow_, several grounds can be defined leading to ground elements with a non-zero potential. Here is an
 example with two ground elements `g1` and `g2`.
@@ -165,6 +246,10 @@ en.res_buses_voltages[["voltage"]].transform([np.abs, ft.partial(np.angle, deg=T
 
 ```{eval-rst}
 .. autoapiclass:: roseau.load_flow.models.Ground
+   :members:
+   :show-inheritance:
+   :no-index:
+.. autoapiclass:: roseau.load_flow.models.GroundConnection
    :members:
    :show-inheritance:
    :no-index:

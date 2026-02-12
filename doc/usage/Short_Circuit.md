@@ -190,8 +190,8 @@ also zero indicating that the current of phase "a" went through the ground.
 
 ## Additional notes
 
-The library will prevent the user from making mistakes, for example when trying to add a power load with the
-short-circuit, or when forgetting parameters.
+The library will prevent the user from making mistakes, for example when trying to add a constant-power or
+constant-current load on a short-circuited bus:
 
 ```pycon
 >>> try:
@@ -202,6 +202,8 @@ short-circuit, or when forgetting parameters.
 The power load 'load' is connected on bus 'b2' that already has a short-circuit.
 It makes the short-circuit calculation impossible. [bad_short_circuit]
 ```
+
+At least two phases or a phase and a ground must be given when creating a short-circuit:
 
 ```pycon
 >>> try:
