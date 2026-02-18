@@ -17,7 +17,7 @@ myst:
 ## Definition
 
 It represents a multiphase node in the network that other elements (loads, lines, transformers, voltage sources...) can
-connect to. A bus is a placeholder point where we want the voltage to be computed during the load flow.
+connect to. A bus is a node where the voltage is computed during the load flow analysis.
 
 ```{image} /_static/Bus.svg
 ---

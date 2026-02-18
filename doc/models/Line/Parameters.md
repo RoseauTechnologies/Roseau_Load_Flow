@@ -121,7 +121,7 @@ respectively the phase-to-neutral series impedance (in $\Omega$/km), the neutral
 phase-to-neutral shunt admittance (in S/km).
 
 ````{note}
-If the computed impedance matrix is be non-invertible, the `from_sym` class method builds impedance
+If the computed impedance matrix is non-invertible, the `from_sym` class method builds impedance
 and shunt admittance matrices using the following definitions:
 
 ```{math}

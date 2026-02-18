@@ -22,60 +22,36 @@ We will start by creating a simple network composed of two LV lines. As usual wi
 add any loads.
 
 ```{note}
-While impedance and current loads could technically be added to the network, it is not possible to add a power load
-on the same bus as the one we want to compute the short-circuit on. This is because having `I = (S/U)*` with `U=0`
-is impossible.
+While impedance loads could technically be added to the network, it is not possible to add a power or current load to
+a short-circuited bus. This is because having `I = (S/U)*` with `U=0` cannot be solved.
 ```
 
 ```pycon
->>> import numpy as np
-... import roseau.load_flow as rlf
+>>> import roseau.load_flow as rlf
 
->>> def create_network():
-...     # Create three buses
-...     source_bus = rlf.Bus(id="sb", phases="abcn")
-...     bus1 = rlf.Bus(id="b1", phases="abcn")
-...     bus2 = rlf.Bus(id="b2", phases="abcn")
-...     # Define the reference of potentials
-...     ground = rlf.Ground(id="gnd")
-...     pref = rlf.PotentialRef(id="pref", element=ground)
-...     rlf.GroundConnection(ground=ground, element=source_bus)
-...     # Create a LV source at the first bus
-...     un = 400 / rlf.SQRT3
-...     vs = rlf.VoltageSource(id="vs", bus=source_bus, phases="abcn", voltages=un)
+>>> def create_network() -> rlf.ElectricalNetwork:
+...     # Define the ground and make it the reference of potentials
+...     ground = rlf.Ground(id="Gnd")
+...     rlf.PotentialRef(id="PRef", element=ground)
+...     # Create three LV buses
+...     bus1 = rlf.Bus(id="Bus1", phases="abcn", nominal_voltage=400)
+...     bus2 = rlf.Bus(id="Bus2", phases="abcn", nominal_voltage=400)
+...     bus3 = rlf.Bus(id="Bus3", phases="abcn", nominal_voltage=400)
+...     # Connect the neutral of the first bus to the ground
+...     rlf.GroundConnection(ground=ground, element=bus1)
+...     # Create a voltage source at the first bus
+...     rlf.VoltageSource(id="Src", bus=bus1, voltages=400 / rlf.SQRT3)
 ...     # Add LV lines
-...     lp1 = rlf.LineParameters.from_geometry(
-...         "U_AL_240",
-...         line_type=rlf.LineType.UNDERGROUND,
-...         material=rlf.Material.AL,
-...         insulator=rlf.Insulator.PVC,
-...         section=240,
-...         section_neutral=120,
-...         height=rlf.Q_(-1.5, "m"),
-...         external_diameter=rlf.Q_(50, "mm"),
-...     )
-...     line1 = rlf.Line(
-...         id="line1", bus1=source_bus, bus2=bus1, parameters=lp1, length=1.0, ground=ground
-...     )
-...     lp2 = rlf.LineParameters.from_geometry(
-...         "U_AL_150",
-...         line_type=rlf.LineType.UNDERGROUND,
-...         material=rlf.Material.AL,
-...         insulator=rlf.Insulator.PVC,
-...         section=150,
-...         section_neutral=150,
-...         height=rlf.Q_(-1.5, "m"),
-...         external_diameter=rlf.Q_(40, "mm"),
-...     )
-...     line2 = rlf.Line(
-...         id="line2", bus1=bus1, bus2=bus2, parameters=lp2, length=2.0, ground=ground
-...     )
-...     # Create network
-...     en = rlf.ElectricalNetwork.from_element(source_bus)
+...     lp1 = rlf.LineParameters.from_catalogue("U_AL_3x240+95")
+...     lp2 = rlf.LineParameters.from_catalogue("U_AL_3x150+150")
+...     rlf.Line(id="Line1", bus1=bus1, bus2=bus2, parameters=lp1, length=1.0, ground=ground)
+...     rlf.Line(id="Line2", bus1=bus2, bus2=bus3, parameters=lp2, length=2.0, ground=ground)
+...     # Create the network
+...     en = rlf.ElectricalNetwork.from_element(bus1)
 ...     return en
 ...
 
->>> # Create network
+>>> # Create the network
 ... en = create_network()
 ```
 
@@ -84,7 +60,7 @@ is impossible.
 We can now add a short-circuit. Let's first create a phase-to-phase short-circuit:
 
 ```pycon
->>> en.buses["b2"].add_short_circuit("a", "b")
+>>> en.buses["Bus3"].add_short_circuit("a", "b")
 ```
 
 Let's run the load flow, and get the current results.
@@ -105,18 +81,18 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 >>> en.res_lines
 ```
 
-| line_id | phase |       current1 |           current2 |             power1 |                  power2 |      potential1 |        potential2 |      series_losses | series_current | max_current | violated |
-| :------ | :---- | -------------: | -----------------: | -----------------: | ----------------------: | --------------: | ----------------: | -----------------: | -------------: | ----------: | :------- |
-| line1   | a     |  374.19+65.47j |      -374.2-65.22j |  86414.44-15119.6j |     -69427.92+23726.69j |       230.94+0j |     190.79-30.15j |  16992.62+8659.77j |   374.2+65.33j |         nan | \<NA>    |
-| line1   | b     | -373.43-65.15j |      373.71+64.99j | 56149.99+67164.05j |     -39212.61-58608.72j |    -115.47-200j |    -75.38-169.94j |  16933.63+8622.68j | -373.58-65.05j |         nan | \<NA>    |
-| line1   | c     |    -0.88-0.32j |         0.61+0.24j |      37.17-214.38j |          -22.32+155.56j |    -115.47+200j |   -116.82+208.22j |         1.32+6.55j |    -0.75-0.28j |         nan | \<NA>    |
-| line1   | n     |     0.16-0.01j |           -0.13-0j |                 0j |             -0.17+1.03j |              0j |        1.38-8.15j |        -0.24+1.15j |     0.14-0.01j |         nan | \<NA>    |
-| line2   | a     |   374.2+65.22j | **-374.11-64.94j** | 69427.92-23726.69j | **-15076.23+41188.79j** |   190.79-30.15j | **57.67-100.09j** | 54358.19+17519.35j |   374.2+64.98j |         nan | \<NA>    |
-| line2   | b     | -373.71-64.99j |  **374.11+64.94j** | 39212.61+58608.72j |  **15076.23-41188.79j** |  -75.38-169.94j | **57.67-100.09j** |  54284.8+17490.99j | -373.95-64.86j |         nan | \<NA>    |
-| line2   | c     |    -0.61-0.24j |                 0j |      22.32-155.56j |                   -0-0j | -116.82+208.22j |   -119.55+224.61j |         1.44+5.44j |    -0.31-0.14j |         nan | \<NA>    |
-| line2   | n     |        0.13+0j |                 0j |         0.17-1.03j |                     -0j |      1.38-8.15j |       4.18-24.45j |         0.16+1.12j |     0.06+0.02j |         nan | \<NA>    |
+| line_id | phase |       current1 |           current2 |           power1 |                power2 |      potential1 |        potential2 |    series_losses | series_current | violated | loading | max_loading | ampacity |
+| :------ | :---- | -------------: | -----------------: | ---------------: | --------------------: | --------------: | ----------------: | ---------------: | -------------: | :------- | ------: | ----------: | -------: |
+| Line1   | a     |  338.25+35.15j |      -338.25-35.1j |    78115.2-8117j |     -63659.5+17359.1j |       230.94-0j |     191.47-31.45j | 14455.7+9251.67j |  338.25+35.12j | False    |    0.88 |           1 |      388 |
+| Line1   | b     | -338.13-35.08j |      338.17+35.06j | 46059.1+63575.1j |     -31612.4-54338.4j |    -115.47-200j |    -76.01-168.56j | 14446.8+9245.92j | -338.15-35.07j | False    |    0.88 |           1 |      388 |
+| Line1   | c     |    -0.12-0.07j |         0.08+0.05j |         0-32.34j |             -0+21.11j |    -115.47+200j |   -115.46+200.02j |             0+0j |     -0.1-0.06j | False    |       0 |           1 |      388 |
+| Line1   | n     |           0+0j |               0+0j |             0+0j |                  0+0j |            0+0j |              0+0j |             0+0j |           0+0j | False    |       0 |           1 |      388 |
+| Line2   | a     |   338.25+35.1j | **-338.22-35.05j** | 63659.5-17359.1j | **-16017.7+35850.7j** |   191.47-31.45j | **57.72-100.02j** | 47641.8+18501.7j |  338.24+35.07j | True     |    1.13 |           1 |      300 |
+| Line2   | b     | -338.17-35.06j |  **338.22+35.05j** | 31612.4+54338.4j |  **16017.7-35850.7j** |  -76.01-168.56j | **57.72-100.02j** | 47630.1+18497.1j |  -338.2-35.04j | True     |    1.13 |           1 |      300 |
+| Line2   | c     |    -0.08-0.05j |               0+0j |         0-21.11j |                  0+0j | -115.46+200.02j |   -115.45+200.03j |             0+0j |    -0.04-0.02j | False    |       0 |           1 |      300 |
+| Line2   | n     |           0+0j |               0+0j |             0+0j |                  0+0j |            0+0j |              0+0j |             0+0j |           0+0j | False    |       0 |           1 |      300 |
 
-Looking at the line results of the second bus of the line `line2`, which is `bus2` where we added the short-circuit, one
+Looking at the line results of the second bus of the line `Line2`, which is `Bus3` where we added the short-circuit, one
 can notice that:
 
 - the potentials of phases "a" and "b" are equal;
@@ -127,27 +103,27 @@ which is expected from a short-circuit.
 
 ## Multi-phase
 
-It is possible to create short-circuits between several phases, not only two. Let's first remove the existing
-short-circuit then create a new one between phases "a", "b", and "c".
+It is also possible to create short-circuits between more than two phases. Let's create a short-circuit between phases
+"a", "b", and "c".
 
 ```pycon
 >>> en = create_network()
->>> en.buses["b2"].add_short_circuit("a", "b", "c")
+>>> en.buses["Bus3"].add_short_circuit("a", "b", "c")
 >>> en.solve_load_flow()
 (1, 3.979039320256561e-13)
 >>> en.res_lines
 ```
 
-| line_id | phase |        current1 |            current2 |             power1 |                power2 |     potential1 |      potential2 |      series_losses |  series_current | max_current | violated |
-| :------ | :---- | --------------: | ------------------: | -----------------: | --------------------: | -------------: | --------------: | -----------------: | --------------: | ----------: | -------: |
-| line1   | a     |   364.42-152.4j |     -364.45+152.64j | 84159.75+35195.32j |   -62323.26-24107.78j |      230.94+0j |    169.06-4.66j | 21841.76+11136.22j |  364.44-152.54j |         nan |    \<NA> |
-| line1   | b     | -329.25-298.27j |       329.5+298.09j | 97671.94+31407.98j |   -74421.29-19633.88j |   -115.47-200j |  -94.56-145.13j | 23247.19+11837.86j | -329.39-298.17j |         nan |    \<NA> |
-| line1   | c     |  -35.27+450.66j |       35.03-450.73j | 94203.88+44984.19j |   -73584.22-31005.25j |   -115.47+200j |  -80.99+156.96j | 20608.18+14029.15j |   -35.13+450.7j |         nan |    \<NA> |
-| line1   | n     |      0.11-0.01j |         -0.08-0.01j |                 0j |            -0.5+0.64j |             0j |      6.47-7.18j |        -0.62+0.71j |          0.1+0j |         nan |    \<NA> |
-| line2   | a     |  364.45-152.64j | **-364.48+152.85j** | 62323.26+24107.78j |   **3461.67-1626.3j** |   169.06-4.66j | **-6.49+7.18j** | 65790.08+22519.24j |  364.47-152.86j |         nan |    \<NA> |
-| line2   | b     |  -329.5-298.09j |   **329.7+297.94j** | 74421.29+19633.88j |     **1.41+4300.23j** | -94.56-145.13j | **-6.49+7.18j** | 74420.66+23978.08j | -329.71-297.95j |         nan |    \<NA> |
-| line2   | c     |  -35.03+450.73j |   **34.78-450.79j** | 73584.22+31005.25j | **-3463.08-2673.93j** | -80.99+156.96j | **-6.49+7.18j** | 70110.99+28372.86j |  -34.79+450.78j |         nan |    \<NA> |
-| line2   | n     |      0.08+0.01j |                  0j |          0.5-0.64j |                 -0-0j |     6.47-7.18j |    19.44-21.56j |        -0.05+0.77j |      0.03+0.02j |         nan |    \<NA> |
+| line_id | phase |        current1 |            current2 |           power1 |            power2 |     potential1 |     potential2 |    series_losses |  series_current | violated | loading | max_loading | ampacity |
+| :------ | :---- | --------------: | ------------------: | ---------------: | ----------------: | -------------: | -------------: | ---------------: | --------------: | :------- | ------: | ----------: | -------: |
+| Line1   | a     |  358.46-160.14j |     -358.46+160.18j | 82782.9+36982.8j | -63514.6-24659.9j |      230.94-0j |   173.32-8.66j | 19268.3+12331.7j |  358.46-160.16j | True     |    1.01 |           1 |      388 |
+| Line1   | b     | -317.92-230.37j |      317.95+230.34j | 82782.9+36982.8j | -63514.6-24659.9j |   -115.47-200j | -94.16-145.77j | 19268.3+12331.7j | -317.94-230.35j | True     |    1.01 |           1 |      388 |
+| Line1   | c     |  -40.54+390.51j |       40.51-390.53j | 82782.9+36982.8j | -63514.6-24659.9j |   -115.47+200j | -79.16+154.43j | 19268.3+12331.7j |  -40.52+390.52j | True     |    1.01 |           1 |      388 |
+| Line1   | n     |            0+0j |                0+0j |             0+0j |              0+0j |           0+0j |           0+0j |             0+0j |            0+0j | False    |       0 |           1 |      388 |
+| Line2   | a     |  358.46-160.18j | **-358.46+160.22j** | 63514.6+24659.9j |          **0-0j** |   173.32-8.66j |      **-0+0j** | 63514.6+24665.8j |  358.46-160.22j | True     |    1.31 |           1 |      300 |
+| Line2   | b     | -317.95-230.34j |  **317.98+230.32j** | 63514.6+24659.9j |          **0+0j** | -94.16-145.77j |      **-0+0j** | 63514.6+24665.8j | -317.98-230.32j | True     |    1.31 |           1 |      300 |
+| Line2   | c     |  -40.51+390.53j |   **40.48-390.54j** | 63514.6+24659.9j |         **-0-0j** | -79.16+154.43j |      **-0+0j** | 63514.6+24665.8j |  -40.48+390.54j | True     |    1.31 |           1 |      300 |
+| Line2   | n     |            0+0j |                0+0j |             0+0j |              0+0j |           0+0j |           0+0j |             0+0j |            0+0j | False    |       0 |           1 |      300 |
 
 Now the potentials of the three phases are equal and the currents and powers add up to zero at the bus where the
 short-circuit is applied.
@@ -159,23 +135,24 @@ phase "a" and ground.
 
 ```pycon
 >>> en = create_network()
->>> # ground MUST be passed as a keyword argument
-... en.buses["b2"].add_short_circuit("a", ground=en.grounds["gnd"])
+>>> # The ground MUST be passed as a keyword argument
+... gnd = en.grounds["Gnd"]
+... en.buses["Bus3"].add_short_circuit("a", ground=gnd)
 >>> en.solve_load_flow()
 (1, 4.985456492079265e-13)
 >>> en.res_lines
 ```
 
-| line_id | phase |      current1 |       current2 |             power1 |            power2 |      potential1 |      potential2 |     series_losses | series_current | max_current | violated |
-| :------ | :---- | ------------: | -------------: | -----------------: | ----------------: | --------------: | --------------: | ----------------: | -------------: | ----------: | -------: |
-| line1   | a     | 95.83-188.13j | -95.86+188.37j | 22130.38+43446.19j | -16871.5-29433.8j |       230.94-0j |    160.32-7.98j | 5265.84+14061.06j |  95.84-188.26j |         nan |    \<NA> |
-| line1   | b     |    0.96-0.74j |    -0.65+0.52j |      36.74-277.43j |    -10.48+232.63j |    -115.47-200j | -163.66-224.36j |      23.55+50.71j |     0.81-0.64j |         nan |    \<NA> |
-| line1   | c     |   -0.81-0.43j |     0.55+0.33j |       8.47-212.03j |    -29.32+150.27j |    -115.47+200j | -159.37+177.78j |      -38.38+1.87j |    -0.68-0.39j |         nan |    \<NA> |
-| line1   | n     |    0.24-0.25j |    -0.21+0.22j |                 0j |       4.52+15.58j |              0j |   -48.11-24.34j |       5.05+16.93j |     0.23-0.24j |         nan |    \<NA> |
-| line2   | a     | 95.86-188.37j | -95.99+188.69j |   16871.5+29433.8j |               -0j |    160.32-7.98j |          **0j** | 16880.47+29471.2j |   95.9-188.61j |         nan |    \<NA> |
-| line2   | b     |    0.65-0.52j |         **0j** |      10.48-232.63j |             -0-0j | -163.66-224.36j |  -265.1-275.72j |      20.23+48.58j |      0.35-0.3j |         nan |    \<NA> |
-| line2   | c     |   -0.55-0.33j |         **0j** |      29.32-150.27j |             -0-0j | -159.37+177.78j | -252.37+130.63j |      -34.05+6.73j |    -0.26-0.21j |         nan |    \<NA> |
-| line2   | n     |    0.21-0.22j |         **0j** |       -4.52-15.58j |               -0j |   -48.11-24.34j |  -149.45-75.72j |       5.24+21.59j |     0.13-0.15j |         nan |    \<NA> |
+| line_id | phase |       current1 |        current2 |           power1 |            power2 |      potential1 |      potential2 |    series_losses | series_current | violated | loading | max_loading | ampacity |
+| :------ | :---- | -------------: | --------------: | ---------------: | ----------------: | --------------: | --------------: | ---------------: | -------------: | :------- | ------: | ----------: | -------: |
+| Line1   | a     | 358.46-160.14j | -358.46+160.18j | 82782.9+36982.8j | -63514.6-24659.9j |       230.94+0j |    173.32-8.66j | 19268.3+12331.7j | 358.46-160.16j | True     |    1.01 |           1 |      388 |
+| Line1   | b     |     0.12-0.07j |     -0.08+0.05j |         0-32.34j |         -0+21.11j |    -115.47-200j |    -115.49-200j |             0+0j |      0.1-0.06j | False    |       0 |           1 |      388 |
+| Line1   | c     |    -0.12-0.07j |      0.08+0.05j |         0-32.34j |         -0+21.11j |    -115.47+200j | -115.46+200.02j |             0+0j |     -0.1-0.06j | False    |       0 |           1 |      388 |
+| Line1   | n     |           0+0j |            0+0j |             0+0j |              0+0j |            0+0j |            0+0j |             0+0j |           0+0j | False    |       0 |           1 |      388 |
+| Line2   | a     | 358.46-160.18j | -358.46+160.22j | 63514.6+24659.9j |              0-0j |    173.32-8.66j |        **0+0j** | 63514.6+24665.8j | 358.46-160.22j | True     |    1.31 |           1 |      300 |
+| Line2   | b     |     0.08-0.05j |       **-0-0j** |         0-21.11j |              0+0j |    -115.49-200j |    -115.51-200j |             0+0j |     0.04-0.02j | False    |       0 |           1 |      300 |
+| Line2   | c     |    -0.08-0.05j |        **0+0j** |         0-21.11j |              0+0j | -115.46+200.02j | -115.45+200.03j |             0+0j |    -0.04-0.02j | False    |       0 |           1 |      300 |
+| Line2   | n     |           0+0j |        **0+0j** |             0+0j |              0+0j |            0+0j |            0+0j |             0+0j |           0+0j | False    |       0 |           1 |      300 |
 
 ```pycon
 >>> en.res_grounds
@@ -183,10 +160,10 @@ phase "a" and ground.
 
 | ground_id | potential |
 | :-------- | --------: |
-| gnd       |      0+0j |
+| Gnd       |      0+0j |
 
-Here the potential at phase "a" of bus `b2` is zero, equal to the ground potential. The currents in the other phases are
-also zero indicating that the current of phase "a" went through the ground.
+Here the potential at phase "a" of bus `Bus3` is zero, equal to the ground potential. The currents in the other phases
+are also zero indicating that the current of phase "a" went through the ground.
 
 ## Additional notes
 
@@ -195,11 +172,11 @@ constant-current load on a short-circuited bus:
 
 ```pycon
 >>> try:
-...     load = rlf.PowerLoad("load", bus=en.buses["b2"], powers=[10, 10, 10])
+...     load = rlf.PowerLoad("Load", bus=en.buses["Bus3"], powers=[10, 10, 10])
 ... except RoseauLoadFlowException as e:
 ...     print(e)
 ...
-The power load 'load' is connected on bus 'b2' that already has a short-circuit.
+The power load 'Load' is connected on bus 'Bus3' that already has a short-circuit.
 It makes the short-circuit calculation impossible. [bad_short_circuit]
 ```
 
@@ -207,10 +184,10 @@ At least two phases or a phase and a ground must be given when creating a short-
 
 ```pycon
 >>> try:
-...     en.buses["b2"].add_short_circuit("a")
+...     en.buses["Bus3"].add_short_circuit("a")
 ... except RoseauLoadFlowException as e:
 ...     print(e)
 ...
-For the short-circuit on bus 'b2', expected at least two phases or a phase and a ground.
+For the short-circuit on bus 'Bus3', expected at least two phases or a phase and a ground.
 Only phase 'a' is given. [bad_phase]
 ```

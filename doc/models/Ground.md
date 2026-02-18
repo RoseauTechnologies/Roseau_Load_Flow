@@ -7,7 +7,7 @@ myst:
     keywords lang=en: simulation, distribution grid, ground, earth, model
     # spellchecker:off
     description lang=fr: |
-      Inclure des éléments Terre dans votre modèle de électrique avec Roseau Load Flow - Solveur d'écoulement de
+      Inclure des éléments Terre dans votre modèle électrique avec Roseau Load Flow - Solveur d'écoulement de
       charge triphasé et déséquilibré dans une API Python par Roseau Technologies.
     keywords lang=fr: simulation, réseau, électrique, terre, roseau load flow, modèle
     # spellchecker:on
@@ -24,7 +24,7 @@ made with ideal or impedant connections using the `GroundConnection` element. Li
 ```{image} /_static/Ground.svg
 ---
 alt: A diagram of a ground element
-width: 200px
+width: 400px
 align: center
 ---
 ```

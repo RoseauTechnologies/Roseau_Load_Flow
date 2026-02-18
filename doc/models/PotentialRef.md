@@ -30,7 +30,7 @@ align: center
 ```
 
 ```{note}
-One and only one potential reference per galvanically isolated section of the network can be set.
+Only one potential reference can be set per galvanically isolated section of the network.
 ```
 
 ## Available Results

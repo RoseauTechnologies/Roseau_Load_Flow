@@ -44,7 +44,7 @@ Let's take the electrical network of the [Getting started page](./Getting_Starte
 ... )
 ```
 
-At this point, all the elements are connected, but they do not belong to a network:
+At this point, all the elements are connected, but none belong to a network:
 
 ```pycon
 >>> load.network

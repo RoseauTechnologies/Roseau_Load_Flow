@@ -47,7 +47,7 @@ $ python -m pip install roseau-load-flow
 ````
 
 `````{tip}
-It is recommended to work in a virtual environment to isolate your project. Create and activate a virtual environment
+Working in a virtual environment is recommended to isolate your project. Create and activate a virtual environment
 before installing the package. You can create one with:
 
 ````{tab} Windows
