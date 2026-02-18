@@ -89,11 +89,13 @@ Click on `Execute` to finish the export.
 ### Import into Roseau Load Flow
 
 To import a PowerFactory network in `roseau-load-flow`, use the
-{meth}`ElectricalNetwork.from_dgs() <roseau.load_flow.ElectricalNetwork.from_dgs>` method:
+{meth}`ElectricalNetwork.from_dgs_file() <roseau.load_flow.ElectricalNetwork.from_dgs_file>` method:
+
+<!-- "my_dgs_network.json" is "roseau/load_flow/tests/data/dgs/Full_Example.json" -->
 
 ```pycon
->>> rlf.ElectricalNetwork.from_dgs("my_dgs_network.json")
-<ElectricalNetwork: 6 buses, 5 branches, 8 loads, 1 source, 1 ground, 1 potential ref>
+>>> rlf.ElectricalNetwork.from_dgs_file("my_dgs_network.json")
+<ElectricalNetwork: 4 buses, 2 lines, 1 transformer, 0 switches, 6 loads, 1 source, 1 ground, 2 potential refs, 1 ground connection>
 ```
 
 ### Limitations

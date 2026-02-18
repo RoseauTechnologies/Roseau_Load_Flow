@@ -24,10 +24,10 @@ electrical components. As a result, some appliances may receive excessive voltag
 power. In severe cases, outlets can become dangerously energized with full phase-to-phase voltage, posing a significant
 risk of equipment damage, electric shock, or fire.
 
-With a perfectly balanced load, the neutral current is zero and the neutral voltage is zero as well. With an unbalanced
-load, the neutral current is non-zero. In this case, it is the role of the neutral to balance the voltage across the
-electrical phases. In a floating neutral situation, the phase-to-phase voltages remain normal, but the 0V reference of
-the neutral gets lost. The larger the load imbalance, the more serious the issue becomes.
+With a perfectly balanced load, both the neutral current and voltage are zero. With an unbalanced load, the neutral
+current is non-zero. In this case, it is the role of the neutral to balance the voltage across the electrical phases. In
+a floating neutral situation, the phase-to-phase voltages remain normal, but the 0V reference of the neutral gets lost.
+The larger the load imbalance, the more serious the issue becomes.
 
 ## Modelling floating neutral in Roseau Load Flow
 

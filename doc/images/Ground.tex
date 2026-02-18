@@ -1,17 +1,40 @@
 \input{Preamble}%
 
 \begin{document}
-\ctikzset{european, straight voltages, cute inductors}%
+\ctikzset{european, straight voltages, cute inductors, label/align=straight}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
     background rectangle/.style={fill=white}%
   ]
 
-  \coordinate (g) at (0,0);
+  \coordinate (g) at (0,0);%
+  \coordinate (g top) at (0,1.5);%
   \node[ground] at (g) {};%
   \node[left] at (g) {$\underline{V_{\grm}}$};%
-  \draw (0, 1) to[short, i=$\underline{I_{\grm}}$, -*] (g);
+  \draw (g top) to[short, i=$\underline{I_{\grm}}$, *-*] (g);
+
+  \draw (g top) ++(155:1.25) coordinate (v1 bottom) ++(155:2) coordinate (v1);%
+  \node[above] at (v1) {$\underline{V_1}$};%
+  \draw (v1) to[generic, l_=$\underline{Z_1}$, *-] (v1 bottom) %
+  to[short, i_=$\underline{I_1}$, current/distance=0.2] (g top);%
+
+  \draw (g top) ++(125:1.25) coordinate (v2 bottom) ++(125:2) coordinate (v2);%
+  \node[above] at (v2) {$\underline{V_2}$};%
+  \draw (v2) to[generic, l_=$\underline{Z_2}$, *-] (v2 bottom)%
+  to[short, i=$\underline{I_2}$, current/distance=0.2] (g top);%
+
+  \draw (g top) ++(55:1.25) coordinate (vkm1 bottom) ++(55:2) coordinate (vkm1);%
+  \node[above] at (vkm1) {$\underline{V_{k-1}}$};%
+  \draw (vkm1) to[generic,l=$\underline{Z_{k-1}}$, *-] (vkm1 bottom) %
+  to[short, i_=$\underline{I_{k-1}}$, current/distance=0.2] (g top);%
+
+  \draw (g top) ++(25:1.25) coordinate (vk bottom) ++(25:2) coordinate (vk);%
+  \node[above] at (vk) {$\underline{V_k}$};%
+  \draw (vk) to[generic,l=$\underline{Z_k}$, *-] (vk bottom) %
+  to[short, i=$\underline{I_k}$, current/distance=0.2] (g top);%
+
+  \draw[->,-{Latex[]}, dashed] (g top) +(120:3) arc (120:60:3);%
 
 \end{tikzpicture}
 \end{document}
