@@ -31,7 +31,7 @@ align: center
 
 `Ground` adds the equation $\underline{I_{\mathrm{g}}} = 0$, where $\underline{I_{\mathrm{g}}}$ is the sum of the
 currents of all elements connected to the ground. `GroundConnection` adds the equation
-$\underline{I} = \frac{\underline{V} - \underline{V_{\mathrm{g}}}}{\underline{Z}}$, where $\underline{I}$ is the current
+$\underline{V} - \underline{V_{\mathrm{g}}} = \underline{Z} \cdot \underline{I}$, where $\underline{I}$ is the current
 flowing through the ground connection towards the ground, $\underline{V}$ is the potential of the terminal element
 connected to the ground, $\underline{V_{\mathrm{g}}}$ is the potential of the ground and $\underline{Z}$ is the
 impedance of the ground connection.
