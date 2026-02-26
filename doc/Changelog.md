@@ -21,6 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`447` Fix serialization to JSON when the `Switch` constructor gets a numpy bool as the `closed` argument.
 - {gh-pr}`440` Add switch `closed` status to the network's switches dataframe and graph representation.
 - {gh-pr}`439` Fix repr string of `rlf.GroundConnection`
 
