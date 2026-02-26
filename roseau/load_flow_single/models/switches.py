@@ -46,7 +46,7 @@ class Switch(AbstractBranch["SwitchSide", CySwitch | CyOpenSwitch]):
         super().__init__(id=id, bus1=bus1, bus2=bus2, n=1, geometry=geometry)
         self._side1 = SwitchSide(branch=self, side=1, bus=bus1)
         self._side2 = SwitchSide(branch=self, side=2, bus=bus2)
-        self._closed = closed
+        self._closed = bool(closed)
         self._check_elements()
         if closed:
             self._check_loop(operation="connecting")
