@@ -115,10 +115,12 @@ def patch_engine_impl(request: pytest.FixtureRequest, extra_dir: Path | None = N
                     module = importlib.import_module(f"{base_module}.{f.removesuffix('.py')}")
                     for _, klass in inspect.getmembers(
                         module,
-                        lambda member: inspect.isclass(member)
-                        and "load_flow_engine." in member.__module__
-                        and member.__name__.startswith("Cy")
-                        and member.__name__ != "CyLicense",  # Test of the static methods of this class
+                        lambda member: (
+                            inspect.isclass(member)
+                            and "load_flow_engine." in member.__module__
+                            and member.__name__.startswith("Cy")
+                            and member.__name__ != "CyLicense"
+                        ),  # Test of the static methods of this class
                     ):
                         mpatch.setattr(f"{module.__name__}.{klass.__name__}", _PATCHED_CY_CLASSES[klass.__name__])
 

@@ -46,18 +46,16 @@ Figures and equations on this page are related to a transformer connected betwee
 The following equations are used:
 
 ```{math}
-\begin{equation}
-    \left\{
-    \begin{aligned}
-        k \cdot \underline{U_{1,\mathrm{a}}} &= \underline{U_{2,\mathrm{a}}} - \underline{Z_2} \cdot \underline{I_{2,
-        \mathrm{a}}} \\
-        \underline{I_{1,\mathrm{a}}} - \underline{Y_{\mathrm{m}}} \cdot \underline{U_{1,\mathrm{a}}} &= -k \cdot
-        \underline{I_{2,\mathrm{a}}} \\
-        \underline{I_{1,\mathrm{a}}} &= -\underline{I_{1,\mathrm{n}}} \\
-        \underline{I_{2,\mathrm{a}}} &= -\underline{I_{2,\mathrm{n}}} \\
-    \end{aligned}
-  \right.
-\end{equation}
+\left\{
+  \begin{aligned}
+    k \cdot \underline{U_{1,\mathrm{a}}} &= \underline{U_{2,\mathrm{a}}} - \underline{Z_2} \cdot \underline{I_{2,
+    \mathrm{a}}} \\
+    \underline{I_{1,\mathrm{a}}} - \underline{Y_{\mathrm{m}}} \cdot \underline{U_{1,\mathrm{a}}} &= -k \cdot
+    \underline{I_{2,\mathrm{a}}} \\
+    \underline{I_{1,\mathrm{a}}} &= -\underline{I_{1,\mathrm{n}}} \\
+    \underline{I_{2,\mathrm{a}}} &= -\underline{I_{2,\mathrm{n}}} \\
+  \end{aligned}
+\right.
 ```
 
 Where $\underline{Z_2}$ is the series impedance, $\underline{Y_{\mathrm{m}}}$ is the magnetizing admittance of the

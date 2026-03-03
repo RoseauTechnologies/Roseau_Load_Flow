@@ -140,6 +140,7 @@ docstring-code-format = true
 
 # Tombi
 [tool.tombi]
+files.exclude = ["uv.lock"]
 schema.strict = false
 
 [[tool.tombi.schemas]]
