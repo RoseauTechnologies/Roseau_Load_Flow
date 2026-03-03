@@ -48,33 +48,29 @@ at the secondary is always $\mathrm{n}$**.
 The following equations are used:
 
 ```{math}
-\begin{equation}
-    \left\{
-    \begin{aligned}
-        \underline{U_{2,\mathrm{a}}^0} &= -\underline{U_{2,\mathrm{b}}^0} \\
-        k \cdot \underline{U_{1,\mathrm{ab}}} &= \underline{U_{2,\mathrm{a}}^0} - \underline{U_{2,\mathrm
-        {b}}^0} \\
-        \underline{I_{1,\mathrm{a}}} - Y_{\mathrm{m}} \cdot \underline{U_{1,\mathrm{ab}}} &=
-        -k \cdot \frac{\underline{I_{2,\mathrm{a}}} + \underline{I_{2,\mathrm{b}}}}{2} \\
-        \underline{I_{1,\mathrm{a}}} &= -\underline{I_{1,\mathrm{n}}} \\
-        \underline{I_{2,\mathrm{a}}} + \underline{I_{2,\mathrm{b}}} + \underline{I_{2,\mathrm{n}}} &= 0 \\
-    \end{aligned}
-  \right.
-\end{equation}
+\left\{
+  \begin{aligned}
+    \underline{U_{2,\mathrm{a}}^0} &= -\underline{U_{2,\mathrm{b}}^0} \\
+    k \cdot \underline{U_{1,\mathrm{ab}}} &= \underline{U_{2,\mathrm{a}}^0} - \underline{U_{2,\mathrm
+    {b}}^0} \\
+    \underline{I_{1,\mathrm{a}}} - Y_{\mathrm{m}} \cdot \underline{U_{1,\mathrm{ab}}} &=
+    -k \cdot \frac{\underline{I_{2,\mathrm{a}}} + \underline{I_{2,\mathrm{b}}}}{2} \\
+    \underline{I_{1,\mathrm{a}}} &= -\underline{I_{1,\mathrm{n}}} \\
+    \underline{I_{2,\mathrm{a}}} + \underline{I_{2,\mathrm{b}}} + \underline{I_{2,\mathrm{n}}} &= 0 \\
+  \end{aligned}
+\right.
 ```
 
 Where $\underline{Z_2}$ is the series impedance, $\underline{Y_{\mathrm{m}}}$ is the magnetizing admittance of the
 transformer, $k$ the transformation ratio, and:
 
 ```{math}
-\begin{equation}
-    \left\{
-    \begin{aligned}
-        \underline{U_{2,\mathrm{a}}^0} &= \underline{U_{2,\mathrm{a}}} - \frac{Z_2}{2} \underline{I_{2,\mathrm{a}}} \\
-        \underline{U_{2,\mathrm{b}}^0} &= \underline{U_{2,\mathrm{b}}} - \frac{Z_2}{2} \underline{I_{2,\mathrm{b}}}
-        \end{aligned}
-  \right.
-\end{equation}
+\left\{
+  \begin{aligned}
+    \underline{U_{2,\mathrm{a}}^0} &= \underline{U_{2,\mathrm{a}}} - \frac{Z_2}{2} \underline{I_{2,\mathrm{a}}} \\
+    \underline{U_{2,\mathrm{b}}^0} &= \underline{U_{2,\mathrm{b}}} - \frac{Z_2}{2} \underline{I_{2,\mathrm{b}}}
+  \end{aligned}
+\right.
 ```
 
 ## Example
