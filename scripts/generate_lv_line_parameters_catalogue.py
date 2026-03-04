@@ -1,3 +1,11 @@
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "polars>=1.38.1",
+#     "roseau-load-flow>=0.14.0",
+# ]
+# ///
+# Run with: `uv run scripts/generate_lv_line_parameters_catalogue.py``
 import math
 import statistics
 import warnings
@@ -73,7 +81,7 @@ def extrapolate[X: float](table: dict[X, float], x: X) -> None:
     if x in table:
         warnings.warn(f"Value for x={x} already exists in the table, no extrapolation needed.", stacklevel=2)
         return
-    lr = statistics.linear_regression(list(table.keys()), list(table.values()))
+    lr = statistics.linear_regression(table.keys(), table.values())
     table[x] = x * lr.slope + lr.intercept
 
 
@@ -433,15 +441,9 @@ def generate_c33210_lv_underground_parameters() -> pl.DataFrame:
 
 
 if __name__ == "__main__":
-    import io
-
     twisted_df = generate_c33209_lv_twisted_parameters()
     underground_df = generate_c33210_lv_underground_parameters()
     all_df = pl.concat([twisted_df, underground_df], how="vertical")
 
-    s = io.StringIO()
-    all_df.with_columns(
-        # Round float columns for better CSV readability
-        pl.col(pl.Float64).round(10)
-    ).write_csv(s)
-    print(s.getvalue())
+    # Round float columns for better CSV readability
+    print(all_df.with_columns(pl.col(pl.Float64).round(10)).write_csv(), end="")
