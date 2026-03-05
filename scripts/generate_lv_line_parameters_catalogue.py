@@ -312,7 +312,7 @@ def generate_c33209_lv_twisted_parameters() -> pl.DataFrame:
     return twisted_df
 
 
-def generate_c33210_lv_underground_parameters() -> pl.DataFrame:
+def generate_c33210_lv_underground_parameters(extras: bool = False) -> pl.DataFrame:
     """Nexans: Distribution cable 3 conductors + neutral (NF-C-33-210).
 
     Description
@@ -394,6 +394,12 @@ def generate_c33210_lv_underground_parameters() -> pl.DataFrame:
         ("3x150+1x150", 38.5, 50.8, approx(3000), 390, 0.206, 0.206, 300, 324, 0.51),  # Source: NF-C-33-210
         ("3x240+1x95", 45.5, 58.7, 3900, 470, 0.125, 0.320, 388, 439, 0.31),
     ]
+    if extras:
+        # Extra IEC 60502-1 compliant sizes used in some countries
+        data += [
+            ("3x150+1x95", math.nan, math.nan, math.nan, math.nan, 0.206, 0.320, 300, 324, math.nan),
+            ("3x240+1x120", math.nan, math.nan, math.nan, math.nan, 0.125, 0.253, 388, 439, math.nan),
+        ]
 
     nexans_underground_cable_reactance = {95: 0.08, 150: 0.08, 240: 0.08}  # Ohm/km
     nexans_underground_cable_capacitance = {95: 0.58, 150: 0.63, 240: 0.67}  # µF/km
@@ -403,6 +409,9 @@ def generate_c33210_lv_underground_parameters() -> pl.DataFrame:
     extrapolate(nexans_underground_cable_reactance, 70)
     extrapolate(nexans_underground_cable_capacitance, 50)
     extrapolate(nexans_underground_cable_capacitance, 70)
+    if extras:
+        extrapolate(nexans_underground_cable_reactance, 120)
+        extrapolate(nexans_underground_cable_capacitance, 120)
 
     underground_df = (
         pl.DataFrame(data, schema=header, orient="row")
