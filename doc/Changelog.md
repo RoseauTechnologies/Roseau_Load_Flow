@@ -19,6 +19,14 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Version 0.14.1
+
+- {gh-pr}`451` Plot switches that are represented as lines in the interactive map plots.
+- {gh-pr}`449` Fix wrong unit of no-load current of some transformers in the catalogue.
+- {gh-pr}`447` Fix serialization to JSON when the `Switch` constructor gets a numpy bool as the `closed` argument.
+- {gh-pr}`440` Add switch `closed` status to the network's switches dataframe and graph representation.
+- {gh-pr}`439` Fix repr string of `rlf.GroundConnection`
+
 ## Version 0.14.0
 
 - {gh-pr}`435` {gh-issue}`436` Add `rlf.converters.kron_reduction` function to perform Kron reduction on any nxn matrix

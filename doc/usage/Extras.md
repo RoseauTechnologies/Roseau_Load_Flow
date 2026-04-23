@@ -24,8 +24,8 @@ myst:
 The graph contains the geometries of the buses in the nodes data and the geometries and branch types in the edges data.
 
 ```{note}
-This method requires *networkx* which is not installed by default in pip managed installs. You can
-install it with the `"graph"` extra if you are using pip: `pip install "roseau-load-flow[graph]"`.
+This method requires *networkx* which is not installed by default. You can install it with the `"graph"` extra using:
+`pip install "roseau-load-flow[graph]"`.
 ```
 
 In addition, you can use the property
@@ -194,23 +194,50 @@ constants:
 - `rlf.ALPHA`: the alpha constant. Rotates a complex number by 120°.
 - `rlf.ALPHA2`: the alpha constant squared. Rotates a complex number by 240° (or -120°).
 
-## Voltage unbalance
+## Unbalance calculations
 
-It is possible to calculate the voltage unbalance due to asymmetric operation. There are many definitions of voltage
-unbalance (see {cite:p}`Girigoudar_2019`). In `roseau-load-flow`, you can use the
-{meth}`~roseau.load_flow.models.Bus.res_voltage_unbalance` method on a 3-phase bus to get the Voltage Unbalance Factor
-(VUF) as per the IEC definition:
+`roseau-load-flow` supports common voltage and current unbalance calculations in three-phase elements. Voltage unbalance
+definitions are thoroughly discussed in {cite:p}`Girigoudar_2019`.
+
+The {meth}`~roseau.load_flow.models.AbstractTerminal.res_voltage_unbalance` method on a 3-phase terminal elements
+calculates the voltage balance depending on the `definition` parameter:
+
+1. IEC's _Voltage Unbalance Factor (VUF)_ by default (`definition="VUF"`):
+
+   ```{math}
+   VUF = \frac{|V_{\mathrm{n}}|}{|V_{\mathrm{p}}|} \times 100 (\%)
+   ```
+
+   Where $V_{\mathrm{n}}$ is the negative-sequence voltage and $V_{\mathrm{p}}$ is the positive-sequence voltage.
+
+2. NEMA's _Line Voltage Unbalance Rate (LVUR)_ (`definition="LVUR"`):
+
+   ```{math}
+   LVUR = \dfrac{\Delta V_\mathrm{Line,Max}}{\Delta V_\mathrm{Line,Mean}} \times 100 (\%)
+   ```
+
+   Where {math}`\Delta V_\mathrm{Line,Mean}` is the arithmetic mean of the line voltages and
+   {math}`\Delta V_\mathrm{Line,Max}` is the maximum deviation between the measured line voltages and
+   {math}`\Delta V_\mathrm{Line,Mean}`.
+
+3. IEEE's _Phase Voltage Unbalance Rate (PVUR)_ (`definition="PVUR"`):
+
+   ```{math}
+   PVUR = \dfrac{\Delta V_\mathrm{Phase,Max}}{\Delta V_\mathrm{Phase,Mean}} \times 100 (\%)
+   ```
+
+   Where {math}`\Delta V_\mathrm{Phase,Mean}` is the arithmetic mean of the phase voltages and
+   {math}`\Delta V_\mathrm{Phase,Max}` is the maximum deviation between the measured phase voltages and
+   {math}`\Delta V_\mathrm{Phase,Mean}`.
+
+The {meth}`~roseau.load_flow.models.AbstractConnectable.res_current_unbalance` method on three-phase bus-connectable
+elements (loads, sources, branch sides) calculates the _Current Unbalance Factor (CUF)_ defined as:
 
 ```{math}
-VUF = \frac{|V_{\mathrm{n}}|}{|V_{\mathrm{p}}|} \times 100 (\%)
+CUF = \frac{|I_{\mathrm{n}}|}{|I_{\mathrm{p}}|} \times 100 (\%)
 ```
 
-Where $V_{\mathrm{n}}$ is the negative-sequence voltage and $V_{\mathrm{p}}$ is the positive-sequence voltage.
-
-```{note}
-Other definitions of voltage unbalance could be added in the future. If you need a specific
-definition, please open an issue on the GitHub repository.
-```
+Where $I_{\mathrm{n}}$ is the negative-sequence current and $I_{\mathrm{p}}$ is the positive-sequence current.
 
 ## Bibliography
 

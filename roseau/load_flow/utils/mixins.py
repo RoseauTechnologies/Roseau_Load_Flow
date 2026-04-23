@@ -37,6 +37,8 @@ def _json_encoder_default(obj: object) -> object:
         return int(obj)
     elif isinstance(obj, np.floating):
         return float(obj)
+    elif isinstance(obj, np.bool):
+        return bool(obj)
     elif np.isscalar(obj) and pd.isna(obj):
         return None
     # raise the default error from the json module

@@ -229,7 +229,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         parts = [
             f"id={self.id!r}",
             f"ground={self._ground.id!r}",
-            f"element={self._element_info!r} {self._element._side_desc}".rstrip(),
+            f"element=<{self._element.element_type} {self._element.id!r} {self._element._side_desc}".rstrip() + ">",
             f"impedance={self._impedance!r}",
             f"phase={self._phase!r}",
             f"on_connected={self.on_connected!r}",

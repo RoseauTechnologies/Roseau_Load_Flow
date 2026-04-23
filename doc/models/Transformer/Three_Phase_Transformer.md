@@ -92,23 +92,21 @@ whether on the HV side or on the LV side, may have a neutral connection brought 
 The following equations are used to model 3-phase transformers:
 
 ```{math}
-\begin{equation}
-    \left\{
-    \begin{aligned}
-        K_{\mathrm{UXYZ}} \cdot \underline{U_{\mathrm{XYZ}}}
-        &= K_{\mathrm{VABC}} \cdot \underline{V_{\mathrm{ABC}}} - K_{\mathrm{N}} \cdot \underline{V_{\mathrm{N}}} \\
-        K_{\mathrm{Uxyz}} \cdot M_{\mathrm{TV}}\cdot \underline{U_{\mathrm{XYZ}}} + o_r \cdot \underline{Z_2} \cdot
-        \underline{I_{\mathrm{xyz}}}
-            &= K_{\mathrm{Vabc}} \cdot \underline{V_{\mathrm{abc}}} - K_{\mathrm{n}} \cdot \underline{V_{\mathrm{n}}} \\
-        K_{\mathrm{IABC}} \cdot \underline{I_{\mathrm{ABC}}} &= K_{\mathrm{IXYZ}} \cdot
-            \left( \underline{Y_{\mathrm{m}}} \cdot \underline{U_{\mathrm{XYZ}}} + M_{\mathrm{TI}} \cdot
-            \underline{I_{\mathrm{xyz}}} \right)\\
-        K_{\mathrm{Iabc}} \cdot \underline{I_{\mathrm{abc}}} &= K_{\mathrm{Ixyz}} \cdot \underline{I_{\mathrm{xyz}}} \\
-        \underline{I_{\mathrm{N}}} &= - K_{\mathrm{N}}^\top \cdot \underline{I_{\mathrm{ABC}}} \\
-        \underline{I_{\mathrm{n}}} &= - K_{\mathrm{n}}^\top \cdot \underline{I_{\mathrm{abc}}}
-    \end{aligned}
-  \right.
-\end{equation}
+\left\{
+  \begin{aligned}
+    K_{\mathrm{UXYZ}} \cdot \underline{U_{\mathrm{XYZ}}}
+    &= K_{\mathrm{VABC}} \cdot \underline{V_{\mathrm{ABC}}} - K_{\mathrm{N}} \cdot \underline{V_{\mathrm{N}}} \\
+    K_{\mathrm{Uxyz}} \cdot M_{\mathrm{TV}}\cdot \underline{U_{\mathrm{XYZ}}} + o_r \cdot \underline{Z_2} \cdot
+    \underline{I_{\mathrm{xyz}}}
+      &= K_{\mathrm{Vabc}} \cdot \underline{V_{\mathrm{abc}}} - K_{\mathrm{n}} \cdot \underline{V_{\mathrm{n}}} \\
+    K_{\mathrm{IABC}} \cdot \underline{I_{\mathrm{ABC}}} &= K_{\mathrm{IXYZ}} \cdot
+      \left( \underline{Y_{\mathrm{m}}} \cdot \underline{U_{\mathrm{XYZ}}} + M_{\mathrm{TI}} \cdot
+      \underline{I_{\mathrm{xyz}}} \right)\\
+    K_{\mathrm{Iabc}} \cdot \underline{I_{\mathrm{abc}}} &= K_{\mathrm{Ixyz}} \cdot \underline{I_{\mathrm{xyz}}} \\
+    \underline{I_{\mathrm{N}}} &= - K_{\mathrm{N}}^\top \cdot \underline{I_{\mathrm{ABC}}} \\
+    \underline{I_{\mathrm{n}}} &= - K_{\mathrm{n}}^\top \cdot \underline{I_{\mathrm{abc}}}
+  \end{aligned}
+\right.
 ```
 
 Where $\underline{Z_2}$ is the series impedance and $\underline{Y_{\mathrm{m}}}$ is the magnetizing admittance of the

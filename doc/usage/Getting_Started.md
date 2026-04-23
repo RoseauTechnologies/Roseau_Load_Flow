@@ -76,8 +76,9 @@ The following is a summary of the available elements:
 
 - Other elements:
 
-  - [`Ground`](../models/Ground.md): A perfect conductor that can be connected to various elements. If two elements are
-    connected to the same ground, the potentials at the connection points are always equal.
+  - [`Ground`](../models/Ground.md): Represents the Earth as an infinite perfect conductor.
+  - [`GroundConnection`](../models/Ground.md): Connects a given phase of bus or other terminal elements to the ground
+    with an ideal or impedant connection.
   - [`PotentialRef`](../models/PotentialRef.md): Sets the reference of potentials in the network. It can be connected to
     buses or grounds.
 

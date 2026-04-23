@@ -20,7 +20,7 @@ myst:
 ## General information
 
 The goal is to compute the voltages at each bus and the currents and powers flow in each branch of the network. The
-computation must respect the Kirchhoff's laws and the constraints of the network.
+computation must respect Kirchhoff's laws and the constraints of the network.
 
 More formally, this is done by solving a system of $n$ nonlinear equations with $n$ variables:
 

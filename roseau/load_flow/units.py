@@ -28,12 +28,11 @@ from fractions import Fraction
 from inspect import Parameter, Signature, signature
 from itertools import zip_longest
 from types import GenericAlias
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
-from pint.facets.numpy.quantity import NumpyQuantity
-from pint.registry import Unit, UnitRegistry
+from pint.registry import Quantity, Unit, UnitRegistry
 from pint.util import UnitsContainer, to_units_container
 
 __all__ = ["ureg", "Q_", "ureg_wraps"]
@@ -46,15 +45,15 @@ ureg: UnitRegistry = UnitRegistry(
 ureg.define("volt_ampere_reactive = 1 * volt_ampere = VAr")
 
 if TYPE_CHECKING:
-    # Copy types from pint and add complex
+    # Copy types defined in pint but not exposed publicly
     type Scalar = int | float | Decimal | Fraction | complex | np.number[Any]
     type Array = np.ndarray[Any, Any]
     type UnitLike = str | dict[str, Scalar] | UnitsContainer | Unit
-    type Magnitude = Scalar | Array | Sequence[Scalar | Array] | Sequence[Sequence[Scalar | Array]]
+    type Magnitude = Scalar | Array
     M_co = TypeVar("M_co", covariant=True, bound=Magnitude)
 
-    # Redefine Q_ with support for complex and better type hints
-    class Q_(NumpyQuantity[M_co]):  # type: ignore # noqa: N801
+    # Redefine Q_ with support for sequences and better type hints
+    class Q_(Quantity[M_co], Generic[M_co]):  # noqa: N801, UP046
         @overload  # Known magnitude type
         def __new__[M: Magnitude](cls, value: M, units: UnitLike | None = None) -> "Q_[M]": ...
 
@@ -90,7 +89,7 @@ if TYPE_CHECKING:
         def __new__(cls, value: M_co, units: UnitLike | None = None) -> "Q_[M_co]":  # type: ignore
             return super().__new__(cls, value, units)  # type: ignore
 
-        def __init__(self, value: M_co, units: UnitLike | None = None) -> None:
+        def __init__(self, value: M_co | Sequence, units: UnitLike | None = None) -> None:
             super().__init__(value, units)  # type: ignore  # for PyCharm only, it does not recognize __new__ alone
 
         def __getattr__(self, name: str) -> Any: ...  # attributes of the magnitude are accessible on the quantity

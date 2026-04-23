@@ -44,7 +44,7 @@ Let's take the electrical network of the [Getting started page](./Getting_Starte
 ... )
 ```
 
-At this point, all the elements are connected, but they do not belong to a network:
+At this point, all the elements are connected, but none belong to a network:
 
 ```pycon
 >>> load.network
@@ -56,7 +56,7 @@ Then, creating an electrical network populates all the `network` fields of eleme
 ```pycon
 >>> en = rlf.ElectricalNetwork.from_element(source_bus)
 >>> load.network
-<ElectricalNetwork: 2 buses, 1 branch, 1 load, 1 source, 1 ground, 1 potential ref>
+<ElectricalNetwork: 2 buses, 1 line, 1 load, 1 source, 1 ground, 1 potential ref>
 ```
 
 Obviously, an element can only belong to a single network:
@@ -91,7 +91,7 @@ Now, the load no longer belongs to the network `en`. Symmetrically, the network 
 >>> load.network
 None
 >>> en
-<ElectricalNetwork: 2 buses, 1 branch, 0 loads, 1 source, 1 ground, 1 potential ref>
+<ElectricalNetwork: 2 buses, 1 line, 0 loads, 1 source, 1 ground, 1 potential ref>
 ```
 
 When accessing a result, a warning is emitted because the results are now outdated:
@@ -143,13 +143,13 @@ belong to a network) will propagate the network to the new elements.
 ...     length=0.5,
 ... )
 >>> new_line.network
-<ElectricalNetwork: 3 buses, 2 branches, 1 load, 1 source, 1 ground, 1 potential ref>
+<ElectricalNetwork: 3 buses, 2 lines, 1 load, 1 source, 1 ground, 1 potential ref>
 >>> new_bus.network
-<ElectricalNetwork: 3 buses, 2 branches, 1 load, 1 source, 1 ground, 1 potential ref>
+<ElectricalNetwork: 3 buses, 2 lines, 1 load, 1 source, 1 ground, 1 potential ref>
 >>> new_load.network
-<ElectricalNetwork: 3 buses, 2 branches, 1 load, 1 source, 1 ground, 1 potential ref>
+<ElectricalNetwork: 3 buses, 2 lines, 1 load, 1 source, 1 ground, 1 potential ref>
 >>> en
-<ElectricalNetwork: 3 buses, 2 branches, 1 load, 1 source, 1 ground, 1 potential ref>
+<ElectricalNetwork: 3 buses, 2 lines, 1 load, 1 source, 1 ground, 1 potential ref>
 ```
 
 If you look at the network elements, you can see the new bus, line and load are added.
@@ -159,7 +159,7 @@ If you look at the network elements, you can see the new bus, line and load are 
 Bus(id='new_bus', phases='abcn')
 >>> en.loads["new_load"]
 PowerLoad(id='new_load', phases='an', bus='new_bus')
->>> en.branches["new_line"]
+>>> en.lines["new_line"]
 Line(id='new_line', phases1='abcn', phases2='abcn', bus1='lb', bus2='new_bus')
 ```
 

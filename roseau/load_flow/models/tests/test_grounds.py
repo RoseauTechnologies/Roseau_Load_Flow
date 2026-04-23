@@ -193,3 +193,20 @@ def test_ground_deprecations():
     assert ground.connections[0].element is bus
     assert ground.connections[0].phase == "a"
     assert ground.connections[0].side is None
+
+
+def test_ground_connection_repr():
+    ground = Ground("Ground")
+    bus = Bus("Bus", phases="an")
+    gc = GroundConnection(ground=ground, element=bus)
+    assert repr(gc) == (
+        "<GroundConnection: id=\"bus 'Bus' phase 'n' to ground 'Ground'\", ground='Ground', "
+        "element=<bus 'Bus'>, impedance=0j, phase='n', on_connected='raise'>"
+    )
+    bus2 = Bus("Bus2", phases="an")
+    sw = Switch("Sw", bus1=bus, bus2=bus2)
+    gc2 = GroundConnection(id="GC2", ground=ground, element=sw.side1)
+    assert repr(gc2) == (
+        "<GroundConnection: id='GC2', ground='Ground', element=<switch 'Sw' side (1)>, "
+        "impedance=0j, phase='n', on_connected='raise'>"
+    )
