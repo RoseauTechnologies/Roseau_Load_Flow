@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict
 
 import geopandas as gpd
 import numpy as np
+import shapely as shp
 from pint import PintError
 
 from roseau.load_flow.models import AbstractTerminal, Bus, Line, Switch, Transformer
@@ -26,7 +27,7 @@ if TYPE_CHECKING:
 
     type FeatureMap = dict[str, Any]
     type StyleDict = dict[str, Any]
-    type MapElementType = Literal["bus", "line", "transformer"]
+    type MapElementType = Literal["bus", "line", "transformer", "switch"]
 
     class VoltageProfileNode(TypedDict):
         distance: float
@@ -369,6 +370,9 @@ def _plot_interactive_map_internal(  # noqa: C901
                 weight = 4.5  # HV
             dash_array = "5, 5" if line_type == LineType.UNDERGROUND else None
             return {"color": style_color, "weight": weight, "dashArray": dash_array}
+        elif e_type == "switch":
+            # Use a gray line for switches
+            return {"color": "#888888", "weight": 3}
         elif e_type == "transformer":
             bus_hv_id = feature["properties"]["bus_hv_id"]
             bus_lv_id = feature["properties"]["bus_lv_id"]
@@ -477,11 +481,11 @@ def _plot_interactive_map_internal(  # noqa: C901
 
     m = folium.Map(**map_kws)
     network_layer = folium.FeatureGroup(name="Electrical Network").add_to(m)
-    names = {"bus": "Buses", "line": "Lines", "transformer": "Transformers"}
+    names = {"bus": "Buses", "line": "Lines", "transformer": "Transformers", "switch": "Switches"}
     for e_type, frame in dataframes.items():
         if frame.empty:
             continue
-        marker = folium.Marker(icon=folium.DivIcon()) if e_type != "line" else None
+        marker = folium.Marker(icon=folium.DivIcon()) if e_type not in ("line", "switch") else None
         name = names[e_type]
         folium.GeoJson(
             data=frame,
@@ -622,9 +626,33 @@ def plot_interactive_map(
         transformers_gdf.at[idx, "uhv"] = lp._uhv
         transformers_gdf.at[idx, "ulv"] = lp._ulv
 
+    # Switches as lines if their buses are not at the same point
+    switches_data = {
+        "id": [],
+        "element_type": [],
+        "bus1_id": [],
+        "bus2_id": [],
+        "status": [],
+        "geometry": [],
+    }
+    for switch in network.switches.values():
+        if (
+            switch.bus1.geometry is None
+            or switch.bus2.geometry is None
+            or switch.bus1.geometry.equals(switch.bus2.geometry)
+        ):
+            continue
+        switches_data["id"].append(switch.id)
+        switches_data["element_type"].append("switch")
+        switches_data["bus1_id"].append(switch.bus1.id)
+        switches_data["bus2_id"].append(switch.bus2.id)
+        switches_data["status"].append("closed" if switch.closed else "open")
+        switches_data["geometry"].append(shp.LineString([switch.bus1.geometry, switch.bus2.geometry]))
+    switches_gdf = gpd.GeoDataFrame(switches_data, crs=network.crs)
+
     m = _plot_interactive_map_internal(
         network=network,
-        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf},
+        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
         fields={
             "bus": {
                 "id": "Id:",
@@ -662,6 +690,12 @@ def plot_interactive_map(
                 "bus_lv_id": "» Bus:",
                 "phases_lv": "» Phases:",
                 "ulv": "» Ur (V):",
+            },
+            "switch": {
+                "id": "Id:",
+                "bus1_id": "Bus1:",
+                "bus2_id": "Bus2:",
+                "status": "Status:",
             },
         },
         style_color_callback=lambda et, id: "#000000" if et == "transformer" else style_color,
@@ -892,9 +926,32 @@ def plot_results_interactive_map(
         transformers_data["res_voltage_level_hv"].append(buses_data["res_voltage_level"][bus_hv_idx])
         transformers_data["res_voltage_level_lv"].append(buses_data["res_voltage_level"][bus_lv_idx])
 
+    switches_data = {
+        "id": [],
+        "element_type": [],
+        "bus1_id": [],
+        "bus2_id": [],
+        "status": [],
+        "geometry": [],
+    }
+    for switch in network.switches.values():
+        if (
+            switch.bus1.geometry is None
+            or switch.bus2.geometry is None
+            or switch.bus1.geometry.equals(switch.bus2.geometry)
+        ):
+            continue
+        switches_data["id"].append(switch.id)
+        switches_data["element_type"].append("switch")
+        switches_data["bus1_id"].append(switch.bus1.id)
+        switches_data["bus2_id"].append(switch.bus2.id)
+        switches_data["status"].append("closed" if switch.closed else "open")
+        switches_data["geometry"].append(shp.LineString([switch.bus1.geometry, switch.bus2.geometry]))
+
     buses_gdf = gpd.GeoDataFrame(buses_data, crs=network.crs)
     lines_gdf = gpd.GeoDataFrame(lines_data, crs=network.crs)
     transformers_gdf = gpd.GeoDataFrame(transformers_data, crs=network.crs)
+    switches_gdf = gpd.GeoDataFrame(switches_data, crs=network.crs)
 
     def style_color_callback(et, eid):
         if et == "bus":
@@ -908,7 +965,7 @@ def plot_results_interactive_map(
 
     m = _plot_interactive_map_internal(
         network=network,
-        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf},
+        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
         fields={
             "bus": {
                 "id": "Id:",
@@ -956,6 +1013,12 @@ def plot_results_interactive_map(
                 "res_voltage_lv": "Uʟv (V):",
                 "res_voltage_level_hv": "Uʜv (%):",
                 "res_voltage_level_lv": "Uʟv (%):",
+            },
+            "switch": {
+                "id": "Id:",
+                "bus1_id": "Bus1:",
+                "bus2_id": "Bus2:",
+                "status": "Status:",
             },
         },
         style_color_callback=style_color_callback,
