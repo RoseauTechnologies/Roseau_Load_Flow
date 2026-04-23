@@ -1,10 +1,11 @@
 [project]
 name = "roseau-load-flow"
-version = "0.14.0"
+version = "0.14.1"
 description = "Highly capable multi-phase load flow solver"
 readme = "README.md"
 requires-python = ">=3.12"
-license = { file = "LICENSE.md" }
+license = "BSD-3-Clause"
+license-files = ["LICENSE.md"]
 authors = [
   { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
   { name = "Sébastien Vallet", email = "sebastien.vallet@roseautechnologies.com" },

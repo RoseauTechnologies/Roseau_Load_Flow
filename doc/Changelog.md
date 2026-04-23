@@ -19,7 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.14.1
 
 - {gh-pr}`451` Plot switches that are represented as lines in the interactive map plots.
 - {gh-pr}`449` Fix wrong unit of no-load current of some transformers in the catalogue.
