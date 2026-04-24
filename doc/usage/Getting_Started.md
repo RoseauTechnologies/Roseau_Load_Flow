@@ -159,17 +159,17 @@ can explicitly set its phases to `"abcn"`:
 ```pycon
 >>> # A star-connected source has "abcn" phases
 ... vs_star = rlf.VoltageSource(
-...     id="Y Source", bus=mv_bus, voltages=un / rlf.SQRT3, phases="abcn"
+...     id="Y Source", bus=mv_bus, voltages=20e3 / rlf.SQRT3, phases="abcn"
 ... )
 ```
 
-Here, the source voltages become phase-to-neutral (`un / rlf.SQRT3`), and not phase-to-phase (`un`). This is because,
-everywhere in `roseau-load-flow`, the `voltages` of an element depend on the element's `phases`. Voltages of elements
-connected in a _Star (wye)_ configuration (elements that have a neutral connection indicated by the presence of the
-`'n'` character in their `phases` attribute) are the **phase-to-neutral** voltages. Voltages of elements connected in a
-_Delta_ configuration (elements that do not have a neutral connection indicated by the absence of the `'n'` char from
-their `phases` attribute) are the **phase-to-phase** voltages. To see between which phases the voltage is defined, you
-can use the `voltage_phases` property of the element.
+Here, the source voltages become phase-to-neutral ({math}`\frac{20}{\sqrt{3}} kV`), and not phase-to-phase
+({math}`20 kV`). This is because, everywhere in `roseau-load-flow`, the `voltages` of an element depend on the element's
+`phases`. Voltages of elements connected in a _Star (wye)_ configuration (elements that have a neutral connection
+indicated by the presence of `'n'` in their `phases` attribute) are the **phase-to-neutral** voltages. Voltages of
+elements connected in a _Delta_ configuration (elements that do not have a neutral connection indicated by the absence
+of `'n'` in their `phases` attribute) are the **phase-to-phase** voltages. To see between which phases the voltage is
+defined, you can use the `voltage_phases` property of the element.
 
 ```pycon
 >>> vs.voltage_phases
