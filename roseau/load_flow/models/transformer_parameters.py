@@ -1,4 +1,5 @@
 import logging
+import math
 import re
 from functools import lru_cache
 from importlib import resources
@@ -632,7 +633,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         kvs: tuple[float, float] | FloatArrayLike1D,
         kvas: float | Q_[float] | tuple[float, float] | FloatArrayLike1D,
         leadlag: str,
-        xhl: float,
+        xhl: float | Q_[float],
         loadloss: float | Q_[float] | None = None,
         noloadloss: float | Q_[float] = 0,
         imag: float | Q_[float] = 0,
@@ -805,7 +806,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         p0 = (noloadloss / 100) * sn
         i0 = imag / 100
         psc = (loadloss / 100) * sn
-        vsc = xhl / 100
+        vsc = math.sqrt(xhl**2 + loadloss**2) / 100
         z2, ym = cls._compute_zy(vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
 
         instance = cls(

@@ -574,7 +574,10 @@ def test_from_open_dss():
         kvs=(33, 0.405),
         kvas=1800,
         leadlag="euro",
-        xhl=6,
+        # The model above given by Roger Dugan seems to be simplified. Lines 2152-2157 of
+        # https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Source/PDElements/Transformer.pas
+        # show that in the actual model XHL² = %Z² - %Loadloss², not XHL = %Z
+        xhl=np.sqrt(6**2 - 0.902**2),
         loadloss=0.902,
         noloadloss=0.136,
         imag=0.3,

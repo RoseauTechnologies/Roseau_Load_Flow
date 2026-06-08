@@ -19,6 +19,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`454` Fix conversion of transformer parameters from OpenDSS when `loadloss` is non-zero.
+
 ## Version 0.14.1
 
 - {gh-pr}`451` Plot switches that are represented as lines in the interactive map plots.
