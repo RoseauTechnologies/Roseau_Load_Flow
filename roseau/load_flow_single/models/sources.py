@@ -1,5 +1,5 @@
 import logging
-from typing import Final, Self
+from typing import Final, Self, final
 
 import numpy as np
 
@@ -13,6 +13,7 @@ from roseau.load_flow_single.models.connectables import AbstractDisconnectable
 logger = logging.getLogger(__name__)
 
 
+@final
 class VoltageSource(AbstractDisconnectable[CyVoltageSource]):
     """A voltage source fixes the voltage of the bus it is connected to.
 

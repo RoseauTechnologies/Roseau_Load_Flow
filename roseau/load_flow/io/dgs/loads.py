@@ -15,7 +15,7 @@ from roseau.load_flow.io.dgs.constants import (
     PV_SYS_PHASES,
     PwFLoadType,
 )
-from roseau.load_flow.models import AbstractLoad, Bus, PowerLoad
+from roseau.load_flow.models import Bus, Load, PowerLoad
 from roseau.load_flow.typing import Id
 
 logger = logging.getLogger(__name__)
@@ -253,7 +253,7 @@ def compute_3phase_load_powers(
 #
 def elm_lod_all_to_loads(
     elm_lod: pd.DataFrame,
-    loads: dict[Id, AbstractLoad],
+    loads: dict[Id, Load],
     buses: dict[str, Bus],
     sta_cubic: pd.DataFrame,
     factor: float,

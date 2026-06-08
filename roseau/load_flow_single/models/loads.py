@@ -1,7 +1,7 @@
 import cmath
 import logging
 from abc import ABC, abstractmethod
-from typing import Final
+from typing import Final, final
 
 import numpy as np
 from typing_extensions import TypeVar
@@ -49,7 +49,7 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "AbstractLoad":
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "Load":
         load_type = data["type"]
         if load_type == "power":
             power = complex(data["power"][0], data["power"][1])
@@ -83,6 +83,7 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
         return load_dict
 
 
+@final
 class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
     """A constant power load."""
 
@@ -192,6 +193,7 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
         return data
 
 
+@final
 class CurrentLoad(AbstractLoad[CyCurrentLoad]):
     """A constant current load."""
 
@@ -243,6 +245,7 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad]):
             self._cy_element.update_current(self._current)
 
 
+@final
 class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
     """A constant impedance load."""
 
@@ -293,3 +296,7 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
         self._invalidate_network_results()
         if self._cy_initialized:
             self._cy_element.update_admittance(1.0 / self._impedance)
+
+
+type Load = PowerLoad | CurrentLoad | ImpedanceLoad
+"""Alias to the union of all load types."""

@@ -1,5 +1,5 @@
 import logging
-from typing import Final
+from typing import Final, final
 
 from shapely.geometry.base import BaseGeometry
 
@@ -15,6 +15,7 @@ from roseau.load_flow_single.models.transformer_parameters import TransformerPar
 logger = logging.getLogger(__name__)
 
 
+@final
 class Transformer(AbstractBranch["TransformerSide", CySingleTransformer]):
     """A generic transformer model.
 
@@ -229,6 +230,7 @@ class Transformer(AbstractBranch["TransformerSide", CySingleTransformer]):
         return results
 
 
+@final
 class TransformerSide(AbstractBranchSide):
     element_type = "transformer"
     _branch: Transformer

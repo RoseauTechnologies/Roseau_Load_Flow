@@ -1,11 +1,11 @@
 from typing import TypedDict, final
 
 from roseau.load_flow.models import (
-    AbstractLoad,
     Bus,
     Ground,
     GroundConnection,
     Line,
+    Load,
     PotentialRef,
     Switch,
     Transformer,
@@ -19,7 +19,7 @@ class NetworkElements(TypedDict):
     """A dictionary of network elements."""
 
     buses: dict[Id, Bus]
-    loads: dict[Id, AbstractLoad]
+    loads: dict[Id, Load]
     sources: dict[Id, VoltageSource]
     lines: dict[Id, Line]
     transformers: dict[Id, Transformer]
