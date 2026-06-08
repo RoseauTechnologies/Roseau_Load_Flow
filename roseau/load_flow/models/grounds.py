@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Final, Literal, Self
+from typing import TYPE_CHECKING, Final, Literal, Self, final
 
 import numpy as np
 from typing_extensions import deprecated
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+@final
 class Ground(Element[CyGround]):
     """A ground element represents the earth in the network.
 
@@ -121,6 +122,7 @@ class Ground(Element[CyGround]):
         return {"id": self.id, "potential": [v.real, v.imag]}
 
 
+@final
 class GroundConnection(Element[CySimplifiedLine | CySwitch]):
     """An ideal or impedant connection to the ground."""
 

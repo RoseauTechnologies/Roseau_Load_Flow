@@ -1,6 +1,6 @@
 import logging
 from functools import cached_property
-from typing import Final
+from typing import Final, final
 
 from shapely.geometry.base import BaseGeometry
 
@@ -16,6 +16,7 @@ from roseau.load_flow_engine.cy_engine import CyTransformer
 logger = logging.getLogger(__name__)
 
 
+@final
 class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
     """A generic transformer model.
 
@@ -447,6 +448,7 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
         return results
 
 
+@final
 class TransformerSide(AbstractBranchSide):
     element_type = "transformer"
     allowed_phases = Transformer.allowed_phases  # type: ignore

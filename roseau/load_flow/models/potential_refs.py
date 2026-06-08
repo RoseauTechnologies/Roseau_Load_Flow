@@ -1,5 +1,5 @@
 import logging
-from typing import Final, Self
+from typing import Final, Self, final
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
@@ -13,6 +13,7 @@ from roseau.load_flow_engine.cy_engine import CyDeltaPotentialRef, CyPotentialRe
 logger = logging.getLogger(__name__)
 
 
+@final
 class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
     """A potential reference.
 

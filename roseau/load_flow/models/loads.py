@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from typing import Final
+from typing import Final, final
 
 import numpy as np
 from typing_extensions import TypeVar
@@ -135,7 +135,7 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
                 )
 
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "AbstractLoad":
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "Load":
         load_type = data["type"]
         if load_type == "power":
             if (fp_data_list := data.get("flexible_params")) is not None:
@@ -206,6 +206,7 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
         return results
 
 
+@final
 class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | CyDeltaFlexibleLoad]):
     """A constant power load."""
 
@@ -383,6 +384,7 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
         return self._res_flexible_powers_getter(warning=True)
 
 
+@final
 class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
     """A constant current load."""
 
@@ -457,6 +459,7 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
             self._cy_element.update_currents(self._currents)
 
 
+@final
 class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad | CyDeltaAdmittanceLoad]):
     """A constant impedance load."""
 
@@ -524,3 +527,7 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad | CyDeltaAdmittanceLoad]):
         self._invalidate_network_results()
         if self._cy_initialized:
             self._cy_element.update_admittances(1.0 / self._impedances)
+
+
+type Load = PowerLoad | CurrentLoad | ImpedanceLoad
+"""Alias to the union of all load types."""

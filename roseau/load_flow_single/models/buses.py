@@ -1,7 +1,7 @@
 import logging
 import math
 from collections.abc import Iterator
-from typing import Final, Self
+from typing import Final, Self, final
 
 import numpy as np
 import pandas as pd
@@ -18,6 +18,7 @@ from roseau.load_flow_single.models.terminals import AbstractTerminal
 logger = logging.getLogger(__name__)
 
 
+@final
 class Bus(AbstractTerminal[CyBus]):
     """An electrical bus."""
 

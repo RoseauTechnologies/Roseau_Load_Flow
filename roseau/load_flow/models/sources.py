@@ -1,5 +1,5 @@
 import logging
-from typing import Final, Self
+from typing import Final, Self, final
 
 import numpy as np
 
@@ -14,6 +14,7 @@ from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSou
 logger = logging.getLogger(__name__)
 
 
+@final
 class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSource]):
     """A voltage source fixes the voltages on the phases of the bus it is connected to.
 

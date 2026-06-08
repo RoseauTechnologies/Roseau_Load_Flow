@@ -25,6 +25,7 @@ from roseau.load_flow.models import (
     GroundConnection,
     Line,
     LineParameters,
+    Load,
     PotentialRef,
     Switch,
     Transformer,
@@ -119,7 +120,7 @@ def network_from_dict(  # noqa: C901
         bus = Bus.from_dict(data=bus_data, include_results=include_results)
         buses[bus.id] = bus
         has_results = has_results and not bus._no_results
-    loads: dict[Id, AbstractLoad] = {}
+    loads: dict[Id, Load] = {}
     for load_data in data["loads"]:
         load_data["bus"] = buses[load_data["bus"]]
         load = AbstractLoad.from_dict(data=load_data, include_results=include_results)

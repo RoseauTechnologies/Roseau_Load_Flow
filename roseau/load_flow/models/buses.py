@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, Final, Self
+from typing import TYPE_CHECKING, Any, Final, Self, final
 
 import numpy as np
 import pandas as pd
@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from roseau.load_flow.models.grounds import Ground
 
 
+@final
 class Bus(AbstractTerminal[CyBus]):
     """A multi-phase electrical bus."""
 

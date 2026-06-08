@@ -19,17 +19,14 @@ from roseau.load_flow.converters import _calculate_voltages, calculate_voltage_p
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io import network_from_dgs, network_from_dict, network_to_dict
 from roseau.load_flow.models import (
-    AbstractLoad,
     AbstractTerminal,
     Bus,
-    CurrentLoad,
     Element,
     Ground,
     GroundConnection,
-    ImpedanceLoad,
     Line,
+    Load,
     PotentialRef,
-    PowerLoad,
     Switch,
     Transformer,
     VoltageSource,
@@ -151,7 +148,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         lines: MapOrSeq[Line],
         transformers: MapOrSeq[Transformer],
         switches: MapOrSeq[Switch],
-        loads: MapOrSeq[AbstractLoad],
+        loads: MapOrSeq[Load],
         sources: MapOrSeq[VoltageSource],
         grounds: MapOrSeq[Ground],
         potential_refs: MapOrSeq[PotentialRef],
@@ -165,9 +162,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         )
         self.switches: dict[Id, Switch] = self._elements_as_dict(switches, RoseauLoadFlowExceptionCode.BAD_SWITCH_ID)
         # Use a union of all loads types to help autocompletion when typing `load.powers` for example
-        self.loads: dict[Id, AbstractLoad | PowerLoad | CurrentLoad | ImpedanceLoad] = self._elements_as_dict(
-            loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID
-        )
+        self.loads: dict[Id, Load] = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
         self.sources: dict[Id, VoltageSource] = self._elements_as_dict(
             sources, RoseauLoadFlowExceptionCode.BAD_SOURCE_ID
         )
@@ -741,7 +736,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         loads_dict = {"load_id": [], "phase": [], "flexible_power": []}
         dtypes = {c: DTYPES[c] for c in loads_dict} | {"phase": VoltagePhaseDtype}
         for load_id, load in self.loads.items():
-            if not (isinstance(load, PowerLoad) and load.is_flexible):
+            if not (load.type == "power" and load.is_flexible):
                 continue
             for flexible_power, phase in zip(
                 load._res_flexible_powers_getter(warning=False).tolist(), load.voltage_phases, strict=True

@@ -20,18 +20,7 @@ from roseau.load_flow.utils import DTYPES, AbstractNetwork, LoadTypeDtype, count
 from roseau.load_flow_engine.cy_engine import CyGround, CyPotentialRef
 from roseau.load_flow_single.io import network_from_dgs, network_from_dict, network_to_dgs, network_to_dict
 from roseau.load_flow_single.io.rlf import OnIncompatibleType, network_from_rlf
-from roseau.load_flow_single.models import (
-    AbstractLoad,
-    Bus,
-    CurrentLoad,
-    Element,
-    ImpedanceLoad,
-    Line,
-    PowerLoad,
-    Switch,
-    Transformer,
-    VoltageSource,
-)
+from roseau.load_flow_single.models import Bus, Element, Line, Load, Switch, Transformer, VoltageSource
 
 if TYPE_CHECKING:
     from networkx import MultiGraph
@@ -117,7 +106,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         lines: MapOrSeq[Line],
         transformers: MapOrSeq[Transformer],
         switches: MapOrSeq[Switch],
-        loads: MapOrSeq[AbstractLoad],
+        loads: MapOrSeq[Load],
         sources: MapOrSeq[VoltageSource],
         crs: CRSLike | None = None,
     ) -> None:
@@ -127,9 +116,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             transformers, RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_ID
         )
         self.switches: dict[Id, Switch] = self._elements_as_dict(switches, RoseauLoadFlowExceptionCode.BAD_SWITCH_ID)
-        self.loads: dict[Id, AbstractLoad | PowerLoad | CurrentLoad | ImpedanceLoad] = self._elements_as_dict(
-            loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID
-        )
+        self.loads: dict[Id, Load] = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
         self.sources: dict[Id, VoltageSource] = self._elements_as_dict(
             sources, RoseauLoadFlowExceptionCode.BAD_SOURCE_ID
         )

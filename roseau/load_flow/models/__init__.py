@@ -13,7 +13,7 @@ from roseau.load_flow.models.flexible_parameters import Control, FlexibleParamet
 from roseau.load_flow.models.grounds import Ground, GroundConnection
 from roseau.load_flow.models.line_parameters import LineParameters
 from roseau.load_flow.models.lines import Line
-from roseau.load_flow.models.loads import AbstractLoad, CurrentLoad, ImpedanceLoad, PowerLoad
+from roseau.load_flow.models.loads import AbstractLoad, CurrentLoad, ImpedanceLoad, Load, PowerLoad
 from roseau.load_flow.models.potential_refs import PotentialRef
 from roseau.load_flow.models.sources import VoltageSource
 from roseau.load_flow.models.switches import Switch
@@ -47,6 +47,7 @@ __all__ = [
     "FlexibleParameter",
     "Control",
     "Projection",
+    "Load",  # type alias
     # Transformers
     "Transformer",
     "TransformerParameters",

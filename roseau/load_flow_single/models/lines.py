@@ -1,5 +1,5 @@
 import logging
-from typing import Final
+from typing import Final, final
 
 import numpy as np
 from shapely.geometry.base import BaseGeometry
@@ -15,6 +15,7 @@ from roseau.load_flow_single.models.line_parameters import LineParameters
 logger = logging.getLogger(__name__)
 
 
+@final
 class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
     """An electrical line PI model with series impedance and optional shunt admittance."""
 
@@ -319,6 +320,7 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
         return results
 
 
+@final
 class LineSide(AbstractBranchSide):
     element_type = "line"
     _branch: Line

@@ -19,13 +19,13 @@ from roseau.load_flow.io.dgs.switches import elm_coup_to_switches
 from roseau.load_flow.io.dgs.transformers import elm_tr2_to_transformers, typ_tr2_to_tp
 from roseau.load_flow.io.dgs.utils import dgs_dict_to_df, has_typ_lne, has_typ_tr2, parse_dgs_version
 from roseau.load_flow.models import (
-    AbstractLoad,
     Bus,
     Element,
     Ground,
     GroundConnection,
     Line,
     LineParameters,
+    Load,
     PotentialRef,
     Switch,
     Transformer,
@@ -84,7 +84,7 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     # ElectricalNetwork elements
     buses: dict[str, Bus] = {}  # key is the FID
     sources: dict[Id, VoltageSource] = {}
-    loads: dict[Id, AbstractLoad] = {}
+    loads: dict[Id, Load] = {}
     lines: dict[Id, Line] = {}
     transformers: dict[Id, Transformer] = {}
     switches: dict[Id, Switch] = {}
