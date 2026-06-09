@@ -632,9 +632,9 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
                 Any bus of the network. The network is constructed from this bus and all the
                 elements connected to it. This is usually the main source bus of the network.
 
-        crs:
-            An optional Coordinate Reference System to use with geo data frames. Can be anything
-            accepted by geopandas and pyproj, such as an authority string or WKT string.
+            crs:
+                An optional Coordinate Reference System to use with geo data frames. Can be anything
+                accepted by geopandas and pyproj, such as an authority string or WKT string.
 
         Returns:
             The network constructed from the given bus and all the elements connected to it.
