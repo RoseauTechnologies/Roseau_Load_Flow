@@ -139,6 +139,8 @@ class RoseauLoadFlowExceptionCode(StrEnum):
 
     # OpenDSS import
     DSS_BAD_LOSS = auto()
+    DSS_BAD_PHASES = auto()
+    DSS_BAD_WINDINGS = auto()
 
     def __eq__(self, other) -> bool:
         if isinstance(other, str):

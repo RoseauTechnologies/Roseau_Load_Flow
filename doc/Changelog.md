@@ -21,6 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`456` Support single-phase transformer parameters conversion from OpenDSS.
 - {gh-pr}`454` Fix conversion of transformer parameters from OpenDSS when `loadloss` is non-zero.
 
 ## Version 0.14.1

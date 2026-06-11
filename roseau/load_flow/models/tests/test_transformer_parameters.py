@@ -145,7 +145,7 @@ def test_transformer_parameters():
     with pytest.raises(RoseauLoadFlowException) as e:
         TransformerParameters.from_dict(data)
     assert e.value.msg == (
-        "Transformer parameters 'test' has the low voltage higher than the high voltage: uhv=350 V and ulv=400.0045 V."
+        "Transformer parameters 'test' has the low voltage higher than the high voltage: uhv=350.0 V and ulv=400.0045 V."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES
 
@@ -220,6 +220,7 @@ def test_transformers_parameters_units():
     assert np.isclose(tp._ulv, 400)
     assert np.isclose(tp._uhv, 20000)
     assert np.isclose(tp._sn, 50e3)
+    assert tp._fn is not None
     assert np.isclose(tp._fn, 50)
 
     # Bad unit for each of them
@@ -549,6 +550,7 @@ def test_from_open_dss():
         ~ Wdg=2 bus=LVBusname.1.2.3.4 kV=0.405 kVA=1800 conn=wye
         ~ %Loadloss=0.902 %imag=0.3 %noload=.136  LeadLag=Euro
     """
+    # Three phase
     sn = Q_(1800, "kVA")
     tp_rlf = TransformerParameters.from_open_and_short_circuit_tests(
         id="tp-test",
@@ -566,7 +568,6 @@ def test_from_open_dss():
         range="Tech+",
         efficiency="Wonderful",
     )
-
     tp_dss = TransformerParameters.from_open_dss(
         id="tp-test",
         # Electrical parameters
@@ -586,8 +587,6 @@ def test_from_open_dss():
         range="Tech+",
         efficiency="Wonderful",
     )
-
-    # Electrical parameters
     assert tp_rlf.vg == tp_dss.vg
     assert tp_rlf.uhv == tp_dss.uhv
     assert tp_rlf.ulv == tp_dss.ulv
@@ -596,11 +595,81 @@ def test_from_open_dss():
     assert tp_rlf.orientation == tp_dss.orientation
     np.testing.assert_allclose(tp_rlf.z2.m, tp_dss.z2.m)
     np.testing.assert_allclose(tp_rlf.ym.m, tp_dss.ym.m)
-
-    # Optional parameters
+    np.testing.assert_allclose(tp_rlf.vsc.m, tp_dss.vsc.m)
+    np.testing.assert_allclose(tp_rlf.psc.m, tp_dss.psc.m)
+    np.testing.assert_allclose(tp_rlf.i0.m, tp_dss.i0.m)
+    np.testing.assert_allclose(tp_rlf.p0.m, tp_dss.p0.m)
     assert tp_rlf.manufacturer == tp_dss.manufacturer
     assert tp_rlf.range == tp_dss.range
     assert tp_rlf.efficiency == tp_dss.efficiency
+
+    # Single phase
+    kvs = (12.47, 0.12)
+    kvas = (25, 25)
+    tp_dss = TransformerParameters.from_open_dss(
+        id="1ph", phases=1, conns=("delta", "wye"), kvs=kvs, kvas=kvas, xhl=2.0, noloadloss=0.2, rs=(1.2, 1.2), imag=0.6
+    )
+    assert tp_dss.type == "single-phase"
+    assert tp_dss.vg == "Ii0"
+    assert tp_dss.sn.m_as("kVA") == kvas[0]
+    np.testing.assert_allclose(tp_dss.psc.m_as("kW"), 2.4 / 100 * kvas[0])  # 2.4% = sum(rs)
+    np.testing.assert_allclose(tp_dss.uhv.m_as("kV"), kvs[0])  # already line-to-line
+    np.testing.assert_allclose(tp_dss.ulv.m_as("kV"), kvs[1] * np.sqrt(3))  # line-to-line from line-to-neutral
+    # Other options: LL and LN connections, both loadloass and rs, etc.
+    tp_dss = TransformerParameters.from_open_dss(
+        id="1ph", phases=1, conns=("ll", "ln"), kvs=kvs, kvas=kvas, xhl=2.04, noloadloss=0.2, rs=(1, 1), loadloss=2
+    )
+    np.testing.assert_allclose(tp_dss.psc.m_as("kW"), 2 / 100 * kvas[0])  # 2% = sum(rs) = loadloss
+    np.testing.assert_allclose(tp_dss.uhv.m_as("kV"), kvs[0])  # already line-to-line
+    np.testing.assert_allclose(tp_dss.ulv.m_as("kV"), kvs[1] * np.sqrt(3))  # line-to-line from line-to-neutral
+
+    # Warnings
+    with pytest.warns(match=r"Only one base kVA rating is expected, got 2"):
+        tp_dss_w = TransformerParameters.from_open_dss(
+            id="1ph", phases=1, conns=("delta", "wye"), kvs=(20, 0.4), kvas=(1, 0.8), xhl=2, loadloss=0
+        )
+    np.testing.assert_allclose(tp_dss_w.sn.m_as("kVA"), 1)  # The first one is taken
+    with pytest.warns(match=r"The sum of rs=\(1.2, 1.2\) is not equal to the value of loadloss=2"):
+        tp_dss_w = TransformerParameters.from_open_dss(
+            id="1ph", phases=1, conns=("delta", "wye"), kvs=(20, 0.4), kvas=1, xhl=2, loadloss=2, rs=(1.2, 1.2)
+        )
+    np.testing.assert_allclose(tp_dss_w.psc.m_as("kW"), 2 / 100 * 1)  # 2% = loadloss is taken
+    with pytest.warns(match=r"rs=1.2 is not consistent with loadloss=2 for 2 windings"):
+        tp_dss_w = TransformerParameters.from_open_dss(
+            id="1ph", phases=1, conns=("delta", "wye"), kvs=(20, 0.4), kvas=1, xhl=2, loadloss=2, rs=1.2
+        )
+    np.testing.assert_allclose(tp_dss_w.psc.m_as("kW"), 2 / 100 * 1)  # 2% = loadloss is taken
+
+    # Errors
+    with pytest.raises(TypeError, match=r"missing 1 required keyword argument: 'loadloss' or 'rs'"):
+        TransformerParameters.from_open_dss(id="err", conns=("delta", "wye"), kvs=(15, 0.4), kvas=1e3, xhl=1)
+    with pytest.raises(
+        RoseauLoadFlowException, match=r"Only single-phase or three-phase transformers are currently supported"
+    ) as e:
+        TransformerParameters.from_open_dss(
+            id="err", conns=("delta", "wye"), kvs=(15, 0.4), kvas=1e3, xhl=1, loadloss=0, phases=2
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.DSS_BAD_PHASES
+    with pytest.raises(RoseauLoadFlowException, match=r"Only 2-winding transformers are currently supported") as e:
+        TransformerParameters.from_open_dss(
+            id="err", conns=("delta", "wye"), kvs=(15, 0.4), kvas=1e3, xhl=1, loadloss=0, windings=3
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS
+    with pytest.raises(RoseauLoadFlowException, match=r"Expected 2 connections, got 3") as e:
+        TransformerParameters.from_open_dss(
+            id="err", conns=("delta", "wye", "wye"), kvs=(15, 0.4), kvas=1e3, xhl=1, loadloss=0
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS
+    with pytest.raises(RoseauLoadFlowException, match=r"Expected 2 kV ratings, got 3") as e:
+        TransformerParameters.from_open_dss(
+            id="err", conns=("delta", "wye"), kvs=(15, 0.4, 0.4), kvas=1e3, xhl=1, loadloss=0
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS
+    with pytest.raises(RoseauLoadFlowException, match=r"Expected 2 kVA ratings, got 3") as e:
+        TransformerParameters.from_open_dss(
+            id="err", conns=("delta", "wye"), kvs=(15, 0.4), kvas=(1e3, 1e3, 1e3), xhl=1, loadloss=0
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS
 
 
 def test_from_power_factory():
@@ -748,7 +817,7 @@ def test_to_dict():
     assert d.pop("vg") == tp2.vg
     assert d.pop("z2") == [tp2.z2.m.real, tp2.z2.m.imag]
     assert d.pop("ym") == [tp2.ym.m.real, tp2.ym.m.imag]
-    assert d.pop("fn") == tp2.fn.m
+    assert d.pop("fn") == tp2.fn.m if tp2.fn is not None else None
     assert d.pop("manufacturer") == tp2.manufacturer
     assert d.pop("range") == tp2.range
     assert d.pop("efficiency") == tp2.efficiency
