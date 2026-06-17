@@ -21,6 +21,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`457` Fix a rare bug where modifying the tap of an inverted single-phase transformer (vector groups "Ii6" and
+  "Iii6") after its creation would incorrectly invert back its orientation.
 - {gh-pr}`456` Support single-phase transformer parameters conversion from OpenDSS.
 - {gh-pr}`454` Fix conversion of transformer parameters from OpenDSS when `loadloss` is non-zero.
 

@@ -199,8 +199,7 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
         self._tap = value
         self._invalidate_network_results()
         if self._cy_initialized:
-            z2, ym, k = self.parameters._z2, self.parameters._ym, self.parameters._k
-            self._cy_element.update_transformer_parameters(z2, ym, k * value)
+            self._cy_update_parameters(tap=value, parameters=self.parameters)
 
     @property
     def parameters(self) -> TransformerParameters:
@@ -222,10 +221,7 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
         self._invalidate_network_results()
         self._parameters = value
         if self._cy_initialized:
-            z2, ym, k = value._z2, value._ym, value._k
-            if value.type in ("single-phase", "center-tapped"):
-                k *= value.orientation
-            self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
+            self._cy_update_parameters(tap=self.tap, parameters=value)
 
     @property
     @ureg_wraps("", (None,))
@@ -254,6 +250,12 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
     def max_power(self) -> Q_[float]:
         """The maximum power loading of the transformer (in VA)."""
         return self.parameters._sn * self._max_loading  # type: ignore
+
+    def _cy_update_parameters(self, tap: float, parameters: TransformerParameters) -> None:
+        z2, ym, k = parameters._z2, parameters._ym, parameters._k
+        if parameters.type in ("single-phase", "center-tapped"):
+            k *= parameters.orientation
+        self._cy_element.update_transformer_parameters(z2, ym, k * tap)
 
     def _compute_phases_three(
         self,
