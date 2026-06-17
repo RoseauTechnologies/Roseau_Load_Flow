@@ -27,6 +27,11 @@ class TransformerParameters(MultiTransformerParameters):
         "Dy7", "Dyn7", "Yz7", "YNz7", "Yzn7", "YNzn7", "Yd7", "YNd7",
         "Dd8", "Dz8", "Dzn8",
         "Dd10", "Dz10", "Dzn10",
+        # Untrue connections (Yy with clock numbers 2, 4, 8, 10)
+        "Yy2", "YNy2", "Yyn2", "YNyn2",
+        "Yy4", "YNy4", "Yyn4", "YNyn4",
+        "Yy8", "YNy8", "Yyn8", "YNyn8",
+        "Yy10", "YNy10", "Yyn10", "YNyn10",
     }
     # fmt: on
 
