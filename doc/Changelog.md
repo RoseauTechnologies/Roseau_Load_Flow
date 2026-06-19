@@ -21,6 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`459` Add support for three-phase transformers with "untrue" vector groups
 - {gh-pr}`458` Drop support for the experimental Python 3.13t (free-threaded) following end of support in cibuildwheel
 - {gh-pr}`457` Fix a rare bug where modifying the tap of an inverted single-phase transformer (vector groups "Ii6" and
   "Iii6") after its creation would incorrectly invert back its orientation.
