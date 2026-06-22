@@ -1,70 +1,140 @@
-"""Performance benchmarks for Roseau Load Flow, measured with CodSpeed.
+"""Performance benchmarks for Roseau Load Flow, measured with CodSpeed."""
 
-These benchmarks exercise the hot paths of the library: building an electrical
-network from serialized data, running the load flow solver, and serializing the
-network (with and without results) back to a dictionary.
-
-They rely on the small sample networks bundled in the catalogue. All of the
-selected networks stay within the 10-bus limit of the free public license key
-(documented in the project README), so the benchmarks run without a commercial
-license. If a ``ROSEAU_LOAD_FLOW_LICENSE_KEY`` is provided in the environment,
-it is used instead.
-"""
-
-import os
+import json
+from pathlib import Path
 
 import pytest
 
 import roseau.load_flow as rlf
 
-# Free public license key, valid for networks with up to 10 buses (see README).
-FREE_LICENSE_KEY = "A8C6DA-9405FB-E74FB9-C71C3C-207661-V3"
-
-# Catalogue networks of increasing size, all within the free-license bus limit.
-NETWORKS = (
-    "LVFeeder06713",  # 3 buses
-    "LVFeeder04790",  # 4 buses
-    "LVFeeder06975",  # 6 buses
-    "LVFeeder02639",  # 7 buses
-    "LVFeeder00939",  # 8 buses
+TEST_NETWORKS_PATHS = list(
+    Path(__file__).parent.parent.joinpath("roseau", "load_flow", "tests", "data", "networks").glob("*.json")
 )
-LOAD_POINT = "Winter"
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _license():
-    """Activate the license once for the whole benchmark session.
-
-    A ``ROSEAU_LOAD_FLOW_LICENSE_KEY`` from the environment takes precedence;
-    otherwise the free public key is used (valid for networks up to 10 buses).
-    """
-    if not os.environ.get("ROSEAU_LOAD_FLOW_LICENSE_KEY"):
-        os.environ["ROSEAU_LOAD_FLOW_LICENSE_KEY"] = FREE_LICENSE_KEY
-    rlf.activate_license()
+@pytest.fixture(params=TEST_NETWORKS_PATHS, ids=[path.stem for path in TEST_NETWORKS_PATHS])
+def test_network_path(request) -> Path:
+    return request.param
 
 
-@pytest.fixture(params=NETWORKS, ids=NETWORKS)
-def network_dict(request):
-    """Return the serialized form of a catalogue network."""
-    return rlf.ElectricalNetwork.from_catalogue(request.param, LOAD_POINT).to_dict()
+def test_from_json(benchmark, test_network_path):
+    """Benchmark the time taken to create an ElectricalNetwork object from a JSON file."""
+    benchmark(rlf.ElectricalNetwork.from_json, test_network_path, include_results=True)
 
 
-@pytest.mark.benchmark
-def test_from_dict(benchmark, network_dict):
-    """Build an :class:`ElectricalNetwork` from its serialized representation."""
-    benchmark(rlf.ElectricalNetwork.from_dict, network_dict)
+def test_from_dict(benchmark, test_network_path):
+    """Benchmark the time taken to create an ElectricalNetwork object from a dictionary."""
+    with open(test_network_path, encoding="utf-8") as f:
+        network_dict = json.load(f)
+    benchmark(rlf.ElectricalNetwork.from_dict, network_dict, include_results=True)
 
 
-@pytest.mark.benchmark
-def test_solve_load_flow(benchmark, network_dict):
-    """Run the load flow solver from a cold start (no warm start)."""
-    en = rlf.ElectricalNetwork.from_dict(network_dict, include_results=False)
-    benchmark(lambda: en.solve_load_flow(warm_start=False))
+def test_to_json(benchmark, test_network_path, tmp_path):
+    """Benchmark the time taken to serialize an ElectricalNetwork object to a JSON string."""
+    en = rlf.ElectricalNetwork.from_json(test_network_path)
+    output_path = tmp_path / "network.json"
+    benchmark(en.to_json, output_path, include_results=True)
 
 
-@pytest.mark.benchmark
-def test_to_dict_with_results(benchmark, network_dict):
-    """Serialize a solved network, including its load flow results."""
-    en = rlf.ElectricalNetwork.from_dict(network_dict, include_results=False)
-    en.solve_load_flow(warm_start=False)
-    benchmark(en.to_dict)
+def test_to_dict(benchmark, test_network_path):
+    """Benchmark the time taken to serialize an ElectricalNetwork object to a dictionary."""
+    en = rlf.ElectricalNetwork.from_json(test_network_path)
+    benchmark(en.to_dict, include_results=True)
+
+
+def test_network_results_extraction(benchmark, test_network_path):
+    """Benchmark the time taken to extract all dataframe results from a network."""
+    en = rlf.ElectricalNetwork.from_json(test_network_path)
+
+    @benchmark
+    def _extract():
+        _ = en.res_buses
+        _ = en.res_buses_voltages
+        _ = en.res_buses_voltages_pp
+        _ = en.res_buses_voltages_pn
+        _ = en.res_lines
+        _ = en.res_transformers
+        _ = en.res_switches
+        _ = en.res_loads
+        _ = en.res_loads_voltages
+        _ = en.res_loads_voltages_pp
+        _ = en.res_loads_voltages_pn
+        _ = en.res_sources
+        _ = en.res_sources_voltages
+        _ = en.res_sources_voltages_pp
+        _ = en.res_sources_voltages_pn
+
+
+def test_elements_results_extraction(benchmark, test_network_path):  # noqa: C901
+    """Benchmark the time taken to extract all results from all elements of a network."""
+    en = rlf.ElectricalNetwork.from_json(test_network_path)
+
+    @benchmark
+    def _extract():  # noqa: C901
+        for bus in en.buses.values():
+            _ = bus.res_potentials.m
+            _ = bus.res_voltages.m
+            vl = bus.res_voltage_levels
+            if vl is not None:
+                _ = vl.m
+            if len(bus.phases.removesuffix("n")) > 1:
+                _ = bus.res_voltages_pp.m
+                vl_pp = bus.res_voltage_levels_pp
+                if vl_pp is not None:
+                    _ = vl_pp.m
+            if bus.phases.endswith("n"):
+                _ = bus.res_voltages_pn.m
+                vl_pn = bus.res_voltage_levels_pn
+                if vl_pn is not None:
+                    _ = vl_pn.m
+                _ = bus.res_violated
+        for line in en.lines.values():
+            for side in (line.side1, line.side2):
+                _ = side.res_currents.m
+                _ = side.res_potentials.m
+                _ = side.res_voltages.m
+                _ = side.res_powers.m
+                _ = side.res_shunt_currents.m
+                _ = side.res_shunt_losses.m
+            _ = line.res_series_currents.m
+            _ = line.res_series_power_losses.m
+            _ = line.res_power_losses.m
+            ll = line.res_loading
+            if ll is not None:
+                _ = ll.m
+            _ = line.res_violated
+        for tr in en.transformers.values():
+            for side in (tr.side_hv, tr.side_lv):
+                _ = side.res_currents.m
+                _ = side.res_potentials.m
+                _ = side.res_voltages.m
+                _ = side.res_powers.m
+            _ = tr.res_power_losses.m
+            _ = tr.res_loading.m
+            _ = tr.res_violated
+        for sw in en.switches.values():
+            for side in (sw.side1, sw.side2):
+                _ = side.res_currents.m
+                _ = side.res_potentials.m
+                _ = side.res_voltages.m
+                _ = side.res_powers.m
+        for load in en.loads.values():
+            _ = load.res_currents.m
+            _ = load.res_potentials.m
+            _ = load.res_voltages.m
+            if len(load.phases.removesuffix("n")) > 1:
+                _ = load.res_voltages_pp.m
+            if load.phases.endswith("n"):
+                _ = load.res_voltages_pn.m
+            _ = load.res_powers.m
+            _ = load.res_inner_currents.m
+            _ = load.res_inner_powers.m
+        for src in en.sources.values():
+            _ = src.res_currents.m
+            _ = src.res_potentials.m
+            _ = src.res_voltages.m
+            if len(src.phases.removesuffix("n")) > 1:
+                _ = src.res_voltages_pp.m
+            if src.phases.endswith("n"):
+                _ = src.res_voltages_pn.m
+            _ = src.res_powers.m
