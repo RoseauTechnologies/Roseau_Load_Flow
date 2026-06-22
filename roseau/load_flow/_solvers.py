@@ -110,7 +110,7 @@ class AbstractSolver(ABC, Generic[_CyS_co]):
             raise RoseauLoadFlowException(msg=msg, code=exception_code) from e
         end = time.perf_counter()
 
-        if iterations == max_iterations:
+        if residual > tolerance:
             msg = (
                 f"The load flow did not converge after {iterations} iterations. The norm of the "
                 f"residuals is {residual:5n}"
