@@ -62,6 +62,9 @@ def network_from_dict(
             "`rlf.ElectricalNetwork` instead of `rlfs.ElectricalNetwork`?"
         )
 
+    # Name
+    name = data.get("name", "Network")
+
     # Check the version, 3 was the first version to support RLFS
     version = data["version"]
     assert version >= 3, f"Unsupported network file version {version}, expected >=3."
@@ -157,6 +160,7 @@ def network_from_dict(
 
     return (
         {
+            "name": name,
             "buses": buses,
             "lines": lines,
             "transformers": transformers,
@@ -241,6 +245,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
 
     res = {
         "version": NETWORK_JSON_VERSION,
+        "name": en.name,
         "is_multiphase": False,
         "crs": crs,
         "buses": buses,

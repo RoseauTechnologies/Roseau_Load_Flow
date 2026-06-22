@@ -21,6 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`462` Add `name` attribute to `ElectricalNetwork` to store the name of the network.
 - {gh-pr}`460` Modify the load flow convergence check to use residuals and tolerance comparison. This fixes the case of
   convergence at exactly the number of iterations specified by the `max_iterations` parameter.
 - {gh-pr}`459` Add support for three-phase transformers with "untrue" vector groups

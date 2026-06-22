@@ -480,7 +480,7 @@ def _plot_interactive_map_internal(  # noqa: C901
         map_kws["zoom_control"] = "topright"
 
     m = folium.Map(**map_kws)
-    network_layer = folium.FeatureGroup(name="Electrical Network").add_to(m)
+    network_layer = folium.FeatureGroup(name=network.name).add_to(m)
     names = {"bus": "Buses", "line": "Lines", "transformer": "Transformers", "switch": "Switches"}
     for e_type, frame in dataframes.items():
         if frame.empty:
@@ -1199,6 +1199,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         title = f"Voltage Profile Starting at Bus {self.starting_bus_id!r}"
         if self.mode:
             title = f"{self.mode.capitalize()} {title}"
+        title = f"{self.network.name} - {title}"
         return title
 
     @property

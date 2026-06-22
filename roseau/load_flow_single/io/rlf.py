@@ -314,6 +314,7 @@ def network_from_rlf(  # noqa: C901
 
     return (
         {
+            "name": en_m.name,
             "buses": buses,
             "lines": lines,
             "transformers": transformers,
