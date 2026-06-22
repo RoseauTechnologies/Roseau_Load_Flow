@@ -196,7 +196,7 @@ def test_plot_symmetrical_voltages(elements):
 
 
 def test_plot_interactive_map(test_networks_path):
-    en = ElectricalNetwork.from_json(path=test_networks_path / "all_element_network.json", include_results=True)
+    en = ElectricalNetwork.from_json(path=test_networks_path / "all_elements_network.json", include_results=True)
     en.crs = "EPSG:4326"
     plot_interactive_map(en)
     plot_results_interactive_map(en)
