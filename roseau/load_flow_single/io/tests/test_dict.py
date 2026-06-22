@@ -67,6 +67,7 @@ def test_to_dict():
     # Dict content
     lp1.ampacity = 1000
     res = en.to_dict(include_results=False)
+    assert res["name"] == "Network"  # default name
     res_bus0, res_bus1 = res["buses"]
     res_line0, res_line1 = res["lines"]
     assert "geometry" in res_bus0
@@ -87,6 +88,14 @@ def test_to_dict():
     assert "results" not in res_bus1
     assert "results" not in res_line0
     assert "results" not in res_line1
+
+    # Custom name is serialized and round-trips correctly
+    en.name = "My Network"
+    res = en.to_dict(include_results=False)
+    assert res["name"] == "My Network"
+    en2 = rlfs.ElectricalNetwork.from_dict(res)
+    assert en2.name == "My Network"
+    assert repr(en2).startswith("<ElectricalNetwork 'My Network':")
 
     # Same id, different transformer parameters -> fail
     vn = 400
@@ -148,6 +157,7 @@ def test_all_converters():
     with warnings.catch_warnings(action="ignore"):
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
+    expected_dict["name"] = "Network"  # default name added in current format
     assert_json_close(net_dict, expected_dict)
 
 
@@ -161,6 +171,7 @@ def test_from_dict_v3():
     with warnings.catch_warnings(action="ignore"):
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
+    expected_dict["name"] = "Network"  # default name added in current format
     assert_json_close(net_dict, expected_dict)
 
 

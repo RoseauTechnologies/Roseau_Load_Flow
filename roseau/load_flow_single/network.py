@@ -37,6 +37,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
     :meth:`solve_load_flow` method.
 
     Args:
+        name:
+            The name of the network. Defaults to ``"Network"``.
+
         buses:
             The buses of the network. Either a list of buses or a dictionary of buses with
             their IDs as keys. Buses are the nodes of the network. They connect other elements
@@ -69,6 +72,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             accepted by geopandas and pyproj, such as an authority string or WKT string.
 
     Attributes:
+        name (str):
+            The name of the network.
+
         buses (dict[Id, roseau.load_flow_single.Bus]):
             Dictionary of buses of the network indexed by their IDs. Also available as a
             :attr:`GeoDataFrame<buses_frame>`.
@@ -102,6 +108,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
     def __init__(
         self,
         *,
+        name: str = "Network",
         buses: MapOrSeq[Bus],
         lines: MapOrSeq[Line],
         transformers: MapOrSeq[Transformer],
@@ -139,11 +146,11 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             "load": self.loads,
             "source": self.sources,
         }
-        super().__init__(crs=crs)
+        super().__init__(name=name, crs=crs)
 
     def __repr__(self) -> str:
         return (
-            f"<{type(self).__name__}:"
+            f"<{type(self).__name__} {self.name!r}:"
             f" {count_repr(self.buses, 'bus', 'buses')},"
             f" {count_repr(self.lines, 'line', 'lines')},"
             f" {count_repr(self.transformers, 'transformer', 'transformers')},"
@@ -256,7 +263,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             A networkx multi-graph representing the electrical network.
         """
         nx = optional_deps.networkx
-        graph = nx.MultiGraph()
+        graph = nx.MultiGraph(name=self.name)
         for bus in self.buses.values():
             graph.add_node(
                 bus.id,

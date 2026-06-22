@@ -8,6 +8,7 @@ from roseau.load_flow_single.models import Bus, Line, Load, Switch, Transformer,
 class NetworkElements(TypedDict):
     """A dictionary of the network elements."""
 
+    name: str
     buses: dict[Id, Bus]
     loads: dict[Id, Load]
     sources: dict[Id, VoltageSource]

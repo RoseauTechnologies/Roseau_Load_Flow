@@ -91,6 +91,9 @@ def network_from_dict(  # noqa: C901
     is_multiphase = data.get("is_multiphase", True)
     assert is_multiphase, f"Unsupported phase selection {is_multiphase=}."
 
+    # Name
+    name = data.get("name", "Network")
+
     # CRS
     crs_dict = data.get("crs", {"data": None, "normalize": False})
     crs = CRS(crs_dict["data"]) if crs_dict["normalize"] else crs_dict["data"]
@@ -217,6 +220,7 @@ def network_from_dict(  # noqa: C901
 
     return (
         {
+            "name": name,
             "buses": buses,
             "lines": lines,
             "transformers": transformers,
@@ -311,6 +315,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
 
     res = {
         "version": NETWORK_JSON_VERSION,
+        "name": en.name,
         "is_multiphase": True,
         "crs": crs,
         "grounds": grounds,

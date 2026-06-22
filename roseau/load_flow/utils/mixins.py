@@ -596,7 +596,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
     _DEFAULT_SOLVER: Solver = "newton_goldstein"
 
     @abstractmethod
-    def __init__(self, *, crs: CRSLike | None = None) -> None:
+    def __init__(self, *, name: str = "Network", crs: CRSLike | None = None) -> None:
         for elements in self._elements_by_type.values():
             for element in elements.values():
                 element._check_compatible_phase_tech(self)
@@ -613,6 +613,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         self._create_network()
         self._valid = True
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
+        self.name: str = name
         self.crs: CRSLike | None = crs
         self._tool_data = ToolData()
 
@@ -624,13 +625,16 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             self._add_parameters("transformer", transformer.parameters)  # type: ignore
 
     @classmethod
-    def from_element(cls, initial_bus: AbstractElement, crs: CRSLike | None = None) -> Self:
+    def from_element(cls, initial_bus: AbstractElement, name: str = "Network", crs: CRSLike | None = None) -> Self:
         """Construct the network from only one element (bus) and add the others automatically.
 
         Args:
             initial_bus:
                 Any bus of the network. The network is constructed from this bus and all the
                 elements connected to it. This is usually the main source bus of the network.
+
+            name:
+                The name of the network. Defaults to ``"Network"``.
 
             crs:
                 An optional Coordinate Reference System to use with geo data frames. Can be anything
@@ -661,7 +665,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             elements_kwargs["potential_refs"] = elements_by_type["potential ref"]
             elements_kwargs["grounds"] = elements_by_type["ground"]
             elements_kwargs["ground_connections"] = elements_by_type["ground connection"]
-        return cls(**elements_kwargs, crs=crs)
+        return cls(**elements_kwargs, name=name, crs=crs)
 
     def solve_load_flow(
         self,

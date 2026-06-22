@@ -18,6 +18,7 @@ from roseau.load_flow.typing import CRSLike, Id
 class NetworkElements(TypedDict):
     """A dictionary of network elements."""
 
+    name: str
     buses: dict[Id, Bus]
     loads: dict[Id, Load]
     sources: dict[Id, VoltageSource]
