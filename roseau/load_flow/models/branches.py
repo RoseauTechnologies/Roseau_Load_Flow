@@ -14,7 +14,7 @@ from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.line_parameters import LineParameters
 from roseau.load_flow.models.transformer_parameters import TransformerParameters
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict, Side
-from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import one_or_more_repr, warn_external
 from roseau.load_flow_engine.cy_engine import CyBranch
 
@@ -234,40 +234,36 @@ class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
             )
 
     @property
-    @ureg_wraps(("A", "A"), (None,))
     def res_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch currents (A)."""
         return (
-            self._side1._res_currents_getter(warning=True),
-            self._side2._res_currents_getter(warning=False),  # warn only once
-        )  # type: ignore
+            Q_(self._side1._res_currents_getter(warning=True), "A"),
+            Q_(self._side2._res_currents_getter(warning=False), "A"),  # warn only once
+        )
 
     @property
-    @ureg_wraps(("VA", "VA"), (None,))
     def res_powers(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch powers (VA)."""
         return (
-            self._side1._res_powers_getter(warning=True),
-            self._side2._res_powers_getter(warning=False),  # warn only once
-        )  # type: ignore
+            Q_(self._side1._res_powers_getter(warning=True), "VA"),
+            Q_(self._side2._res_powers_getter(warning=False), "VA"),  # warn only once
+        )
 
     @property
-    @ureg_wraps(("V", "V"), (None,))
     def res_potentials(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch potentials (V)."""
         return (
-            self._side1._res_potentials_getter(warning=True),
-            self._side2._res_potentials_getter(warning=False),  # warn only once
-        )  # type: ignore
+            Q_(self._side1._res_potentials_getter(warning=True), "V"),
+            Q_(self._side2._res_potentials_getter(warning=False), "V"),  # warn only once
+        )
 
     @property
-    @ureg_wraps(("V", "V"), (None,))
     def res_voltages(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """The load flow result of the branch voltages (V)."""
         return (
-            self._side1._res_voltages_getter(warning=True),
-            self._side2._res_voltages_getter(warning=False),  # warn only once
-        )  # type: ignore
+            Q_(self._side1._res_voltages_getter(warning=True), "V"),
+            Q_(self._side2._res_voltages_getter(warning=False), "V"),  # warn only once
+        )
 
     #
     # Json Mixin interface

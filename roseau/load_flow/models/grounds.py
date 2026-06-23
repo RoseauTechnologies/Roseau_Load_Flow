@@ -92,10 +92,9 @@ class Ground(Element[CyGround]):
         return self._res_getter(self._res_potential, warning)
 
     @property
-    @ureg_wraps("V", (None,))
     def res_potential(self) -> Q_[complex]:
         """The load flow result of the ground potential (V)."""
-        return self._res_potential_getter(warning=True)  # type: ignore
+        return Q_(self._res_potential_getter(warning=True), "V")
 
     #
     # Json Mixin interface
@@ -252,10 +251,9 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self._element._side_value
 
     @property
-    @ureg_wraps("ohm", (None,))
     def impedance(self) -> Q_[complex]:
         """The impedance of the connection to the ground (ohm)."""
-        return self._impedance  # type: ignore
+        return Q_(self._impedance, "ohm")
 
     @impedance.setter
     @ureg_wraps(None, (None, "ohm"))
@@ -323,10 +321,9 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self._res_getter(value=self._res_current, warning=warning)
 
     @property
-    @ureg_wraps("A", (None,))
     def res_current(self) -> Q_[complex]:
         """The load flow result of the current flowing through this connection to the ground (A)."""
-        return self._res_current_getter(warning=True)  # type: ignore
+        return Q_(self._res_current_getter(warning=True), "A")
 
     #
     # Json Mixin interface

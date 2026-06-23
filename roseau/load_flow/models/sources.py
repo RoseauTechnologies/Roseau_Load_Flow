@@ -84,7 +84,6 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSourc
         self._cy_connect()
 
     @property
-    @ureg_wraps("V", (None,))
     def voltages(self) -> Q_[ComplexArray]:
         """The complex voltages of the source (V).
 
@@ -98,7 +97,7 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSourc
             of the second and third phases are -120° and 120°, respectively (120° phase shift
             clockwise).
         """
-        return self._voltages
+        return Q_(self._voltages, "V")
 
     @voltages.setter
     @ureg_wraps(None, (None, "V"))

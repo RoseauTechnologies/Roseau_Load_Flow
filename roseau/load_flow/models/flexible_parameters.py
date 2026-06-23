@@ -193,28 +193,24 @@ class Control(JsonMixin):
         return self._type
 
     @property
-    @ureg_wraps("V", (None,))
     def u_min(self) -> Q_[float]:
         """The minimum voltage i.e. the one the control reached the maximum action."""
-        return self._u_min  # type: ignore
+        return Q_(self._u_min, "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def u_down(self) -> Q_[float]:
         """The voltage which starts to trigger the control (lower value)."""
-        return self._u_down  # type: ignore
+        return Q_(self._u_down, "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def u_up(self) -> Q_[float]:
         """TThe voltage  which starts to trigger the control (upper value)."""
-        return self._u_up  # type: ignore
+        return Q_(self._u_up, "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def u_max(self) -> Q_[float]:
         """The maximum voltage i.e. the one the control reached its maximum action."""
-        return self._u_max  # type: ignore
+        return Q_(self._u_max, "V")
 
     @property
     def alpha(self) -> float:
@@ -594,10 +590,9 @@ class FlexibleParameter(JsonMixin):
         )
 
     @property
-    @ureg_wraps("VA", (None,))
     def s_max(self) -> Q_[float]:
         """The apparent power of the flexible load (VA). It is the radius of the feasible circle."""
-        return self._s_max  # type: ignore
+        return Q_(self._s_max, "VA")
 
     @s_max.setter
     @ureg_wraps(None, (None, "VA"))
@@ -622,10 +617,9 @@ class FlexibleParameter(JsonMixin):
         return self._q_min_value if self._q_min_value is not None else -self._s_max
 
     @property
-    @ureg_wraps("VAr", (None,))
     def q_min(self) -> Q_[float]:
         """The minimum reactive power of the flexible load (VAr)."""
-        return self._q_min  # type: ignore
+        return Q_(self._q_min, "VAr")
 
     @q_min.setter
     @ureg_wraps(None, (None, "VAr"))
@@ -656,10 +650,9 @@ class FlexibleParameter(JsonMixin):
         return self._q_max_value if self._q_max_value is not None else self._s_max
 
     @property
-    @ureg_wraps("VAr", (None,))
     def q_max(self) -> Q_[float]:
         """The maximum reactive power of the flexible load (VAr)."""
-        return self._q_max  # type: ignore
+        return Q_(self._q_max, "VAr")
 
     @q_max.setter
     @ureg_wraps(None, (None, "VAr"))

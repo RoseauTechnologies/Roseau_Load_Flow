@@ -102,10 +102,9 @@ class Bus(AbstractTerminal[CyBus]):
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
 
     @property
-    @ureg_wraps("V", (None,))
     def initial_potentials(self) -> Q_[ComplexArray]:
         """An array of initial potentials of the bus (V)."""
-        return self._initial_potentials
+        return Q_(self._initial_potentials, "V")
 
     @initial_potentials.setter
     @ureg_wraps(None, (None, "V"))

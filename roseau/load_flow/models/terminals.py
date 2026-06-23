@@ -10,7 +10,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.core import Element, _CyE_co
 from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict, Side
-from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import SIDE_DESC, SIDE_INDEX, SIDE_SUFFIX
 
 logger = logging.getLogger(__name__)
@@ -109,13 +109,11 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         return _calculate_voltages(potentials, self.phases)
 
     @property
-    @ureg_wraps("V", (None,))
     def res_potentials(self) -> Q_[ComplexArray]:
         """The load flow result of the element potentials (V)."""
-        return self._res_potentials_getter(warning=True)
+        return Q_(self._res_potentials_getter(warning=True), "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def res_voltages(self) -> Q_[ComplexArray]:
         """The load flow result of the element voltages (V).
 
@@ -126,27 +124,24 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         To always get phase-to-phase voltages, use the property :attr:`.res_voltages_pp`.
         To always get phase-to-neutral voltages, use the property :attr:`.res_voltages_pn`.
         """
-        return self._res_voltages_getter(warning=True)
+        return Q_(self._res_voltages_getter(warning=True), "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def res_voltages_pp(self) -> Q_[ComplexArray]:
         """The load flow result of the element's phase-to-phase voltages (V).
 
         Raises an error if the element has only one phase.
         """
-        return self._res_voltages_pp_getter(warning=True)
+        return Q_(self._res_voltages_pp_getter(warning=True), "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def res_voltages_pn(self) -> Q_[ComplexArray]:
         """The load flow result of the element's phase-to-neutral voltages (V).
 
         Raises an error if the element does not have a neutral.
         """
-        return self._res_voltages_pn_getter(warning=True)
+        return Q_(self._res_voltages_pn_getter(warning=True), "V")
 
-    @ureg_wraps("percent", (None, None))
     def res_voltage_unbalance(self, definition: Literal["VUF", "LVUR", "PVUR"] = "VUF") -> Q_[float]:
         """Calculate the voltage unbalance (VU) on this element.
 
@@ -200,17 +195,18 @@ class AbstractTerminal(Element[_CyE_co], ABC):
             # Indeed |V2_pp| / |V1_pp| = |V2 (1-α²)| / |V1(1-α)| = |V2| / |V1|
             potentials = self._res_potentials_getter(warning=True)
             _, v1, v2 = phasor_to_sym(potentials[:3])  # (0, +, -)
-            return abs(v2) / abs(v1) * 100  # type: ignore
+            result = abs(v2) / abs(v1) * 100
         elif definition == "LVUR":
             voltages = abs(self._res_voltages_pp_getter(warning=True))
             avg = sum(voltages) / 3
-            return max(abs(voltages - avg)) / avg * 100  # type: ignore
+            result = max(abs(voltages - avg)) / avg * 100
         elif definition == "PVUR":
             voltages = abs(self._res_voltages_pn_getter(warning=True))
             avg = sum(voltages) / 3
-            return max(abs(voltages - avg)) / avg * 100  # type: ignore
+            result = max(abs(voltages - avg)) / avg * 100
         else:
             raise ValueError(f"Invalid voltage unbalance definition: {definition!r}.")
+        return Q_(result, "percent")
 
     #
     # Json Mixin interface

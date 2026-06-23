@@ -12,7 +12,7 @@ from roseau.load_flow.models.core import _CyE_co
 from roseau.load_flow.models.terminals import AbstractTerminal
 from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict, Side
-from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import SIDE_DESC, abstractattrs, ensure_startsupper, one_or_more_repr, warn_external
 from roseau.load_flow_engine.cy_engine import CyBranch
 
@@ -153,18 +153,15 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         return potentials * currents.conjugate()
 
     @property
-    @ureg_wraps("A", (None,))
     def res_currents(self) -> Q_[ComplexArray]:
         """The load flow result of the element currents (A)."""
-        return self._res_currents_getter(warning=True)
+        return Q_(self._res_currents_getter(warning=True), "A")
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the "line powers" flowing into the element (VA)."""
-        return self._res_powers_getter(warning=True)
+        return Q_(self._res_powers_getter(warning=True), "VA")
 
-    @ureg_wraps("percent", (None,))
     def res_current_unbalance(self) -> Q_[float]:
         """Calculate the current unbalance (CU) on this element.
 
@@ -187,7 +184,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
             raise RoseauLoadFlowException(msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         currents = self._res_currents_getter(warning=True)
         _, i1, i2 = phasor_to_sym(currents[:3])  # (0, +, -)
-        return abs(i2) / abs(i1) * 100  # type: ignore
+        return Q_(abs(i2) / abs(i1) * 100, "percent")
 
     #
     # Json Mixin interface
