@@ -21,7 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- {gh-pr}`465` Improve performance of quantities by making the `Q_` class lazy.
+- {gh-pr}`465` Make results access on elements between 2x and 3x faster by making the `Q_` class lazy.
 - {gh-pr}`464` Support compact JSON output with `indent=False` and improve performance by using `orjson` if installed.
 - {gh-pr}`462` Add `name` attribute to `ElectricalNetwork` to store the name of the network.
 - {gh-pr}`460` Modify the load flow convergence check to use residuals and tolerance comparison. This fixes the case of
