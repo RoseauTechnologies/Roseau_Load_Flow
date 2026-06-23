@@ -153,14 +153,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return s
 
     @property
-    @ureg_wraps("ohm/km", (None,))
     def z_line(self) -> Q_[ComplexMatrix]:
-        return self._z_line
+        return Q_(self._z_line, "ohm/km")
 
     @property
-    @ureg_wraps("S/km", (None,))
     def y_shunt(self) -> Q_[ComplexMatrix]:
-        return self._y_shunt
+        return Q_(self._y_shunt, "S/km")
 
     @property
     def with_shunt(self) -> bool:

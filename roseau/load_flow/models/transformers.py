@@ -224,10 +224,9 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
             self._cy_update_parameters(tap=self.tap, parameters=value)
 
     @property
-    @ureg_wraps("", (None,))
     def max_loading(self) -> Q_[float]:
         """The maximum loading of the transformer (unitless)"""
-        return self._max_loading
+        return Q_(self._max_loading, "")
 
     @max_loading.setter
     @ureg_wraps(None, (None, ""))
@@ -246,10 +245,9 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
         return self._parameters.sn
 
     @property
-    @ureg_wraps("VA", (None,))
     def max_power(self) -> Q_[float]:
         """The maximum power loading of the transformer (in VA)."""
-        return self.parameters._sn * self._max_loading  # type: ignore
+        return Q_(self.parameters._sn * self._max_loading, "VA")
 
     def _cy_update_parameters(self, tap: float, parameters: TransformerParameters) -> None:
         z2, ym, k = parameters._z2, parameters._ym, parameters._k
@@ -404,18 +402,16 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
             return "normal"
 
     @property
-    @ureg_wraps("", (None,))
     def res_loading(self) -> Q_[float]:
         """Get the loading of the transformer (unitless)."""
-        return self._res_loading_getter(warning=True)
+        return Q_(self._res_loading_getter(warning=True), "")
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[complex]:
         """Get the total power losses in the transformer (in VA)."""
         powers_hv = self._side1._res_powers_getter(warning=True)
         powers_lv = self._side2._res_powers_getter(warning=False)  # warn only once
-        return sum(powers_hv) + sum(powers_lv)
+        return Q_(sum(powers_hv) + sum(powers_lv), "VA")
 
     @property
     def res_violated(self) -> bool:

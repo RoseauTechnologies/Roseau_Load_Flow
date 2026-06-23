@@ -43,13 +43,12 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource]):
         self._cy_connect()
 
     @property
-    @ureg_wraps("V", (None,))
     def voltage(self) -> Q_[complex]:
         """The complex voltage of the source (V).
 
         Setting the voltage will update the source voltage and invalidate the network results.
         """
-        return self._voltage
+        return Q_(self._voltage, "V")
 
     @voltage.setter
     @ureg_wraps(None, (None, "V"))

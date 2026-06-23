@@ -141,13 +141,12 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
         return self._flexible_param is not None
 
     @property
-    @ureg_wraps("VA", (None,))
     def power(self) -> Q_[complex]:
         """The power of the load (VA).
 
         Setting the power will update the load's power values and invalidate the network results.
         """
-        return self._power
+        return Q_(self._power, "VA")
 
     @power.setter
     @ureg_wraps(None, (None, "VA"))
@@ -228,13 +227,12 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad]):
         self._cy_connect()
 
     @property
-    @ureg_wraps("A", (None,))
     def current(self) -> Q_[complex]:
         """The current of the load (Amps).
 
         Setting the current will update the load's current and invalidate the network results.
         """
-        return self._current
+        return Q_(self._current, "A")
 
     @current.setter
     @ureg_wraps(None, (None, "A"))
@@ -281,13 +279,12 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
         return super()._validate_value(value)
 
     @property
-    @ureg_wraps("ohm", (None,))
     def impedance(self) -> Q_[complex]:
         """The impedance of the load (Ohms).
 
         Setting the impedance will update the load's impedance and invalidate the network results.
         """
-        return self._impedance
+        return Q_(self._impedance, "ohm")
 
     @impedance.setter
     @ureg_wraps(None, (None, "ohm"))

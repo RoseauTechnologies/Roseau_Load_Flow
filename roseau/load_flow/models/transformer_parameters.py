@@ -296,22 +296,19 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     phase_displacement = clock
 
     @property
-    @ureg_wraps("V", (None,))
     def uhv(self) -> Q_[float]:
         """Rated phase-to-phase voltage of the HV side (V)."""
-        return self._uhv
+        return Q_(self._uhv, "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def ulv(self) -> Q_[float]:
         """Rated no-load phase-to-phase voltage of the LV side (V)."""
-        return self._ulv
+        return Q_(self._ulv, "V")
 
     @property
-    @ureg_wraps("VA", (None,))
     def sn(self) -> Q_[float]:
         """The nominal power of the transformer (VA)."""
-        return self._sn
+        return Q_(self._sn, "VA")
 
     @property
     def fn(self) -> Q_[float] | None:
@@ -319,22 +316,19 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return Q_(self._fn, "Hz") if self._fn is not None else None
 
     @property
-    @ureg_wraps("ohm", (None,))
     def z2(self) -> Q_[complex]:
         """The series impedance of the transformer (Ohm)."""
-        return self._z2
+        return Q_(self._z2, "ohm")
 
     @property
-    @ureg_wraps("S", (None,))
     def ym(self) -> Q_[complex]:
         """The magnetizing admittance of the transformer (S)."""
-        return self._ym
+        return Q_(self._ym, "S")
 
     @property
-    @ureg_wraps("", (None,))
     def k(self) -> Q_[float]:
         """The transformation ratio of the transformer."""
-        return self._k
+        return Q_(self._k, "")
 
     @property
     def orientation(self) -> float:

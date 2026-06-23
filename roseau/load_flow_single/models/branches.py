@@ -8,7 +8,7 @@ from typing_extensions import TypeVar
 
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict, Side
-from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import warn_external
 from roseau.load_flow_engine.cy_engine import CyBranch
 from roseau.load_flow_single.models.buses import Bus
@@ -163,31 +163,28 @@ class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
             self._side2._res_voltage = self._cy_element.get_port_potential(self._n) * SQRT3
 
     @property
-    @ureg_wraps(("A", "A"), (None,))
     def res_currents(self) -> tuple[Q_[complex], Q_[complex]]:
         """The load flow result of the branch currents (A)."""
         return (
-            self._side1._res_current_getter(warning=True),
-            self._side2._res_current_getter(warning=False),  # warn only once
-        )  # type: ignore
+            Q_(self._side1._res_current_getter(warning=True), "A"),
+            Q_(self._side2._res_current_getter(warning=False), "A"),  # warn only once
+        )
 
     @property
-    @ureg_wraps(("V", "V"), (None,))
     def res_voltages(self) -> tuple[Q_[complex], Q_[complex]]:
         """The load flow result of the branch voltages (V)."""
         return (
-            self._side1._res_voltage_getter(warning=True),
-            self._side2._res_voltage_getter(warning=False),  # warn only once
-        )  # type: ignore
+            Q_(self._side1._res_voltage_getter(warning=True), "V"),
+            Q_(self._side2._res_voltage_getter(warning=False), "V"),  # warn only once
+        )
 
     @property
-    @ureg_wraps(("VA", "VA"), (None,))
     def res_powers(self) -> tuple[Q_[complex], Q_[complex]]:
         """The load flow result of the branch powers (VA)."""
         return (
-            self._side1._res_power_getter(warning=True),
-            self._side2._res_power_getter(warning=False),  # warn only once
-        )  # type: ignore
+            Q_(self._side1._res_power_getter(warning=True), "VA"),
+            Q_(self._side2._res_power_getter(warning=False), "VA"),  # warn only once
+        )
 
     #
     # Json Mixin interface
