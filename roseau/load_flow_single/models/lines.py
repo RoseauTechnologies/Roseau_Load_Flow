@@ -101,10 +101,9 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
                 self._cy_element.update_single_line_parameters(z_line=self._z_line)
 
     @property
-    @ureg_wraps("km", (None,))
     def length(self) -> Q_[float]:
         """The length of the line (in km)."""
-        return self._length  # type: ignore
+        return Q_(self._length, "km")
 
     @length.setter
     @ureg_wraps(None, (None, "km"))
@@ -144,22 +143,19 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
             self._update_internal_parameters()
 
     @property
-    @ureg_wraps("ohm", (None,))
     def z_line(self) -> Q_[complex]:
         """Impedance of the line (in Ohm)."""
-        return self._z_line  # type: ignore
+        return Q_(self._z_line, "ohm")
 
     @property
-    @ureg_wraps("S", (None,))
     def y_shunt(self) -> Q_[complex]:
         """Shunt admittance of the line (in Siemens)."""
-        return self._y_shunt  # type: ignore
+        return Q_(self._y_shunt, "S")
 
     @property
-    @ureg_wraps("", (None,))
     def max_loading(self) -> Q_[float]:
         """The maximum loading of the line (unitless)"""
-        return self._max_loading  # type: ignore
+        return Q_(self._max_loading, "")
 
     @max_loading.setter
     @ureg_wraps(None, (None, ""))
@@ -231,40 +227,36 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
             return "normal"
 
     @property
-    @ureg_wraps("A", (None,))
     def res_series_current(self) -> Q_[complex]:
         """Get the current in the series elements of the line (in A)."""
-        return self._res_series_current_getter(warning=True)  # type: ignore
+        return Q_(self._res_series_current_getter(warning=True), "A")
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_series_power_losses(self) -> Q_[complex]:
         """Get the power losses in the series elements of the line (in VA)."""
-        return self._res_series_power_losses_getter(warning=True)  # type: ignore
+        return Q_(self._res_series_power_losses_getter(warning=True), "VA")
 
     @property
-    @ureg_wraps(("A", "A"), (None,))
     def res_shunt_currents(self) -> tuple[Q_[complex], Q_[complex]]:
         """Get the currents in the shunt elements of the line (in A)."""
         return (
-            self._side1._res_shunt_current_getter(warning=True),
-            self._side2._res_shunt_current_getter(warning=False),  # warn only once
-        )  # type: ignore
+            Q_(self._side1._res_shunt_current_getter(warning=True), "A"),
+            Q_(self._side2._res_shunt_current_getter(warning=False), "A"),  # warn only once
+        )
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_shunt_power_losses(self) -> Q_[complex]:
         """Get the power losses in the shunt elements of the line (in VA)."""
-        return (
+        return Q_(
             self._side1._res_shunt_losses_getter(warning=True)
-            + self._side2._res_shunt_losses_getter(warning=False)  # warn only once
-        )  # type: ignore
+            + self._side2._res_shunt_losses_getter(warning=False),  # warn only once
+            "VA",
+        )
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[complex]:
         """Get the power losses in the line (in VA)."""
-        return self._res_power_losses_getter(warning=True)  # type: ignore
+        return Q_(self._res_power_losses_getter(warning=True), "VA")
 
     @property
     def res_loading(self) -> Q_[float] | None:
@@ -343,13 +335,11 @@ class LineSide(AbstractBranchSide):
         return voltage * current.conjugate() * SQRT3
 
     @property
-    @ureg_wraps("A", (None,))
     def res_shunt_current(self) -> Q_[complex]:
         """Get the current in the shunt elements of the line side (in A)."""
-        return self._res_shunt_current_getter(warning=True)  # type: ignore
+        return Q_(self._res_shunt_current_getter(warning=True), "A")
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_shunt_losses(self) -> Q_[complex]:
         """Get the losses in the shunt elements of the line side (in VA)."""
-        return self._res_shunt_losses_getter(warning=True)  # type: ignore
+        return Q_(self._res_shunt_losses_getter(warning=True), "VA")

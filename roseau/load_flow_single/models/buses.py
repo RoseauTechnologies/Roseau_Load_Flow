@@ -93,10 +93,9 @@ class Bus(AbstractTerminal[CyBus]):
         return f"{type(self).__name__}(id={self.id!r})"
 
     @property
-    @ureg_wraps("V", (None,))
     def initial_voltage(self) -> Q_[complex]:
         """Initial voltage of the bus (V)."""
-        return self._initial_voltage
+        return Q_(self._initial_voltage, "V")
 
     @initial_voltage.setter
     @ureg_wraps(None, (None, "V"))
