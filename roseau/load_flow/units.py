@@ -58,8 +58,12 @@ else:
     Quantity = ureg.Quantity
     Quantity.__class_getitem__ = classmethod(GenericAlias)
 
+_Q_SEQ = (list, tuple)
+
 
 class Q_(Quantity[M_co], Generic[M_co]):  # noqa: N801, UP046  # ty:ignore[invalid-generic-class]
+    __slots__ = ("_cv", "_cu", "_cq", "_cm")
+
     @overload  # Known magnitude type
     def __new__[M: Magnitude](cls, value: M, units: UnitLike | None = None) -> "Q_[M]": ...
     @overload  # Unknown magnitude type
@@ -86,35 +90,37 @@ class Q_(Quantity[M_co], Generic[M_co]):  # noqa: N801, UP046  # ty:ignore[inval
     def __new__(cls, value: "Q_[Any]", units: UnitLike | None = None) -> "Q_[Any]": ...
     def __new__(cls, value, units=None):
         self = object.__new__(cls)
-        self.__cached_value = value
-        self.__cached_units = units
-        self.__cached_q = None
-        self.__cached_m = None
+        self._cv = value  # cached value
+        self._cu = units  # cached units
+        self._cq = None  # cached quantity
+        self._cm = None  # cached magnitude
         return self
 
     @property
     def m(self) -> M_co:
         """Quantity's magnitude."""
-        if self.__cached_m is None:
-            if isinstance(self.__cached_value, (list, tuple)):
-                self.__cached_m = np.array(self.__cached_value)
-            elif isinstance(self.__cached_value, ureg.Quantity):
-                if self.__cached_units is None:
-                    self.__cached_m = self.__cached_value.m
-                else:
-                    self.__cached_m = ureg.convert(
-                        self.__cached_value.m, self.__cached_value.units, self.__cached_units
-                    )
-            else:
-                self.__cached_m = self.__cached_value
-        return self.__cached_m
+        val = self._cv
+        # Fast path: scalar value
+        if not (is_seq := isinstance(val, _Q_SEQ)) and not isinstance(val, Quantity):
+            return val
+        # Slow path: list/tuple/Quantity — compute and cache
+        m = self._cm
+        if m is None:
+            if is_seq:
+                self._cm = m = np.array(val)
+            else:  # Quantity
+                cu = self._cu
+                self._cm = m = val.m if cu is None else ureg.convert(val.m, val.units, cu)
+        return m  # type: ignore
 
     magnitude = m
 
     def __getattr__(self, name: str) -> Any:
-        if self.__cached_q is None:
-            self.__cached_q = ureg.Quantity(self.__cached_value, self.__cached_units)
-        res = getattr(self.__cached_q, name)
+        qty = self._cq
+        if qty is None:
+            qty = ureg.Quantity(self._cv, self._cu)
+            self._cq = qty
+        res = getattr(qty, name)
         self.__dict__[name] = res  # cache the result
         return res
 
