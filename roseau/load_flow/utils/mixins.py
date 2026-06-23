@@ -10,6 +10,12 @@ from importlib import resources
 from pathlib import Path
 from typing import Any, ClassVar, Generic, NoReturn, Self, overload
 
+try:
+    import orjson
+
+except ImportError:
+    orjson = None  # ty:ignore[invalid-assignment]
+
 import numpy as np
 import pandas as pd
 import shapely
@@ -43,6 +49,20 @@ def _json_encoder_default(obj: object) -> object:
         return None
     # raise the default error from the json module
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
+def _json_dump(obj: object, /, path: StrPath, indent: bool) -> Path:
+    """Dump an object to a JSON file."""
+    path = Path(path).expanduser().resolve()
+    if orjson is not None:
+        option = orjson.OPT_SERIALIZE_NUMPY
+        if indent:
+            option |= orjson.OPT_INDENT_2 | orjson.OPT_APPEND_NEWLINE
+        path.write_bytes(orjson.dumps(obj, option=option))
+    else:
+        with path.open("w", encoding="utf-8") as fp:
+            json.dump(obj, fp, ensure_ascii=False, indent=2 if indent else None, default=_json_encoder_default)
+    return path
 
 
 @abstractattrs("is_multi_phase")
@@ -117,7 +137,11 @@ class JsonMixin(metaclass=ABCMeta):
         Returns:
             The constructed element.
         """
-        data = json.loads(Path(path).read_text())
+        if orjson is not None:
+            data = orjson.loads(Path(path).read_bytes())
+        else:
+            with open(path, "rb") as fp:
+                data = json.load(fp)
         return cls.from_dict(data=data, include_results=include_results)
 
     @abstractmethod
@@ -147,7 +171,7 @@ class JsonMixin(metaclass=ABCMeta):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
         return self._to_dict(include_results=include_results)
 
-    def to_json(self, path: StrPath, *, include_results: bool = True) -> Path:
+    def to_json(self, path: StrPath, *, include_results: bool = True, indent: bool = True) -> Path:
         """Save this element to a JSON file.
 
         .. note::
@@ -166,14 +190,15 @@ class JsonMixin(metaclass=ABCMeta):
                 If True (default), the results of the load flow are included in the JSON file.
                 If no results are available, this option is ignored.
 
+            indent:
+                If True (default), the JSON output is pretty-printed with 2-space indentation.
+                Set to False for compact output.
+
         Returns:
             The expanded and resolved path of the written file.
         """
         res = self.to_dict(include_results=include_results)
-        path = Path(path).expanduser().resolve()
-        with path.open("w", encoding="utf-8") as fp:
-            json.dump(res, fp, ensure_ascii=False, indent=2, default=_json_encoder_default)
-        return path
+        return _json_dump(res, path=path, indent=indent)
 
     @abstractmethod
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
@@ -220,7 +245,7 @@ class JsonMixin(metaclass=ABCMeta):
         """
         return self._results_to_dict(warning=True, full=full)
 
-    def results_to_json(self, path: StrPath, *, full: bool = False) -> Path:
+    def results_to_json(self, path: StrPath, *, full: bool = False, indent: bool = True) -> Path:
         """Write the results of the load flow to a json file.
 
         .. note::
@@ -239,14 +264,15 @@ class JsonMixin(metaclass=ABCMeta):
                 If `True`, all the results are added in the resulting dictionary, including results computed from other
                 results (such as voltages that could be computed from potentials). `False` by default.
 
+            indent:
+                If True (default), the JSON output is pretty-printed with 2-space indentation.
+                Set to False for compact output.
+
         Returns:
             The expanded and resolved path of the written file.
         """
         dict_results = self._results_to_dict(warning=True, full=full)
-        path = Path(path).expanduser().resolve()
-        with path.open("w", encoding="utf-8") as fp:
-            json.dump(dict_results, fp, ensure_ascii=False, indent=2, default=_json_encoder_default)
-        return path
+        return _json_dump(dict_results, path=path, indent=indent)
 
 
 class CatalogueMixin[T](metaclass=ABCMeta):

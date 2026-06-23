@@ -49,6 +49,7 @@ issues = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/"
 repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/"
 
 [project.optional-dependencies]
+fast-json = ["orjson>=3.6.0"]
 graph = ["networkx>=3.3.0"]
 plot = ["matplotlib>=3.9.0"]
 

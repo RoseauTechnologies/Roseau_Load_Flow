@@ -2,7 +2,6 @@
 This module defines the electrical network class.
 """
 
-import json
 import logging
 import re
 from collections.abc import Generator, Iterable, Mapping
@@ -1363,14 +1362,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
 
         # Get the data from the Json file
         path = cls.catalogue_path() / f"{name}_{load_point_name}.json"
-        try:
-            json_dict = json.loads(path.read_text())
-        except FileNotFoundError:
-            msg = f"The file {path} has not been found while it should exist. Please post an issue on GitHub."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.CATALOGUE_MISSING) from None
-
-        network = cls.from_dict(json_dict)
+        network = cls.from_json(path)
         network.name = f"{name} ({load_point_name})"
         return network
 
