@@ -21,6 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`466` Avoid unnecessary copies of already array inputs.
 - {gh-pr}`465` Make results access on elements between 2x and 3x faster by making the `Q_` class lazy.
 - {gh-pr}`464` Support compact JSON output with `indent=False` and improve performance by using `orjson` if installed.
 - {gh-pr}`462` Add `name` attribute to `ElectricalNetwork` to store the name of the network.

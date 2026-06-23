@@ -103,8 +103,8 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
         return Q_(self._res_inner_powers_getter(warning=True), "VA")
 
     def _validate_value(self, value: ComplexScalarOrArrayLike1D) -> ComplexArray:
-        values = [value for _ in range(self._size)] if np.isscalar(value) else value
-        values = np.array(values, dtype=np.complex128)
+        values = ([value] * self._size) if np.isscalar(value) else value
+        values = np.asarray(values, dtype=np.complex128)
         if len(values) != self._size:
             msg = f"Incorrect number of {self.type}s: {len(values)} instead of {self._size}"
             logger.error(msg)

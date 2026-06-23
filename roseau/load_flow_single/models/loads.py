@@ -272,7 +272,7 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
 
     def _validate_value(self, value: Complex) -> complex:
         # A load cannot have a zero impedance
-        if cmath.isclose(value, 0):
+        if cmath.isclose(value, 0, abs_tol=1e-8):
             msg = f"The impedance of the load {self.id!r} is null"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)

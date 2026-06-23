@@ -1,4 +1,5 @@
 import logging
+import math
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, NoReturn, Self
 
@@ -126,7 +127,7 @@ class Control(JsonMixin):
         # Warn the user if a value different from 0 was given to the control for a useless value
         msg_list = []
         for name, value in useless_values.items():
-            if not np.isclose(value, 0):
+            if not math.isclose(value, 0, abs_tol=1e-8):
                 msg_list.append(f"{name!r} ({value:.1f} V)")
 
         if msg_list:

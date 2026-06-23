@@ -1,3 +1,4 @@
+import cmath
 import logging
 from typing import TYPE_CHECKING, Final, Literal, Self, final
 
@@ -260,7 +261,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
     def impedance(self, value: Complex | Q_[Complex]) -> None:
         self._impedance = complex(value)
         self._invalidate_network_results()
-        if np.isclose(self._impedance, 0):
+        if cmath.isclose(self._impedance, 0, abs_tol=1e-8):
             if not (self._cy_initialized and isinstance(self._cy_element, CySwitch)):
                 if self._cy_initialized:
                     self._cy_element.disconnect()
