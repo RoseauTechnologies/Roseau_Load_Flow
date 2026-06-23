@@ -66,7 +66,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --frozen --all-extras
+          # TODO orjson (fast-json extra) does not yet support free-threaded Python
+          uv sync --frozen --all-extras ${{ matrix.python-version == '3.14t' && '--no-extra fast-json' || '' }}
 
       - name: Test with pytest
         run: |
