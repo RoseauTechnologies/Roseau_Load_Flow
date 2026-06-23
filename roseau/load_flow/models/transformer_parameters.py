@@ -1,3 +1,4 @@
+import cmath
 import logging
 import math
 import re
@@ -157,7 +158,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES)
-        if np.isclose(z2, 0.0):
+        if cmath.isclose(z2, 0, abs_tol=1e-8):
             msg = (
                 f"Transformer parameters {id!r} has a null series impedance z2. Ideal transformers "
                 f"are not supported yet."
@@ -834,7 +835,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             rs = float(rs)
             if loadloss is None:
                 loadloss = rs * windings
-            elif not np.isclose(rs * windings, loadloss):
+            elif not math.isclose(rs * windings, loadloss, abs_tol=1e-8):
                 warn_external(
                     f"rs={rs} is not consistent with loadloss={loadloss} for {windings} windings. "
                     f"Only the value of loadloss will be used and rs will be ignored."
@@ -846,7 +847,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS)
             if loadloss is None:
                 loadloss = float(sum(rs))
-            elif not np.isclose(sum(rs), loadloss):
+            elif not math.isclose(sum(rs), loadloss, abs_tol=1e-8):
                 warn_external(
                     f"The sum of rs={rs!r} is not equal to the value of loadloss={loadloss!r}. "
                     f"Only the value of loadloss will be used and rs will be ignored."

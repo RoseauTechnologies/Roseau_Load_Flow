@@ -113,7 +113,7 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSourc
                 voltages = value * PositiveSequence
         else:
             voltages = value
-        voltages = np.array(voltages, dtype=np.complex128)
+        voltages = np.asarray(voltages, dtype=np.complex128)
         if len(voltages) != self._size:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
             logger.error(msg)

@@ -1,4 +1,5 @@
 import logging
+import math
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any, Final, Self, final
 
@@ -317,7 +318,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._nominal_voltage is None
                     or element._nominal_voltage is None
-                    or np.isclose(element._nominal_voltage, self._nominal_voltage)
+                    or math.isclose(element._nominal_voltage, self._nominal_voltage)
                 ):
                     msg = (
                         f"Cannot propagate the nominal voltage ({self._nominal_voltage} V) of bus {self.id!r} "
@@ -329,7 +330,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._min_voltage_level is None
                     or element._min_voltage_level is None
-                    or np.isclose(element._min_voltage_level, self._min_voltage_level)
+                    or math.isclose(element._min_voltage_level, self._min_voltage_level)
                 ):
                     msg = (
                         f"Cannot propagate the minimum voltage level ({self._min_voltage_level}) of bus {self.id!r} "
@@ -341,7 +342,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._max_voltage_level is None
                     or element._max_voltage_level is None
-                    or np.isclose(element._max_voltage_level, self._max_voltage_level)
+                    or math.isclose(element._max_voltage_level, self._max_voltage_level)
                 ):
                     msg = (
                         f"Cannot propagate the maximum voltage level ({self._max_voltage_level}) of bus {self.id!r} "
@@ -499,12 +500,12 @@ class Bus(AbstractTerminal[CyBus]):
             data["initial_potentials"] = [[v.real, v.imag] for v in self._initial_potentials.tolist()]
         if self.geometry is not None:
             data["geometry"] = self.geometry.__geo_interface__
-        if self.nominal_voltage is not None:
-            data["nominal_voltage"] = self.nominal_voltage.magnitude
-        if self.min_voltage_level is not None:
-            data["min_voltage_level"] = self.min_voltage_level.magnitude
-        if self.max_voltage_level is not None:
-            data["max_voltage_level"] = self.max_voltage_level.magnitude
+        if self._nominal_voltage is not None:
+            data["nominal_voltage"] = self._nominal_voltage
+        if self._min_voltage_level is not None:
+            data["min_voltage_level"] = self._min_voltage_level
+        if self._max_voltage_level is not None:
+            data["max_voltage_level"] = self._max_voltage_level
         if include_results:
             data["results"] = data.pop("results")  # move results to the end
         return data

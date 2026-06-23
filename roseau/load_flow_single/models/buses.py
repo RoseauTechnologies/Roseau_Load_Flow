@@ -410,12 +410,12 @@ class Bus(AbstractTerminal[CyBus]):
             data["initial_voltage"] = [self._initial_voltage.real, self._initial_voltage.imag]
         if self.geometry is not None:
             data["geometry"] = self.geometry.__geo_interface__
-        if self.nominal_voltage is not None:
-            data["nominal_voltage"] = self.nominal_voltage.magnitude
-        if self.min_voltage_level is not None:
-            data["min_voltage_level"] = self.min_voltage_level.magnitude
-        if self.max_voltage_level is not None:
-            data["max_voltage_level"] = self.max_voltage_level.magnitude
+        if self._nominal_voltage is not None:
+            data["nominal_voltage"] = self._nominal_voltage
+        if self._min_voltage_level is not None:
+            data["min_voltage_level"] = self._min_voltage_level
+        if self._max_voltage_level is not None:
+            data["max_voltage_level"] = self._max_voltage_level
         if include_results:
             data["results"] = data.pop("results")  # move results to the end
         return data
