@@ -72,10 +72,6 @@ class AbstractBranchSide(AbstractConnectable[_CyB_co]):
     def __repr__(self) -> str:
         return f"<{type(self).__name__}: branch={self._branch.id!r}, side={self._side_value}, phases={self._phases!r}>"
 
-    @classmethod
-    def from_dict(cls, data, *, include_results=True) -> Self:
-        raise NotImplementedError("Cannot create a branch side from a dict.")
-
     def _connect(self, *elements) -> None:
         # Connections are done in the branch
         pass
@@ -269,7 +265,7 @@ class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         data["geometry"] = cls._parse_geometry(data.pop("geometry", None))
         results = data.pop("results", None)
         self = cls(**data)

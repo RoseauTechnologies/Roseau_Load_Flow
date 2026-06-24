@@ -361,7 +361,7 @@ class Control(JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         alpha = data.get("alpha", cls._DEFAULT_ALPHA)
         epsilon = data.get("epsilon", cls._DEFAULT_EPSILON)
         if data["type"] == "constant":
@@ -499,7 +499,7 @@ class Projection(JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         alpha = data.get("alpha", cls._DEFAULT_ALPHA)
         epsilon = data.get("epsilon", cls._DEFAULT_EPSILON)
         return cls(type=data["type"], alpha=alpha, epsilon=epsilon)
@@ -1074,10 +1074,10 @@ class FlexibleParameter(JsonMixin):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        control_p = Control.from_dict(data=data["control_p"], include_results=include_results)
-        control_q = Control.from_dict(data=data["control_q"], include_results=include_results)
-        projection = Projection.from_dict(data=data["projection"], include_results=include_results)
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+        control_p = Control._from_dict(data=data["control_p"], include_results=include_results)
+        control_q = Control._from_dict(data=data["control_q"], include_results=include_results)
+        projection = Projection._from_dict(data=data["projection"], include_results=include_results)
         q_min = data.get("q_min", None)
         q_max = data.get("q_max", None)
         return cls(

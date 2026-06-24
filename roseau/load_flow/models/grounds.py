@@ -101,7 +101,7 @@ class Ground(Element[CyGround]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         results = data.pop("results", None)
         self = cls(**data)
         if include_results and results:
@@ -330,7 +330,7 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         results = data.pop("results", None)
         data["impedance"] = complex(*data.pop("impedance"))
         self = cls(**data)

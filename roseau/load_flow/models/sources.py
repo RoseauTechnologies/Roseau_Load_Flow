@@ -127,7 +127,7 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSourc
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         self = cls(
             id=data["id"],
             bus=data["bus"],

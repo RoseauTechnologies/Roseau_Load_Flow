@@ -692,7 +692,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
     # Data exchange
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         """Construct an electrical network from a dict created with :meth:`to_dict`.
 
         Args:
