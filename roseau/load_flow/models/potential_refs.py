@@ -130,7 +130,7 @@ class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         self = cls(id=data["id"], element=data["element"], phases=data.get("phases"))
         if include_results and "results" in data:
             self._res_current = complex(*data["results"]["current"])

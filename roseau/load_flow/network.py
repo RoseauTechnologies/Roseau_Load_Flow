@@ -1254,7 +1254,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
     # Network saving/loading
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         """Construct an electrical network from a dict created with :meth:`to_dict`.
 
         Args:

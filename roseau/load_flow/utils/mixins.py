@@ -5,6 +5,7 @@ import textwrap
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
+from copy import deepcopy
 from heapq import heappop, heappush
 from importlib import resources
 from pathlib import Path
@@ -88,61 +89,11 @@ class Identifiable(RLFObject, metaclass=ABCMeta):
         return f"{type(self).__name__}(id={self.id!r})"
 
 
-class JsonMixin(metaclass=ABCMeta):
-    """Mixin for classes that can be serialized to and from JSON."""
+class ToJsonMixin(metaclass=ABCMeta):
+    """Mixin for classes that can be serialized to JSON."""
 
     _no_results = True
     _results_valid = False
-
-    @classmethod
-    @abstractmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        """Create an element from a dictionary created with :meth:`to_dict`.
-
-        Note:
-            This method does not work on all classes that define it as some of them require
-            additional information to be constructed. It can only be safely used on the
-            `ElectricNetwork`, `LineParameters` and `TransformerParameters` classes.
-
-        Args:
-            data:
-                The dictionary containing the element's data.
-
-            include_results:
-                If True (default) and the results of the load flow are included in the dictionary,
-                the results are also loaded into the element.
-
-        Returns:
-            The constructed element.
-        """
-        raise NotImplementedError
-
-    @classmethod
-    def from_json(cls, path: StrPath, *, include_results: bool = True) -> Self:
-        """Construct an element from a JSON file created with :meth:`to_json`.
-
-        Note:
-            This method does not work on all classes that define it as some of them require
-            additional information to be constructed. It can only be safely used on the
-            `ElectricNetwork`, `LineParameters` and `TransformerParameters` classes.
-
-        Args:
-            path:
-                The path to the network data file.
-
-            include_results:
-                If True (default) and the results of the load flow are included in the file,
-                the results are also loaded into the element.
-
-        Returns:
-            The constructed element.
-        """
-        if orjson is not None:
-            data = orjson.loads(Path(path).read_bytes())
-        else:
-            with open(path, "rb") as fp:
-                data = json.load(fp)
-        return cls.from_dict(data=data, include_results=include_results)
 
     @abstractmethod
     def _to_dict(self, include_results: bool) -> JsonDict:
@@ -275,6 +226,61 @@ class JsonMixin(metaclass=ABCMeta):
         return _json_dump(dict_results, path=path, indent=indent)
 
 
+class JsonMixin(ToJsonMixin):
+    """Mixin for classes that can be serialized to and from JSON."""
+
+    @classmethod
+    @abstractmethod
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+        raise NotImplementedError
+
+    @classmethod
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True, copy: bool = True) -> Self:
+        """Create an instance from a dictionary created with :meth:`to_dict`.
+
+        Args:
+            data:
+                The dictionary containing the data.
+
+            include_results:
+                If True (default) and the results of the load flow are included in the dictionary,
+                the results are also loaded.
+
+            copy:
+                If True (default), the input dictionary is deep-copied before processing so the
+                original is never modified. Pass ``False`` when the dictionary is a throwaway (e.g.
+                freshly parsed from JSON) to avoid the copy overhead.
+
+        Returns:
+            The constructed instance.
+        """
+        if copy:
+            data = deepcopy(data)
+        return cls._from_dict(data=data, include_results=include_results)
+
+    @classmethod
+    def from_json(cls, path: StrPath, *, include_results: bool = True) -> Self:
+        """Construct an instance from a JSON file created with :meth:`to_json`.
+
+        Args:
+            path:
+                The path to the data file.
+
+            include_results:
+                If True (default) and the results of the load flow are included in the file,
+                the results are also loaded.
+
+        Returns:
+            The constructed instance.
+        """
+        if orjson is not None:
+            data = orjson.loads(Path(path).read_bytes())
+        else:
+            with open(path, "rb") as fp:
+                data = json.load(fp)
+        return cls._from_dict(data=data, include_results=include_results)
+
+
 class CatalogueMixin[T](metaclass=ABCMeta):
     """A mixin class for objects which can be built from a catalogue. It adds the `from_catalogue` class method."""
 
@@ -401,7 +407,7 @@ class CatalogueMixin[T](metaclass=ABCMeta):
 
 
 @abstractattrs("element_type")
-class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
+class AbstractElement(Identifiable, ToJsonMixin, Generic[_N_co, _CyE_co]):
     """An abstract class of an element in an Electrical network."""
 
     element_type: ClassVar[str]

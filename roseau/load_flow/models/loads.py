@@ -133,12 +133,12 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
                 )
 
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "Load":
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "Load":
         load_type = data["type"]
         if load_type == "power":
             if (fp_data_list := data.get("flexible_params")) is not None:
                 fp = [
-                    FlexibleParameter.from_dict(data=fp_dict, include_results=include_results)
+                    FlexibleParameter._from_dict(data=fp_dict, include_results=include_results)
                     for fp_dict in fp_data_list
                 ]
             else:

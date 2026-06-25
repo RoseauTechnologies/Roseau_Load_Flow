@@ -479,7 +479,7 @@ class Bus(AbstractTerminal[CyBus]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         if (initial_potentials := data.get("initial_potentials")) is not None:
             initial_potentials = [complex(*v) for v in initial_potentials]
         self = cls(

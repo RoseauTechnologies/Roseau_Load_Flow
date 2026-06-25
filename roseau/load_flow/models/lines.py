@@ -369,9 +369,9 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         results = data.get("results", None)
-        self = super().from_dict(data, include_results=include_results)
+        self = super()._from_dict(data, include_results=include_results)
         if include_results and results and self.with_shunt:
             self._res_ground_potential = complex(*results["ground_potential"])
         return self

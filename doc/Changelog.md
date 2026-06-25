@@ -21,6 +21,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`467` Avoid unnecessary copies when deserializing networks from JSON or dict and remove `from_dict` methods
+  from element classes, these methods did not work correctly because they depend on other elements.
 - {gh-pr}`466` Avoid unnecessary copies of already array inputs.
 - {gh-pr}`465` Make results access on elements between 2x and 3x faster by making the `Q_` class lazy.
 - {gh-pr}`464` Support compact JSON output with `indent=False` and improve performance by using `orjson` if installed.

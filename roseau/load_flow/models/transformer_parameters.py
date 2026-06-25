@@ -1059,7 +1059,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         if "p0" in data:
             # TODO should we validate z2 and ym if they exist?
             return cls.from_open_and_short_circuit_tests(

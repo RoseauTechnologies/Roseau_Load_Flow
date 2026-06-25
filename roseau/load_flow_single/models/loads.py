@@ -49,12 +49,12 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "Load":
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "Load":
         load_type = data["type"]
         if load_type == "power":
             power = complex(data["power"][0], data["power"][1])
             if (fp_data := data.get("flexible_param")) is not None:
-                fp = FlexibleParameter.from_dict(data=fp_data, include_results=include_results)
+                fp = FlexibleParameter._from_dict(data=fp_data, include_results=include_results)
             else:
                 fp = None
             self = PowerLoad(id=data["id"], bus=data["bus"], power=power, flexible_param=fp)
