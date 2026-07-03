@@ -2,6 +2,7 @@ from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Any, Literal
 
 import geopandas as gpd
+import shapely as shp
 
 from roseau.load_flow.plotting import (
     _RESULT_COLORS,
@@ -130,9 +131,29 @@ def plot_interactive_map(
         transformers_gdf.at[idx, "uhv"] = lp._uhv
         transformers_gdf.at[idx, "ulv"] = lp._ulv
 
+    # Switches as lines if their buses are not at the same point
+    switches_data = {
+        "id": [],
+        "element_type": [],
+        "bus1_id": [],
+        "bus2_id": [],
+        "status": [],
+        "geometry": [],
+    }
+    for sw in network.switches.values():
+        if sw.bus1.geometry is None or sw.bus2.geometry is None or sw.bus1.geometry.equals(sw.bus2.geometry):
+            continue
+        switches_data["id"].append(sw.id)
+        switches_data["element_type"].append("switch")
+        switches_data["bus1_id"].append(sw.bus1.id)
+        switches_data["bus2_id"].append(sw.bus2.id)
+        switches_data["status"].append("closed" if sw.closed else "open")
+        switches_data["geometry"].append(shp.LineString([sw.bus1.geometry, sw.bus2.geometry]))
+    switches_gdf = gpd.GeoDataFrame(switches_data, crs=network.crs)
+
     m = _plot_interactive_map_internal(
         network=network,
-        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf},
+        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
         fields={
             "bus": {
                 "id": "Id:",
@@ -166,6 +187,12 @@ def plot_interactive_map(
                 "lv_side": "LV Side",
                 "bus_lv_id": "» Bus:",
                 "ulv": "» Ur (V):",
+            },
+            "switch": {
+                "id": "Id:",
+                "bus1_id": "Bus1:",
+                "bus2_id": "Bus2:",
+                "status": "Status:",
             },
         },
         style_color_callback=lambda et, id: "#000000" if et == "transformer" else style_color,
@@ -360,9 +387,32 @@ def plot_results_interactive_map(
         transformers_data["res_voltages"].append(_get_tr_buses_data(tr, "res_voltage"))
         transformers_data["res_voltage_levels"].append(_get_tr_buses_data(tr, "res_voltage_level"))
 
+    switches_data = {
+        "id": [],
+        "element_type": [],
+        "bus1_id": [],
+        "bus2_id": [],
+        "status": [],
+        "geometry": [],
+    }
+    for switch in network.switches.values():
+        if (
+            switch.bus1.geometry is None
+            or switch.bus2.geometry is None
+            or switch.bus1.geometry.equals(switch.bus2.geometry)
+        ):
+            continue
+        switches_data["id"].append(switch.id)
+        switches_data["element_type"].append("switch")
+        switches_data["bus1_id"].append(switch.bus1.id)
+        switches_data["bus2_id"].append(switch.bus2.id)
+        switches_data["status"].append("closed" if switch.closed else "open")
+        switches_data["geometry"].append(shp.LineString([switch.bus1.geometry, switch.bus2.geometry]))
+
     buses_gdf = gpd.GeoDataFrame(buses_data, crs=network.crs)
     lines_gdf = gpd.GeoDataFrame(lines_data, crs=network.crs)
     transformers_gdf = gpd.GeoDataFrame(transformers_data, crs=network.crs)
+    switches_gdf = gpd.GeoDataFrame(switches_data, crs=network.crs)
 
     def style_color_callback(et, eid):
         if et == "bus":
@@ -376,7 +426,7 @@ def plot_results_interactive_map(
 
     m = _plot_interactive_map_internal(
         network=network,
-        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf},
+        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
         fields={
             "bus": {
                 "id": "Id:",
@@ -419,6 +469,12 @@ def plot_results_interactive_map(
                 "res_loading": "Loading (%):",
                 "res_voltages": "U [ʜv,ʟv] (V):",
                 "res_voltage_levels": "U [ʜv,ʟv] (%):",
+            },
+            "switch": {
+                "id": "Id:",
+                "bus1_id": "Bus1:",
+                "bus2_id": "Bus2:",
+                "status": "Status:",
             },
         },
         style_color_callback=style_color_callback,

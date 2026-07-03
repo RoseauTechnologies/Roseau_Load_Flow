@@ -629,25 +629,23 @@ def plot_interactive_map(
     # Switches as lines if their buses are not at the same point
     switches_data = {
         "id": [],
+        "phases": [],
         "element_type": [],
         "bus1_id": [],
         "bus2_id": [],
         "status": [],
         "geometry": [],
     }
-    for switch in network.switches.values():
-        if (
-            switch.bus1.geometry is None
-            or switch.bus2.geometry is None
-            or switch.bus1.geometry.equals(switch.bus2.geometry)
-        ):
+    for sw in network.switches.values():
+        if sw.bus1.geometry is None or sw.bus2.geometry is None or sw.bus1.geometry.equals(sw.bus2.geometry):
             continue
-        switches_data["id"].append(switch.id)
+        switches_data["id"].append(sw.id)
+        switches_data["phases"].append(sw.phases)
         switches_data["element_type"].append("switch")
-        switches_data["bus1_id"].append(switch.bus1.id)
-        switches_data["bus2_id"].append(switch.bus2.id)
-        switches_data["status"].append("closed" if switch.closed else "open")
-        switches_data["geometry"].append(shp.LineString([switch.bus1.geometry, switch.bus2.geometry]))
+        switches_data["bus1_id"].append(sw.bus1.id)
+        switches_data["bus2_id"].append(sw.bus2.id)
+        switches_data["status"].append("closed" if sw.closed else "open")
+        switches_data["geometry"].append(shp.LineString([sw.bus1.geometry, sw.bus2.geometry]))
     switches_gdf = gpd.GeoDataFrame(switches_data, crs=network.crs)
 
     m = _plot_interactive_map_internal(
@@ -695,6 +693,7 @@ def plot_interactive_map(
                 "id": "Id:",
                 "bus1_id": "Bus1:",
                 "bus2_id": "Bus2:",
+                "phases": "Phases:",
                 "status": "Status:",
             },
         },
@@ -928,25 +927,23 @@ def plot_results_interactive_map(
 
     switches_data = {
         "id": [],
+        "phases": [],
         "element_type": [],
         "bus1_id": [],
         "bus2_id": [],
         "status": [],
         "geometry": [],
     }
-    for switch in network.switches.values():
-        if (
-            switch.bus1.geometry is None
-            or switch.bus2.geometry is None
-            or switch.bus1.geometry.equals(switch.bus2.geometry)
-        ):
+    for sw in network.switches.values():
+        if sw.bus1.geometry is None or sw.bus2.geometry is None or sw.bus1.geometry.equals(sw.bus2.geometry):
             continue
-        switches_data["id"].append(switch.id)
+        switches_data["id"].append(sw.id)
+        switches_data["phases"].append(sw.phases)
         switches_data["element_type"].append("switch")
-        switches_data["bus1_id"].append(switch.bus1.id)
-        switches_data["bus2_id"].append(switch.bus2.id)
-        switches_data["status"].append("closed" if switch.closed else "open")
-        switches_data["geometry"].append(shp.LineString([switch.bus1.geometry, switch.bus2.geometry]))
+        switches_data["bus1_id"].append(sw.bus1.id)
+        switches_data["bus2_id"].append(sw.bus2.id)
+        switches_data["status"].append("closed" if sw.closed else "open")
+        switches_data["geometry"].append(shp.LineString([sw.bus1.geometry, sw.bus2.geometry]))
 
     buses_gdf = gpd.GeoDataFrame(buses_data, crs=network.crs)
     lines_gdf = gpd.GeoDataFrame(lines_data, crs=network.crs)
@@ -1018,6 +1015,7 @@ def plot_results_interactive_map(
                 "id": "Id:",
                 "bus1_id": "Bus1:",
                 "bus2_id": "Bus2:",
+                "phases": "Phases:",
                 "status": "Status:",
             },
         },
