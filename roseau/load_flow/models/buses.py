@@ -407,6 +407,23 @@ class Bus(AbstractTerminal[CyBus]):
         voltages_abs = abs(self._res_voltages_pn_getter(warning=warning))
         return SQRT3 * voltages_abs / self._nominal_voltage
 
+    def _res_agg_powers_getter(self, warning: bool) -> list[complex]:
+        """Get the aggregated proper powers of the bus (VA) per phase."""
+        powers = dict.fromkeys(self.phases, 0j)
+        for e in self._connected_elements:
+            if e.element_type == "load":
+                sign = 1
+            elif e.element_type == "source":
+                sign = -1
+            else:
+                continue
+            for phase, power in zip(e.phases, e._res_powers_getter(warning=warning).tolist(), strict=True):  # type: ignore
+                if phase not in powers:
+                    continue
+                powers[phase] += sign * power
+            warning = False  # warn only once
+        return list(powers.values())
+
     def _res_state_getter(self) -> ResultState:
         """The state of the bus based on its voltage levels and limits."""
         u_array = self._res_voltage_levels_getter(warning=False)

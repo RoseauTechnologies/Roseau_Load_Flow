@@ -21,6 +21,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`475` {gh-issue}`446` Show more information when hovering over elements in the voltage profile and interactive
+  map plots. The hover box of bus now shows the net (load - source) active and reactive powers consumed by the bus.
 - {gh-pr}`474` Wrap long element IDs in the hover box of the voltage profile plots.
 - {gh-pr}`473` Add support for custom color per element in the interactive map plots by accepting a callback as the
   `style_color` argument. The callable accepts two positional arguments: the element type and the element ID, and

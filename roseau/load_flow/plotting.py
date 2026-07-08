@@ -38,6 +38,8 @@ if TYPE_CHECKING:
         voltages: list[float] | None
         min_voltage: float | None
         max_voltage: float | None
+        power: complex
+        powers: list[complex] | None
         state: ResultState
         is_tr_bus: bool
 
@@ -156,14 +158,14 @@ def _get_phases_and_potentials(
     return element, phases, potentials
 
 
-def _pu_to_pct[V: (float, list[float])](v: V | None, /) -> V | None:
-    """Convert per unit value to percentage."""
+def _multiply[V: float | complex | list[float] | list[complex] | None](v: V, by: float, /) -> V:
+    """Multiply a number or a list of numbers by a float, returning None if the input is None."""
     if v is None:
         return None
     elif isinstance(v, list):
-        return [val * 100 for val in v]
+        return [val * by for val in v]
     else:
-        return v * 100
+        return v * by
 
 
 def _pp_num(v: float | list[float] | list[float | None] | None, /, missing: str = "n/a") -> str:
@@ -174,6 +176,26 @@ def _pp_num(v: float | list[float] | list[float | None] | None, /, missing: str 
         return "[" + ", ".join(missing if val is None else f"{val:.5g}" for val in v) + "]"
     else:
         return f"{v:.5g}"
+
+
+def _real(v: complex | list[complex] | None) -> float | list[float] | None:
+    """Return the real part of a complex number or a list of complex numbers."""
+    if v is None:
+        return None
+    if isinstance(v, list):
+        return [val.real for val in v]
+    else:
+        return v.real
+
+
+def _imag(v: complex | list[complex] | None) -> float | list[float] | None:
+    """Return the imaginary part of a complex number or a list of complex numbers."""
+    if v is None:
+        return None
+    if isinstance(v, list):
+        return [val.imag for val in v]
+    else:
+        return v.imag
 
 
 def _pp_eid(element_id: int | str, *, indent: str) -> str:
@@ -954,6 +976,8 @@ def plot_results_interactive_map(
         "res_separator": [],
         "res_voltage": [],
         "res_voltage_level": [],
+        "res_active_power": [],
+        "res_reactive_power": [],
     }
     buses_ids: list[Id] = []
     for bus in network.buses.values():
@@ -962,20 +986,24 @@ def plot_results_interactive_map(
         buses_data["phases"].append(bus.phases)
         buses_data["element_type"].append("bus")
         buses_data["nominal_voltage"].append(bus._nominal_voltage)
-        buses_data["min_voltage_level"].append(_pu_to_pct(bus._min_voltage_level))
-        buses_data["max_voltage_level"].append(_pu_to_pct(bus._max_voltage_level))
+        buses_data["min_voltage_level"].append(_multiply(bus._min_voltage_level, 100))
+        buses_data["max_voltage_level"].append(_multiply(bus._max_voltage_level, 100))
         buses_data["geometry"].append(bus.geometry)
         buses_data["res_separator"].append("")  # Results separator
         buses_data["res_voltage"].append(_pp_num([abs(v) for v in bus._res_voltages_getter(warning=False).tolist()]))
         buses_data["res_voltage_level"].append(
             _pp_num(
-                _pu_to_pct(
+                _multiply(
                     v_levels.tolist()
                     if (v_levels := bus._res_voltage_levels_getter(warning=False)) is not None
-                    else None
+                    else None,
+                    100,
                 )
             )
         )
+        bus_agg_powers = _multiply(bus._res_agg_powers_getter(warning=False), 1e-3)  # Convert to kVA
+        buses_data["res_active_power"].append(_pp_num(_real(bus_agg_powers)))
+        buses_data["res_reactive_power"].append(_pp_num(_imag(bus_agg_powers)))
 
     lines_data: dict[str, list[Any]] = {
         "id": [],
@@ -1013,8 +1041,8 @@ def plot_results_interactive_map(
         lines_data["max_loading"].append(line._max_loading * 100)
         lines_data["res_loading"].append(
             _pp_num(
-                _pu_to_pct(
-                    loading.tolist() if (loading := line._res_loading_getter(warning=False)) is not None else None
+                _multiply(
+                    loading.tolist() if (loading := line._res_loading_getter(warning=False)) is not None else None, 100
                 )
             )
         )
@@ -1108,6 +1136,8 @@ def plot_results_interactive_map(
                 "res_separator": "--",
                 "res_voltage": "U (V):",
                 "res_voltage_level": "U (%):",
+                "res_active_power": "P (kW):",
+                "res_reactive_power": "Q (kvar):",
             },
             "line": {
                 "id": "Id:",
@@ -1272,17 +1302,23 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             assert voltages is not None
             voltages = voltages.tolist()
             voltage = {"min": min(voltages), "max": max(voltages)}[mode]
+            powers = bus._res_agg_powers_getter(warning=False)
+            power = sum(powers)
         else:
             voltages = None
             voltage = bus._res_voltage_level_getter(warning=False)
+            powers = None
+            power = bus._res_agg_power_getter(warning=False)
             assert voltage is not None
 
         return {
             "distance": distance,
             "voltage": voltage * 100,
-            "voltages": _pu_to_pct(voltages),
-            "min_voltage": _pu_to_pct(bus._min_voltage_level),
-            "max_voltage": _pu_to_pct(bus._max_voltage_level),
+            "voltages": _multiply(voltages, 100),
+            "min_voltage": _multiply(bus._min_voltage_level, 100),
+            "max_voltage": _multiply(bus._max_voltage_level, 100),
+            "power": power / 1e3,  # Convert to kW
+            "powers": _multiply(powers, 1e-3),
             "state": bus._res_state_getter(),
             "is_tr_bus": False,  # Will be updated later if needed
         }
@@ -1301,8 +1337,8 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         return {
             "from_bus": line.bus1.id,
             "to_bus": line.bus2.id,
-            "loading": _pu_to_pct(loading),
-            "loadings": _pu_to_pct(loadings),
+            "loading": _multiply(loading, 100),
+            "loadings": _multiply(loadings, 100),
             "max_loading": line._max_loading * 100,
             "state": line._res_state_getter(),
         }
@@ -1457,6 +1493,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
 
         # Buses
         voltage_key = "voltages" if self.network.is_multi_phase else "voltage"
+        power_key = "powers" if self.network.is_multi_phase else "power"
         buses_trace = go.Scatter(
             x=[bus["distance"] for bus in self.buses.values()],
             y=[bus["voltage"] for bus in self.buses.values()],
@@ -1472,19 +1509,23 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             },
             customdata=[  # used in hovers
                 (
-                    # indent has the size of the longest legend item: "Voltage limits (%): "
-                    _pp_eid(bus_id, indent="                    "),
+                    # indent has the size of the longest legend item: "Reactive Power (kvar): "
+                    _pp_eid(bus_id, indent="                       "),
                     _pp_num(bus[voltage_key]),
                     _pp_num(bus["min_voltage"]),
                     _pp_num(bus["max_voltage"]),
+                    _pp_num(_real(bus[power_key])),
+                    _pp_num(_imag(bus[power_key])),
                 )
                 for bus_id, bus in self.buses.items()
             ],
             hovertemplate=(
                 '<span style="font-family: monospace">'
-                + "<b>Bus:               </b> %{customdata[0]}<br>"
-                + "<b>Voltage (%):       </b> %{customdata[1]}<br>"
-                + "<b>Voltage limits (%):</b> [%{customdata[2]}, %{customdata[3]}]"
+                + "<b>Bus:                  </b> %{customdata[0]}<br>"
+                + "<b>Voltage (%):          </b> %{customdata[1]}<br>"
+                + "<b>Voltage limits (%):   </b> [%{customdata[2]}, %{customdata[3]}]<br>"
+                + "<b>Active Power (kW):    </b> %{customdata[4]}<br>"
+                + "<b>Reactive Power (kvar):</b> %{customdata[5]}<br>"
                 + "</span><extra></extra>"
             ),
             zorder=3,

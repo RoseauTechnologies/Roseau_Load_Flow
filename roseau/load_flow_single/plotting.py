@@ -10,9 +10,9 @@ from roseau.load_flow.plotting import (
     _check_folium,
     _default_map_style_color,
     _make_style_color_callback,
+    _multiply,
     _plot_interactive_map_internal,
     _pp_num,
-    _pu_to_pct,
     _VoltageProfile,
 )
 from roseau.load_flow.typing import Id
@@ -334,6 +334,8 @@ def plot_results_interactive_map(
         "res_separator": [],
         "res_voltage": [],
         "res_voltage_level": [],
+        "res_active_power": [],
+        "res_reactive_power": [],
     }
     buses_ids: list[Id] = []
     for bus in network.buses.values():
@@ -341,12 +343,15 @@ def plot_results_interactive_map(
         buses_data["id"].append(bus.id)
         buses_data["element_type"].append("bus")
         buses_data["nominal_voltage"].append(bus._nominal_voltage)
-        buses_data["min_voltage_level"].append(_pu_to_pct(bus._min_voltage_level))
-        buses_data["max_voltage_level"].append(_pu_to_pct(bus._max_voltage_level))
+        buses_data["min_voltage_level"].append(_multiply(bus._min_voltage_level, 100))
+        buses_data["max_voltage_level"].append(_multiply(bus._max_voltage_level, 100))
         buses_data["geometry"].append(bus.geometry)
         buses_data["res_separator"].append("")  # Results separator
         buses_data["res_voltage"].append(abs(bus._res_voltage_getter(warning=False)))
-        buses_data["res_voltage_level"].append(_pu_to_pct(bus._res_voltage_level_getter(warning=False)))
+        buses_data["res_voltage_level"].append(_multiply(bus._res_voltage_level_getter(warning=False), 100))
+        bus_agg_power = bus._res_agg_power_getter(warning=False) / 1e3  # Convert to kVA
+        buses_data["res_active_power"].append(bus_agg_power.real)
+        buses_data["res_reactive_power"].append(bus_agg_power.imag)
 
     lines_data: dict[str, list[Any]] = {
         "id": [],
@@ -380,7 +385,7 @@ def plot_results_interactive_map(
         lines_data["geometry"].append(line.geometry)
         lines_data["res_separator"].append("")  # Results separator
         lines_data["max_loading"].append(line._max_loading * 100)
-        lines_data["res_loading"].append(_pu_to_pct(line._res_loading_getter(warning=False)))
+        lines_data["res_loading"].append(_multiply(line._res_loading_getter(warning=False), 100))
 
     def _get_tr_buses_data(tr: Transformer, field: str) -> str:
         return _pp_num([buses_data[field][buses_ids.index(bus_id)] for bus_id in (tr.bus_hv.id, tr.bus_lv.id)])
@@ -464,6 +469,8 @@ def plot_results_interactive_map(
                 "res_separator": "--",
                 "res_voltage": "U (V):",
                 "res_voltage_level": "U (%):",
+                "res_active_power": "P (kW):",
+                "res_reactive_power": "Q (kvar):",
             },
             "line": {
                 "id": "Id:",

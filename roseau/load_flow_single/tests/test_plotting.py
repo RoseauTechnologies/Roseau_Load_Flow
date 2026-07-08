@@ -26,6 +26,8 @@ def test_voltage_profile(all_elements_network_with_results):
                 "voltages": None,
                 "min_voltage": None,
                 "max_voltage": None,
+                "power": profile.network.buses["bus0"]._res_agg_loads_power_getter(warning=False) * 1e-3,
+                "powers": None,
                 "state": "unknown",  # no voltage limits
                 "is_tr_bus": False,
             },
@@ -35,6 +37,8 @@ def test_voltage_profile(all_elements_network_with_results):
                 "voltages": None,
                 "min_voltage": 90,
                 "max_voltage": 110,
+                "power": profile.network.buses["bus1"]._res_agg_loads_power_getter(warning=False) * 1e-3,
+                "powers": None,
                 "state": "normal",
                 "is_tr_bus": False,  # because traverse_transformers=False by default
             },
