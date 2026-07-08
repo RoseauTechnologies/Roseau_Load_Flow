@@ -64,9 +64,15 @@ def plot_interactive_map(
             when it returns ``None``, the default highlight style is used.
 
         map_kws:
-            Additional keyword arguments to pass to the :class:`folium.Map` constructor. By default,
-            if ``fit_bounds`` is false, `location` is set to the centroid of the network geometry
-            and `zoom_start` is calculated based on its bounding box.
+            Additional keyword arguments to pass to the :class:`folium.Map` constructor. The
+            following keywords are passed by default:
+
+            - ``tiles="CartoDB Positron"``: A light background map that does not obscure network
+              elements.
+            - ``location``: The centroid of the network geometry if ``fit_bounds`` is false. No
+              default value is set otherwise.
+            - ``zoom_start``: Calculated based on its bounding box if ``fit_bounds`` is false. No
+              default value is set otherwise.
 
         add_tooltips:
             If ``True`` (default), tooltips will be added to the map elements. Tooltips appear when
@@ -254,9 +260,15 @@ def plot_results_interactive_map(
             when it returns ``None``, the default highlight style is used.
 
         map_kws:
-            Additional keyword arguments to pass to the :class:`folium.Map` constructor. By default,
-            if ``fit_bounds`` is false, `location` is set to the centroid of the network geometry
-            and `zoom_start` is calculated based on its bounding box.
+            Additional keyword arguments to pass to the :class:`folium.Map` constructor. The
+            following keywords are passed by default:
+
+            - ``tiles="CartoDB Positron"``: A light background map that does not obscure network
+              elements.
+            - ``location``: The centroid of the network geometry if ``fit_bounds`` is false. No
+              default value is set otherwise.
+            - ``zoom_start``: Calculated based on its bounding box if ``fit_bounds`` is false. No
+              default value is set otherwise.
 
         add_tooltips:
             If ``True`` (default), tooltips will be added to the map elements. Tooltips appear when

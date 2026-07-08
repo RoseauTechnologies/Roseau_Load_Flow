@@ -21,6 +21,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`472` Many improvements and fixes for the interactive map plots.
+  - Fix highlighting of buses and transformers on hover
+  - Reduce the size of the markers for better visibility of networks with many elements
+  - Use `"CartoDB Positron"` as default tiles for better visibility of the elements. Pass `tiles="OpenStreetMap"` to use
+    OpenStreetMap tiles.
 - {gh-pr}`471` Include switch phases in the interactive map plots.
 - {gh-pr}`467` Avoid unnecessary copies when deserializing networks from JSON or dict and remove `from_dict` methods
   from element classes, these methods did not work correctly because they depend on other elements.
