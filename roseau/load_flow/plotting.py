@@ -3,6 +3,7 @@
 import cmath
 import dataclasses
 import math
+import textwrap
 from collections.abc import Callable, Container, Iterable, Mapping
 from functools import partial
 from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict
@@ -173,6 +174,15 @@ def _pp_num(v: float | list[float] | list[float | None] | None, /, missing: str 
         return "[" + ", ".join(missing if val is None else f"{val:.5g}" for val in v) + "]"
     else:
         return f"{v:.5g}"
+
+
+def _pp_eid(element_id: int | str, *, indent: str) -> str:
+    """Pretty print an element ID, wrapping it if it is too long."""
+    if isinstance(element_id, int):
+        return str(element_id)
+    if len(element_id) <= 35:
+        return element_id
+    return f"<br>{indent}".join(textwrap.wrap(element_id, width=35))
 
 
 def _scalar_if_unique(value: np.ndarray | None):
@@ -1461,14 +1471,21 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 "size": 6,
             },
             customdata=[  # used in hovers
-                (bus_id, _pp_num(bus[voltage_key]), _pp_num(bus["min_voltage"]), _pp_num(bus["max_voltage"]))
+                (
+                    # indent has the size of the longest legend item: "Voltage limits (%): "
+                    _pp_eid(bus_id, indent="                    "),
+                    _pp_num(bus[voltage_key]),
+                    _pp_num(bus["min_voltage"]),
+                    _pp_num(bus["max_voltage"]),
+                )
                 for bus_id, bus in self.buses.items()
             ],
             hovertemplate=(
-                "Bus: %{customdata[0]}"
-                "<br>Voltage (%): %{customdata[1]}"
-                "<br>Voltage limits (%): [%{customdata[2]}, %{customdata[3]}]"
-                "<extra></extra>"
+                '<span style="font-family: monospace">'
+                + "<b>Bus:               </b> %{customdata[0]}<br>"
+                + "<b>Voltage (%):       </b> %{customdata[1]}<br>"
+                + "<b>Voltage limits (%):</b> [%{customdata[2]}, %{customdata[3]}]"
+                + "</span><extra></extra>"
             ),
             zorder=3,
         )
@@ -1514,14 +1531,19 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                     y=[sum(self._edge_ys(tr)) / 2 for tr in self.transformers.values()],
                     mode="markers",
                     marker={"opacity": 0, "color": [self.colors[tr["state"]] for tr in self.transformers.values()]},
-                    customdata=[(tr_id, tr["loading"], tr["max_loading"]) for tr_id, tr in self.transformers.items()],
+                    customdata=[
+                        # indent has the size of the longest legend item: "Loading limit (%): "
+                        (_pp_eid(tr_id, indent="                   "), tr["loading"], tr["max_loading"])
+                        for tr_id, tr in self.transformers.items()
+                    ],
                     hovertemplate=(
                         # For parallel transformers, only the last one might be shown in hover
                         # https://github.com/plotly/plotly.py/issues/2476
-                        "Transformer: %{customdata[0]}"
-                        "<br>Loading (%): %{customdata[1]:.5g}"
-                        "<br>Loading limit (%): %{customdata[2]:.5g}"
-                        "<extra></extra>"
+                        '<span style="font-family: monospace">'
+                        + "<b>Transformer:      </b> %{customdata[0]}<br>"
+                        + "<b>Loading (%):      </b> %{customdata[1]:.5g}<br>"
+                        + "<b>Loading limit (%):</b> %{customdata[2]:.5g}"
+                        + "</span><extra></extra>"
                     ),
                 )
             )
@@ -1556,13 +1578,16 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 mode="markers",
                 marker={"opacity": 0, "color": [self.colors[ln["state"]] for ln in self.lines.values()]},
                 customdata=[
-                    (ln_id, _pp_num(ln[loading_key]), _pp_num(ln["max_loading"])) for ln_id, ln in self.lines.items()
+                    # indent has the size of the longest legend item: "Loading limit (%): "
+                    (_pp_eid(ln_id, indent="                   "), _pp_num(ln[loading_key]), _pp_num(ln["max_loading"]))
+                    for ln_id, ln in self.lines.items()
                 ],
                 hovertemplate=(
-                    "Line: %{customdata[0]}"
-                    "<br>Loading (%): %{customdata[1]}"
-                    "<br>Loading limit (%): %{customdata[2]}"
-                    "<extra></extra>"
+                    '<span style="font-family: monospace">'
+                    + "<b>Line:             </b> %{customdata[0]}<br>"
+                    + "<b>Loading (%):      </b> %{customdata[1]}<br>"
+                    + "<b>Loading limit (%):</b> %{customdata[2]}"
+                    + "</span><extra></extra>"
                 ),
             )
         )
@@ -1596,8 +1621,13 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                     y=[sum(self._edge_ys(sw)) / 2 for sw in self.switches.values()],
                     mode="markers",
                     marker={"opacity": 0, "color": [self.colors[sw["state"]] for sw in self.switches.values()]},
-                    customdata=list(self.switches),
-                    hovertemplate="Switch: %{customdata}<extra></extra>",
+                    # indent has the size of the longest legend item: "Switch: "
+                    customdata=[_pp_eid(sw_id, indent="        ") for sw_id in self.switches],
+                    hovertemplate=(
+                        '<span style="font-family: monospace">'
+                        + "<b>Switch: </b> %{customdata}"
+                        + "</span><extra></extra>"
+                    ),
                 )
             )
 
