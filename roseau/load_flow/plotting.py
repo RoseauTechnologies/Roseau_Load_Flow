@@ -4,6 +4,7 @@ import cmath
 import dataclasses
 import math
 from collections.abc import Callable, Container, Iterable, Mapping
+from functools import partial
 from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict
 
 import geopandas as gpd
@@ -28,6 +29,7 @@ if TYPE_CHECKING:
     type FeatureMap = dict[str, Any]
     type StyleDict = dict[str, Any]
     type MapElementType = Literal["bus", "line", "transformer", "switch"]
+    type StyleColorCallback = Callable[[MapElementType, Id], str | None]
 
     class VoltageProfileNode(TypedDict):
         distance: float
@@ -67,6 +69,14 @@ _RESULT_COLORS: dict[ResultState, str] = {
     "low": "#abd9e9",  # light bluish
     "very-low": "#2c7bb6",  # bluish
     "unknown": "#666666",  # gray
+}
+
+_MV, _LV = 60e3, 1e3
+_DEFAULT_MAP_STYLE_COLORS: dict["MapElementType", str] = {
+    "bus": "#234e83",
+    "line": "#234e83",
+    "transformer": "#000000",
+    "switch": "#888888",
 }
 
 
@@ -259,7 +269,7 @@ def plot_symmetrical_voltages(
         raise ValueError("The element must have 'abc' or 'abcn' phases.")
     if axes is None:
         _, axes = plt.subplots(1, 3)
-    ax0, ax1, ax2 = axes  # type: ignore
+    ax0, ax1, ax2 = axes
     sym_components = phasor_to_sym(potentials[:3])
     u0, u1, u2 = sym_components.tolist()
     un = potentials.item(3) if "n" in phases else 0j
@@ -309,7 +319,24 @@ def _check_folium(func_name: str) -> None:
         raise
 
 
-_MV, _LV = 60e3, 1e3
+def _make_style_color_callback(
+    style_color: "str | StyleColorCallback | None",
+    default_style_color_callback: Callable[["MapElementType", Id], str],
+) -> Callable[["MapElementType", Id], str]:
+    if isinstance(style_color, str):
+        return lambda et, eid: style_color
+
+    def callback(el_type: "MapElementType", el_id: Id, /) -> str:
+        if style_color is None or (color := style_color(el_type, el_id)) is None:
+            return default_style_color_callback(el_type, el_id)
+        if not isinstance(color, str):
+            raise TypeError(
+                f"The style_color callback must return a string or None, got {type(color)} for "
+                f"el_type={el_type!r}, el_id={el_id!r}."
+            )
+        return color
+
+    return callback
 
 
 def _map_get_bus_style_dict(
@@ -317,7 +344,7 @@ def _map_get_bus_style_dict(
     *,
     nominal_voltages: Mapping[Id, float],
     source_buses: Container[Id],
-    color_callback: Callable[[str, Id], str],
+    color_callback: Callable[["MapElementType", Id], str],
 ) -> dict[str, str]:
     vn = nominal_voltages[bus_id]
     if bus_id in source_buses:
@@ -354,7 +381,7 @@ def _map_get_transformer_style_dict(
     bus_lv_id: Id,
     nominal_voltages: Mapping[Id, float],
     source_buses: Container[Id],
-    color_callback: Callable[[str, Id], str],
+    color_callback: Callable[["MapElementType", Id], str],
 ) -> dict[str, str]:
     vn = nominal_voltages[bus_hv_id]
     if bus_hv_id in source_buses or bus_lv_id in source_buses:
@@ -395,7 +422,7 @@ def _plot_interactive_map_internal(  # noqa: C901
     network: "ElectricalNetwork | rlfs.ElectricalNetwork",
     dataframes: dict["MapElementType", gpd.GeoDataFrame],
     fields: dict["MapElementType", dict[str, str]],
-    style_color_callback: Callable[[str, Id], str],
+    style_color_callback: Callable[["MapElementType", Id], str],
     highlight_color: str,
     style_function: Callable[["FeatureMap"], "StyleDict | None"] | None,
     highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None,
@@ -432,11 +459,11 @@ def _plot_interactive_map_internal(  # noqa: C901
             else:
                 weight = 3.0  # HV
             dash_array = "5, 5" if line_type == LineType.UNDERGROUND else None
-            style_color = style_color_callback("line", line.id)
+            style_color = style_color_callback("line", e_id)
             return {"color": style_color, "weight": weight, "dashArray": dash_array}
         elif e_type == "switch":
-            # Use a gray line for switches
-            return {"color": "#888888", "weight": 2}
+            style_color = style_color_callback("switch", e_id)
+            return {"color": style_color, "weight": 2}
         elif e_type == "transformer":
             return _map_get_transformer_style_dict(
                 transformer_id=e_id,
@@ -447,8 +474,7 @@ def _plot_interactive_map_internal(  # noqa: C901
                 color_callback=style_color_callback,
             )
         else:
-            style_color = style_color_callback(e_type, e_id)
-            return {"color": style_color, "weight": 2}
+            raise NotImplementedError(f"Unknown element type: {e_type!r}.")
 
     def internal_highlight_function(feature):
         result = highlight_function(feature) if highlight_function is not None else None
@@ -474,8 +500,10 @@ def _plot_interactive_map_internal(  # noqa: C901
                 source_buses=source_buses,
                 color_callback=lambda e_type, e_id: highlight_color,
             )
-        else:
+        elif e_type == "switch":
             return {"color": highlight_color}
+        else:
+            raise NotImplementedError(f"Unknown element type: {e_type!r}.")
 
     source_buses = {src.bus.id for src in network.sources.values()}
     transformer_buses = {side.bus.id for tr in network.transformers.values() for side in (tr.side_hv, tr.side_lv)}
@@ -578,7 +606,7 @@ def _plot_interactive_map_internal(  # noqa: C901
 def plot_interactive_map(
     network: ElectricalNetwork,
     *,
-    style_color: str = "#234e83",
+    style_color: "str | StyleColorCallback | None" = None,
     highlight_color: str = "#cad40e",
     style_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
     highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
@@ -602,7 +630,12 @@ def plot_interactive_map(
             source elements are represented with bigger square markers.
 
         style_color:
-            The color of the default style of an element. Defaults to :roseau-primary:`■ #234e83`.
+            A string to use as the default color of all elements, or a callback function in the form
+            ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
+            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``. Return ``None`` from
+            the callable to use the default color for that element instead. Defaults to
+            :roseau-primary:`■ #234e83` for buses and lines, :color-gray:`■ #888888` for switches,
+            and :color-black:`■ #000000` for transformers.
 
         highlight_color:
             The color of the default style when an element is highlighted. Defaults to
@@ -666,7 +699,7 @@ def plot_interactive_map(
     lines_gdf[["ampacity", "section", "line_type", "material", "insulator"]] = None
     line_params = {}
     for idx in lines_gdf.index:
-        line_id: Id = lines_gdf.at[idx, "id"]  # type: ignore
+        line_id: Id = lines_gdf.at[idx, "id"]
         lp = network.lines[line_id].parameters
         if lp.id not in line_params:
             line_params[lp.id] = {
@@ -689,9 +722,9 @@ def plot_interactive_map(
     transformers_gdf[["hv_side", "lv_side"]] = ""
     transformers_gdf[["vg", "sn", "uhv", "ulv"]] = None
     for idx in transformers_gdf.index:
-        tr_id: Id = transformers_gdf.at[idx, "id"]  # type: ignore
+        tr_id: Id = transformers_gdf.at[idx, "id"]
         # Replace geometry with that of the HV bus
-        bus_hv_id: Id = transformers_gdf.at[idx, "bus_hv_id"]  # type: ignore
+        bus_hv_id: Id = transformers_gdf.at[idx, "bus_hv_id"]
         transformers_gdf.at[idx, "geometry"] = network.buses[bus_hv_id].geometry  # type: ignore
         lp = network.transformers[tr_id].parameters
         transformers_gdf.at[idx, "vg"] = lp.vg
@@ -718,7 +751,7 @@ def plot_interactive_map(
         switches_data["bus1_id"].append(sw.bus1.id)
         switches_data["bus2_id"].append(sw.bus2.id)
         switches_data["status"].append("closed" if sw.closed else "open")
-        switches_data["geometry"].append(shp.LineString([sw.bus1.geometry, sw.bus2.geometry]))
+        switches_data["geometry"].append(shp.LineString([sw.bus1.geometry.centroid, sw.bus2.geometry.centroid]))
     switches_gdf = gpd.GeoDataFrame(switches_data, crs=network.crs)
 
     m = _plot_interactive_map_internal(
@@ -770,7 +803,7 @@ def plot_interactive_map(
                 "status": "Status:",
             },
         },
-        style_color_callback=lambda et, id: "#000000" if et == "transformer" else style_color,
+        style_color_callback=_make_style_color_callback(style_color, lambda et, eid: _DEFAULT_MAP_STYLE_COLORS[et]),
         highlight_color=highlight_color,
         style_function=style_function,
         highlight_function=highlight_function,
@@ -783,10 +816,25 @@ def plot_interactive_map(
     return m
 
 
+def _default_map_style_color(
+    et: "MapElementType", eid: Id, network: "ElectricalNetwork | rlfs.ElectricalNetwork"
+) -> str:
+    if et == "bus":
+        return _RESULT_COLORS[network.buses[eid]._res_state_getter()]
+    elif et == "line":
+        return _RESULT_COLORS[network.lines[eid]._res_state_getter()]
+    elif et == "transformer":
+        return _RESULT_COLORS[network.transformers[eid]._res_state_getter()]
+    elif et == "switch":
+        return "#888888"
+    else:
+        raise NotImplementedError(f"Unknown element type: {et!r}")
+
+
 def plot_results_interactive_map(
     network: ElectricalNetwork,
     *,
-    style_color: str = "#234e83",
+    style_color: "str | StyleColorCallback | None" = None,
     highlight_color: str = "#cad40e",
     style_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
     highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None = None,
@@ -813,7 +861,26 @@ def plot_results_interactive_map(
             source elements are represented with bigger square markers.
 
         style_color:
-            The color of the default style of an element. Defaults to :roseau-primary:`■ #234e83`.
+            A string to use as the default color of all elements, or a callback function in the form
+            ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
+            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``. Return ``None`` from
+            the callable to use the default color for that element instead. The default colors depend
+            on the element type and its results:
+
+            For buses, the default color is determined by their voltage levels:
+
+            - blue: `U` below `Umin`
+            - cyan: `U` close to `Umin`; specifically, `Umin ≤ U < 0.75 * Umin + 0.25`
+            - green: `U` within `Umin` and `Umax` and not close to the limits
+            - orange: `U` close to `Umax`; specifically, `0.75 * Umax + 0.25 < U ≤ Umax`
+            - red: `U` above `Umax`
+
+            For lines and transformers, the default color depends on their loadings:
+            - green: below 75% of the maximum loading
+            - orange: between 75% and 100% of the maximum loading
+            - red: above 100% of the maximum loading
+
+            For switches, the default color is :color-gray:`■ #888888`.
 
         highlight_color:
             The color of the default style when an element is highlighted. Defaults to
@@ -821,18 +888,7 @@ def plot_results_interactive_map(
 
         style_function:
             Function mapping a GeoJson Feature to a style dict. If not provided or when it returns
-            ``None``, the default style is used. The default style colors of buses depend on their
-            voltage levels:
-            - blue: `U` below `Umin`
-            - cyan: `U` close to `Umin`; specifically, `Umin ≤ U < 0.75 * Umin + 0.25`
-            - green: `U` within `Umin` and `Umax` and not close to the limits
-            - orange: `U` close to `Umax`; specifically, `0.75 * Umax + 0.25 < U ≤ Umax`
-            - red: `U` above `Umax`
-
-            The default style colors of lines and transformers depend on their loadings:
-            - green: below 75% of the maximum loading
-            - orange: between 75% and 100% of the maximum loading
-            - red: above 100% of the maximum loading
+            ``None``, the default style is used.
 
         highlight_function:
             Function mapping a GeoJson Feature to a style dict for mouse events. If not provided or
@@ -1022,22 +1078,12 @@ def plot_results_interactive_map(
         switches_data["bus1_id"].append(sw.bus1.id)
         switches_data["bus2_id"].append(sw.bus2.id)
         switches_data["status"].append("closed" if sw.closed else "open")
-        switches_data["geometry"].append(shp.LineString([sw.bus1.geometry, sw.bus2.geometry]))
+        switches_data["geometry"].append(shp.LineString([sw.bus1.geometry.centroid, sw.bus2.geometry.centroid]))
 
     buses_gdf = gpd.GeoDataFrame(buses_data, crs=network.crs)
     lines_gdf = gpd.GeoDataFrame(lines_data, crs=network.crs)
     transformers_gdf = gpd.GeoDataFrame(transformers_data, crs=network.crs)
     switches_gdf = gpd.GeoDataFrame(switches_data, crs=network.crs)
-
-    def style_color_callback(et, eid):
-        if et == "bus":
-            return _RESULT_COLORS[network.buses[eid]._res_state_getter()]
-        elif et == "line":
-            return _RESULT_COLORS[network.lines[eid]._res_state_getter()]
-        elif et == "transformer":
-            return _RESULT_COLORS[network.transformers[eid]._res_state_getter()]
-        else:
-            return style_color
 
     m = _plot_interactive_map_internal(
         network=network,
@@ -1098,7 +1144,9 @@ def plot_results_interactive_map(
                 "status": "Status:",
             },
         },
-        style_color_callback=style_color_callback,
+        style_color_callback=_make_style_color_callback(
+            style_color, partial(_default_map_style_color, network=network)
+        ),
         highlight_color=highlight_color,
         style_function=style_function,
         highlight_function=highlight_function,

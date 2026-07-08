@@ -141,7 +141,8 @@ documentation for more details.
 
 **Note**
 
-Only buses, lines and transformers are currently plotted.
+Only buses, lines, transformers and switches are currently plotted. Switches are only plotted if their buses do not have
+the same geometry.
 
 ### Interactive Map with Load Flow Results
 
@@ -162,6 +163,34 @@ the map. The network must have valid results before calling this function. Examp
 
 The plot shows the buses color-coded according to their voltages and the lines/transformers color-coded according to
 their loading as described in the [Results Colors](#results-colors) section below.
+
+### Customizing Colors of Map Elements
+
+Both {func}`~roseau.load_flow.plotting.plot_interactive_map` and
+{func}`~roseau.load_flow.plotting.plot_results_interactive_map` accept a `style_color` argument. It can either be a
+single color used for the default style of every element, or a callable `(element_type, element_id, /) -> color` called
+for every plotted element, where `element_type` is one of `"bus"`, `"line"`, `"transformer"`, `"switch"`. Return `None`
+from the callable to keep the default color for a given element.
+
+For example, to highlight all buses that have loads with a power >60kW, you can pass a `style_color` like this:
+
+```pycon
+>>> import roseau.load_flow as rlf
+... en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
+... buses_with_loads_gt_60kva = {
+...     load.bus.id
+...     for load in en.loads.values()
+...     if load.type == "power" and load.powers.m.sum().real > 60e3
+... }
+... rlf.plotting.plot_interactive_map(
+...     en,
+...     style_color=lambda el_type, el_id: (
+...         "red" if el_type == "bus" and el_id in buses_with_loads_gt_60kva else None
+...     ),
+... )
+```
+
+<iframe src="../_static/Plotting/MVFeeder210_Highlight.html" height="500px" width="100%" frameborder="0"></iframe>
 
 ### Graph Plot
 
@@ -248,4 +277,6 @@ align: center
 ---
 ```
 
-Colors are currently not customizable. Let us know if you need this feature.
+The thresholds defining these states are currently not customizable. Let us know if you need this feature. The colors of
+individual elements on the interactive map can be overridden with the `style_color` argument, see
+[Customizing Colors of Map Elements](#customizing-colors-of-map-elements) above.
