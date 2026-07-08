@@ -123,6 +123,8 @@ rst_prolog = """
 .. role:: roseau-primary
 .. role:: roseau-secondary
 .. role:: roseau-tertiary
+.. role:: color-black
+.. role:: color-gray
 """
 
 

@@ -21,6 +21,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`473` Add support for custom color per element in the interactive map plots by accepting a callback as the
+  `style_color` argument. The callable accepts two positional arguments: the element type and the element ID, and
+  returns a color string or `None` to use the default color for that element.
 - {gh-pr}`472` Many improvements and fixes for the interactive map plots.
   - Fix highlighting of buses and transformers on hover
   - Reduce the size of the markers for better visibility of networks with many elements
