@@ -3,7 +3,7 @@
 import cmath
 import dataclasses
 import math
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping
 from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict
 
 import geopandas as gpd
@@ -309,6 +309,88 @@ def _check_folium(func_name: str) -> None:
         raise
 
 
+_MV, _LV = 60e3, 1e3
+
+
+def _map_get_bus_style_dict(
+    bus_id: Id,
+    *,
+    nominal_voltages: Mapping[Id, float],
+    source_buses: Container[Id],
+    color_callback: Callable[[str, Id], str],
+) -> dict[str, str]:
+    vn = nominal_voltages[bus_id]
+    if bus_id in source_buses:
+        radius = 12
+        border_radius = 0  # Source bus: square
+    else:
+        if vn < _LV:
+            radius = 4  # LV
+        elif vn < _MV:
+            radius = 7  # MV
+        else:
+            radius = 10  # HV
+        border_radius = radius / 2
+    color = color_callback("bus", bus_id)
+    markup = f"""\
+    <div style="position: absolute;
+                left: 0;
+                top: 0;
+                transform: translate(-50%, -50%);
+                width: {radius}px;
+                height: {radius}px;
+                border-radius: {border_radius}px;
+                background-color: {color};
+                ">
+    </div>
+    """
+    return {"html": markup}
+
+
+def _map_get_transformer_style_dict(
+    transformer_id: Id,
+    *,
+    bus_hv_id: Id,
+    bus_lv_id: Id,
+    nominal_voltages: Mapping[Id, float],
+    source_buses: Container[Id],
+    color_callback: Callable[[str, Id], str],
+) -> dict[str, str]:
+    vn = nominal_voltages[bus_hv_id]
+    if bus_hv_id in source_buses or bus_lv_id in source_buses:
+        radius = 12
+    else:
+        if vn < _LV:
+            radius = 4  # LV
+        elif vn < _MV:
+            radius = 7  # MV
+        else:
+            radius = 10  # HV
+    tr_color = color_callback("transformer", transformer_id)
+    hv_color = color_callback("bus", bus_hv_id)
+    lv_color = color_callback("bus", bus_lv_id)
+    markup = f"""\
+    <div style="position: absolute;
+                left: 0;
+                top: 0;
+                transform: translate(-50%, -50%);
+                width: {radius}px;
+                height: {radius}px;
+                border-top: 2px solid {tr_color};
+                border-bottom: 2px solid {tr_color};
+                background: linear-gradient(to right,
+                                            {hv_color} 0%,
+                                            {hv_color} 40%,
+                                            {tr_color} 41%,
+                                            {tr_color} 59%,
+                                            {lv_color} 60%,
+                                            {lv_color} 100%);
+                ">
+    </div>
+    """
+    return {"html": markup}
+
+
 def _plot_interactive_map_internal(  # noqa: C901
     network: "ElectricalNetwork | rlfs.ElectricalNetwork",
     dataframes: dict["MapElementType", gpd.GeoDataFrame],
@@ -332,84 +414,40 @@ def _plot_interactive_map_internal(  # noqa: C901
             return result
         # Default style
         e_id, e_type = feature["properties"]["id"], feature["properties"]["element_type"]
-        style_color = style_color_callback(e_type, e_id)
         if e_type == "bus":
-            vn = nominal_voltages[e_id]
-            if e_id in source_buses:
-                radius, margin = 15, -1
-                border_radius = 0  # Source bus: square
-            else:
-                if vn < lv:
-                    radius, margin = 5, 3  # LV
-                elif vn < mv:
-                    radius, margin = 10, 1  # MV
-                else:
-                    radius, margin = 15, -1  # HV
-                border_radius = radius / 2
-            markup = f"""
-            <div style="font-size: 0.8em;">
-                <div style="width: {radius}px;
-                            height: {radius}px;
-                            border-radius: {border_radius}px;
-                            background-color: {style_color};
-                            margin: {margin}px;
-                            ">
-                </div>
-            </div>
-            """
-            return {"html": markup}
+            return _map_get_bus_style_dict(
+                bus_id=e_id,
+                nominal_voltages=nominal_voltages,
+                source_buses=source_buses,
+                color_callback=style_color_callback,
+            )
         elif e_type == "line":
             line = network.lines[e_id]
             line_type = line.parameters._line_type
             vn = nominal_voltages[line.bus1.id]
-            if vn < lv:
-                weight = 1.5  # LV
-            elif vn < mv:
-                weight = 3.0  # MV
+            if vn < _LV:
+                weight = 1.0  # LV
+            elif vn < _MV:
+                weight = 2.0  # MV
             else:
-                weight = 4.5  # HV
+                weight = 3.0  # HV
             dash_array = "5, 5" if line_type == LineType.UNDERGROUND else None
+            style_color = style_color_callback("line", line.id)
             return {"color": style_color, "weight": weight, "dashArray": dash_array}
         elif e_type == "switch":
             # Use a gray line for switches
-            return {"color": "#888888", "weight": 3}
+            return {"color": "#888888", "weight": 2}
         elif e_type == "transformer":
-            bus_hv_id = feature["properties"]["bus_hv_id"]
-            bus_lv_id = feature["properties"]["bus_lv_id"]
-            vn = nominal_voltages[bus_hv_id]
-            if bus_hv_id in source_buses or bus_lv_id in source_buses:
-                radius, margin = 15, -1
-            else:
-                if vn < lv:
-                    radius, margin = 5, 3  # LV
-                elif vn < mv:
-                    radius, margin = 10, 1  # MV
-                else:
-                    radius, margin = 15, -1  # HV
-            tr_color = style_color
-            hv_color = style_color_callback("bus", bus_hv_id)
-            lv_color = style_color_callback("bus", bus_lv_id)
-            markup = f"""
-            <div style="font-size: 0.8em;">
-                <div style="width: {radius}px;
-                            height: {radius}px;
-                            border-top: 2px solid {tr_color};
-                            border-bottom: 2px solid {tr_color};
-                            background: linear-gradient(to right,
-                                                       {hv_color} 0%,
-                                                       {hv_color} 40%,
-                                                       {tr_color} 41%,
-                                                       {tr_color} 59%,
-                                                       {lv_color} 60%,
-                                                       {lv_color} 100%);
-                            margin: {margin}px;
-                            ">
-                </div>
-
-            </div>
-            """
-            return {"html": markup}
+            return _map_get_transformer_style_dict(
+                transformer_id=e_id,
+                bus_hv_id=feature["properties"]["bus_hv_id"],
+                bus_lv_id=feature["properties"]["bus_lv_id"],
+                nominal_voltages=nominal_voltages,
+                source_buses=source_buses,
+                color_callback=style_color_callback,
+            )
         else:
+            style_color = style_color_callback(e_type, e_id)
             return {"color": style_color, "weight": 2}
 
     def internal_highlight_function(feature):
@@ -417,20 +455,31 @@ def _plot_interactive_map_internal(  # noqa: C901
         if result is not None:
             return result
         # Default highlight style
-        e_type = feature["properties"]["element_type"]
-        if e_type == "bus":  # noqa: SIM116
-            return {"color": highlight_color, "fillColor": highlight_color}
+        e_id, e_type = feature["properties"]["id"], feature["properties"]["element_type"]
+        if e_type == "bus":
+            return _map_get_bus_style_dict(
+                bus_id=e_id,
+                nominal_voltages=nominal_voltages,
+                source_buses=source_buses,
+                color_callback=lambda e_type, e_id: highlight_color,
+            )
         elif e_type == "line":
             return {"color": highlight_color}
         elif e_type == "transformer":
-            return {"color": highlight_color, "fillColor": highlight_color}
+            return _map_get_transformer_style_dict(
+                transformer_id=e_id,
+                bus_hv_id=feature["properties"]["bus_hv_id"],
+                bus_lv_id=feature["properties"]["bus_lv_id"],
+                nominal_voltages=nominal_voltages,
+                source_buses=source_buses,
+                color_callback=lambda e_type, e_id: highlight_color,
+            )
         else:
             return {"color": highlight_color}
 
     source_buses = {src.bus.id for src in network.sources.values()}
     transformer_buses = {side.bus.id for tr in network.transformers.values() for side in (tr.side_hv, tr.side_lv)}
     nominal_voltages = network._get_nominal_voltages()
-    mv, lv = 60e3, 1e3
 
     # Filter out transformer buses, these are represented by the transformers themselves
     dataframes["bus"] = dataframes["bus"].loc[~dataframes["bus"]["id"].isin(transformer_buses)]
@@ -478,14 +527,32 @@ def _plot_interactive_map_internal(  # noqa: C901
 
     if "zoom_control" not in map_kws and add_search:
         map_kws["zoom_control"] = "topright"
+    map_kws.setdefault("tiles", "CartoDB Positron")
 
     m = folium.Map(**map_kws)
+    # `folium`/`Leaflet` only support `setStyle` (used to implement highlighting) on vector layers
+    # (e.g. `Path`), not on `Marker`s. Since buses and transformers are rendered as `Marker`s with a
+    # `DivIcon`, we need to teach `L.Marker` how to apply a style produced by `highlight_function`
+    # (an `{"html": ...}` dict) by rebuilding its icon.
+    root = m.get_root()
+    assert isinstance(root, folium.Figure)
+    folium.Element(
+        "L.Marker.include({"
+        "  setStyle: function (style) {"
+        "    this.setIcon(L.divIcon(Object.assign({}, this.options.icon.options, style)));"
+        "  }"
+        "});"
+    ).add_to(root.script)
     network_layer = folium.FeatureGroup(name=network.name).add_to(m)
     names = {"bus": "Buses", "line": "Lines", "transformer": "Transformers", "switch": "Switches"}
     for e_type, frame in dataframes.items():
         if frame.empty:
             continue
-        marker = folium.Marker(icon=folium.DivIcon()) if e_type not in ("line", "switch") else None
+        marker = (
+            folium.Marker(icon=folium.DivIcon(icon_size=(0, 0), icon_anchor=(0, 0)))
+            if e_type not in ("line", "switch")
+            else None
+        )
         name = names[e_type]
         folium.GeoJson(
             data=frame,
@@ -550,9 +617,15 @@ def plot_interactive_map(
             when it returns ``None``, the default highlight style is used.
 
         map_kws:
-            Additional keyword arguments to pass to the :class:`folium.Map` constructor. By default,
-            if ``fit_bounds`` is false, `location` is set to the centroid of the network geometry
-            and `zoom_start` is calculated based on its bounding box.
+            Additional keyword arguments to pass to the :class:`folium.Map` constructor. The
+            following keywords are passed by default:
+
+            - ``tiles="CartoDB Positron"``: A light background map that does not obscure network
+              elements.
+            - ``location``: The centroid of the network geometry if ``fit_bounds`` is false. No
+              default value is set otherwise.
+            - ``zoom_start``: Calculated based on its bounding box if ``fit_bounds`` is false. No
+              default value is set otherwise.
 
         add_tooltips:
             If ``True`` (default), tooltips will be added to the map elements. Tooltips appear when
@@ -766,9 +839,15 @@ def plot_results_interactive_map(
             when it returns ``None``, the default highlight style is used.
 
         map_kws:
-            Additional keyword arguments to pass to the :class:`folium.Map` constructor. By default,
-            if ``fit_bounds`` is false, `location` is set to the centroid of the network geometry
-            and `zoom_start` is calculated based on its bounding box.
+            Additional keyword arguments to pass to the :class:`folium.Map` constructor. The
+            following keywords are passed by default:
+
+            - ``tiles="CartoDB Positron"``: A light background map that does not obscure network
+              elements.
+            - ``location``: The centroid of the network geometry if ``fit_bounds`` is false. No
+              default value is set otherwise.
+            - ``zoom_start``: Calculated based on its bounding box if ``fit_bounds`` is false. No
+              default value is set otherwise.
 
         add_tooltips:
             If ``True`` (default), tooltips will be added to the map elements. Tooltips appear when
