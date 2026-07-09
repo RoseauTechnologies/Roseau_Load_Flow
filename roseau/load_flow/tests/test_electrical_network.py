@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
+from roseau.load_flow.converters import calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     Bus,
@@ -2808,3 +2809,13 @@ def test_tool_metadata(small_network: ElectricalNetwork):
     }
     en.tool_data.clear()
     assert en.tool_data.to_dict() == {}
+
+
+def test_can_voltage_source():
+    bus = Bus("Bus", phases="can")
+    vs = VoltageSource("Src", bus, phases="can", voltages=230)
+    PotentialRef("Pref", bus)
+    ElectricalNetwork.from_element(bus)
+    np.testing.assert_allclose(bus.initial_potentials.m, [230, -230, 0])
+    np.testing.assert_allclose(calculate_voltages(bus.initial_potentials, bus.phases), vs.voltages)
+    assert bus.voltage_phases == vs.voltage_phases == ["cn", "an"]
