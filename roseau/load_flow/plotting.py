@@ -38,8 +38,6 @@ if TYPE_CHECKING:
         voltages: list[float] | None
         min_voltage: float | None
         max_voltage: float | None
-        power: complex
-        powers: list[complex] | None
         state: ResultState
         is_tr_bus: bool
 
@@ -1302,13 +1300,9 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             assert voltages is not None
             voltages = voltages.tolist()
             voltage = {"min": min(voltages), "max": max(voltages)}[mode]
-            powers = bus._res_agg_powers_getter(warning=False)
-            power = sum(powers)
         else:
             voltages = None
             voltage = bus._res_voltage_level_getter(warning=False)
-            powers = None
-            power = bus._res_agg_power_getter(warning=False)
             assert voltage is not None
 
         return {
@@ -1317,8 +1311,6 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             "voltages": _multiply(voltages, 100),
             "min_voltage": _multiply(bus._min_voltage_level, 100),
             "max_voltage": _multiply(bus._max_voltage_level, 100),
-            "power": power / 1e3,  # Convert to kW
-            "powers": _multiply(powers, 1e-3),
             "state": bus._res_state_getter(),
             "is_tr_bus": False,  # Will be updated later if needed
         }
@@ -1364,6 +1356,85 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             "max_loading": 100.0,
             "state": "unknown",
         }
+
+    def _get_bus_extra_info(self, bus_id: Id) -> dict[str, Any]:
+        """Get extra information for a bus to display in the tooltip."""
+        bus = self.network.buses[bus_id]
+        if isinstance(bus, Bus):
+            phases = bus.phases
+            powers = _multiply(bus._res_agg_powers_getter(warning=False), 1e-3)  # Convert to kVA
+            return {
+                "active_power": _pp_num(_real(powers)),
+                "reactive_power": _pp_num(_imag(powers)),
+                "phases": phases,
+            }
+        else:
+            power = bus._res_agg_power_getter(warning=False) / 1e3  # Convert to kVA
+            return {
+                "active_power": _pp_num(power.real),
+                "reactive_power": _pp_num(power.imag),
+                "phases": None,
+            }
+
+    def _get_extra_line_info(self, line_id: Id) -> dict[str, Any]:
+        """Get extra information for a line to display in the tooltip."""
+        line = self.network.lines[line_id]
+        if isinstance(line, Line):
+            return {
+                "length": line._length,
+                "parameters_id": line._parameters.id,
+                "line_type": line._parameters._line_type or "n/a",
+                "material": _scalar_if_unique(line._parameters._materials) or "n/a",
+                "section": _pp_num(_scalar_if_unique(line._parameters._sections), missing="n/a"),
+                "ampacity": _pp_num(_scalar_if_unique(line._parameters._ampacities), missing="n/a"),
+                "phases": line.phases,
+            }
+        else:
+            return {
+                "length": line._length,
+                "parameters_id": line._parameters.id,
+                "line_type": line._parameters._line_type or "n/a",
+                "material": line._parameters._material or "n/a",
+                "section": _pp_num(line._parameters._section, missing="n/a"),
+                "ampacity": _pp_num(line._parameters._ampacity, missing="n/a"),
+                "phases": None,
+            }
+
+    def _get_extra_transformer_info(self, tr_id: Id) -> dict[str, Any]:
+        """Get extra information for a transformer to display in the tooltip."""
+        tr = self.network.transformers[tr_id]
+        if isinstance(tr, Transformer):
+            return {
+                "parameters_id": tr._parameters.id,
+                "vg": tr._parameters.vg,
+                "sn": tr._parameters._sn / 1e3,  # Convert to kVA
+                "rated_voltages": _pp_num([tr._parameters._uhv, tr._parameters._ulv]),
+                "tap": tr._tap * 100,
+                "phases": [tr.phases_hv, tr.phases_lv],
+            }
+        else:
+            return {
+                "parameters_id": tr._parameters.id,
+                "vg": tr._parameters.vg,
+                "sn": tr._parameters._sn / 1e3,  # Convert to kVA
+                "rated_voltages": _pp_num([tr._parameters._uhv, tr._parameters._ulv]),
+                "tap": tr._tap * 100,
+                "phases": None,
+            }
+
+    def _get_extra_switch_info(self, switch_id: Id) -> dict[str, Any]:
+        """Get extra information for a switch to display in the tooltip."""
+        switch = self.network.switches[switch_id]
+        if isinstance(switch, Switch):
+            return {
+                "status": "closed" if switch.closed else "open",
+                "phases": switch.phases,
+            }
+        else:
+            return {
+                "status": "closed" if switch.closed else "open",
+                "phases": None,
+            }
 
     @property
     def _title(self) -> str:
@@ -1490,10 +1561,10 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             raise
 
         traces: list[go.Scatter] = []
+        is_multi_phase = self.network.is_multi_phase
 
         # Buses
         voltage_key = "voltages" if self.network.is_multi_phase else "voltage"
-        power_key = "powers" if self.network.is_multi_phase else "power"
         buses_trace = go.Scatter(
             x=[bus["distance"] for bus in self.buses.values()],
             y=[bus["voltage"] for bus in self.buses.values()],
@@ -1514,8 +1585,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                     _pp_num(bus[voltage_key]),
                     _pp_num(bus["min_voltage"]),
                     _pp_num(bus["max_voltage"]),
-                    _pp_num(_real(bus[power_key])),
-                    _pp_num(_imag(bus[power_key])),
+                    *self._get_bus_extra_info(bus_id).values(),
                 )
                 for bus_id, bus in self.buses.items()
             ],
@@ -1526,6 +1596,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 + "<b>Voltage limits (%):   </b> [%{customdata[2]}, %{customdata[3]}]<br>"
                 + "<b>Active Power (kW):    </b> %{customdata[4]}<br>"
                 + "<b>Reactive Power (kvar):</b> %{customdata[5]}<br>"
+                + "<b>Phases:               </b> %{customdata[6]}<br>" * is_multi_phase
                 + "</span><extra></extra>"
             ),
             zorder=3,
@@ -1574,7 +1645,12 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                     marker={"opacity": 0, "color": [self.colors[tr["state"]] for tr in self.transformers.values()]},
                     customdata=[
                         # indent has the size of the longest legend item: "Loading limit (%): "
-                        (_pp_eid(tr_id, indent="                   "), tr["loading"], tr["max_loading"])
+                        (
+                            _pp_eid(tr_id, indent="                   "),
+                            tr["loading"],
+                            tr["max_loading"],
+                            *self._get_extra_transformer_info(tr_id).values(),
+                        )
                         for tr_id, tr in self.transformers.items()
                     ],
                     hovertemplate=(
@@ -1583,7 +1659,13 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                         '<span style="font-family: monospace">'
                         + "<b>Transformer:      </b> %{customdata[0]}<br>"
                         + "<b>Loading (%):      </b> %{customdata[1]:.5g}<br>"
-                        + "<b>Loading limit (%):</b> %{customdata[2]:.5g}"
+                        + "<b>Loading limit (%):</b> %{customdata[2]:.5g}<br>"
+                        + "<b>Parameters:       </b> %{customdata[3]}<br>"
+                        + "<b>Vector Group:     </b> %{customdata[4]}<br>"
+                        + "<b>Sn (kVA):         </b> %{customdata[5]:.5g}<br>"
+                        + "<b>Ur [ʜv,ʟv] (V):   </b> %{customdata[6]}<br>"
+                        + "<b>Tap Position (%): </b> %{customdata[7]:.5g}<br>"
+                        + "<b>Phases [ʜv,ʟv]:   </b> %{customdata[8]}<br>" * is_multi_phase
                         + "</span><extra></extra>"
                     ),
                 )
@@ -1620,14 +1702,26 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 marker={"opacity": 0, "color": [self.colors[ln["state"]] for ln in self.lines.values()]},
                 customdata=[
                     # indent has the size of the longest legend item: "Loading limit (%): "
-                    (_pp_eid(ln_id, indent="                   "), _pp_num(ln[loading_key]), _pp_num(ln["max_loading"]))
+                    (
+                        _pp_eid(ln_id, indent="                   "),
+                        _pp_num(ln[loading_key]),
+                        _pp_num(ln["max_loading"]),
+                        *self._get_extra_line_info(ln_id).values(),
+                    )
                     for ln_id, ln in self.lines.items()
                 ],
                 hovertemplate=(
                     '<span style="font-family: monospace">'
                     + "<b>Line:             </b> %{customdata[0]}<br>"
                     + "<b>Loading (%):      </b> %{customdata[1]}<br>"
-                    + "<b>Loading limit (%):</b> %{customdata[2]}"
+                    + "<b>Loading limit (%):</b> %{customdata[2]:.5g}<br>"
+                    + "<b>Length (km):      </b> %{customdata[3]:.5g}<br>"
+                    + "<b>Parameters:       </b> %{customdata[4]}<br>"
+                    + "<b>Line type:        </b> %{customdata[5]}<br>"
+                    + "<b>Material:         </b> %{customdata[6]}<br>"
+                    + "<b>Section (mm²):    </b> %{customdata[7]}<br>"
+                    + "<b>Ampacity (A):     </b> %{customdata[8]}<br>"
+                    + "<b>Phases:           </b> %{customdata[9]}<br>" * is_multi_phase
                     + "</span><extra></extra>"
                 ),
             )
@@ -1663,10 +1757,18 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                     mode="markers",
                     marker={"opacity": 0, "color": [self.colors[sw["state"]] for sw in self.switches.values()]},
                     # indent has the size of the longest legend item: "Switch: "
-                    customdata=[_pp_eid(sw_id, indent="        ") for sw_id in self.switches],
+                    customdata=[
+                        (
+                            _pp_eid(sw_id, indent="        "),
+                            *self._get_extra_switch_info(sw_id).values(),
+                        )
+                        for sw_id in self.switches
+                    ],
                     hovertemplate=(
                         '<span style="font-family: monospace">'
-                        + "<b>Switch: </b> %{customdata}"
+                        + "<b>Switch: </b> %{customdata[0]}<br>"
+                        + "<b>Status: </b> %{customdata[1]}<br>"
+                        + "<b>Phases: </b> %{customdata[2]}<br>" * is_multi_phase
                         + "</span><extra></extra>"
                     ),
                 )
