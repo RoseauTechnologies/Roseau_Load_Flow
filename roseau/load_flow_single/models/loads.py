@@ -83,8 +83,9 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
         return load_dict
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
+class PowerLoad(AbstractLoad["CyPowerLoad | CyFlexibleLoad"]):
     """A constant power load."""
 
     type: Final = "power"
@@ -192,8 +193,9 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
         return data
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class CurrentLoad(AbstractLoad[CyCurrentLoad]):
+class CurrentLoad(AbstractLoad["CyCurrentLoad"]):
     """A constant current load."""
 
     type: Final = "current"
@@ -243,8 +245,9 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad]):
             self._cy_element.update_current(self._current)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
+class ImpedanceLoad(AbstractLoad["CyAdmittanceLoad"]):
     """A constant impedance load."""
 
     type: Final = "impedance"

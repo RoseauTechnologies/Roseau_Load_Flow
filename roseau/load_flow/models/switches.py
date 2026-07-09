@@ -15,8 +15,9 @@ from roseau.load_flow_engine.cy_engine import CyOpenSwitch, CySwitch
 logger = logging.getLogger(__name__)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class Switch(AbstractBranch["SwitchSide", CySwitch | CyOpenSwitch]):
+class Switch(AbstractBranch["SwitchSide", "CySwitch | CyOpenSwitch"]):
     """A general purpose switch branch."""
 
     element_type: Final = "switch"

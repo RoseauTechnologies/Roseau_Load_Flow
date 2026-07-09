@@ -14,8 +14,9 @@ from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSou
 logger = logging.getLogger(__name__)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSource]):
+class VoltageSource(AbstractDisconnectable["CyVoltageSource | CyDeltaVoltageSource"]):
     """A voltage source fixes the voltages on the phases of the bus it is connected to.
 
     The source can be connected in a wye or star configuration (i.e with a neutral) or in a delta

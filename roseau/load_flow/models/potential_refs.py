@@ -13,8 +13,9 @@ from roseau.load_flow_engine.cy_engine import CyDeltaPotentialRef, CyPotentialRe
 logger = logging.getLogger(__name__)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
+class PotentialRef(Element["CyPotentialRef | CyDeltaPotentialRef"]):
     """A potential reference.
 
     This element sets the reference for the potentials in a network. Only one potential reference

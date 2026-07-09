@@ -19,8 +19,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class Ground(Element[CyGround]):
+class Ground(Element["CyGround"]):
     """A ground element represents the earth in the network.
 
     The ground itself is modeled as an ideal infinite plane. The ground potential is NOT assumed to
@@ -122,8 +123,9 @@ class Ground(Element[CyGround]):
         return {"id": self.id, "potential": [v.real, v.imag]}
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class GroundConnection(Element[CySimplifiedLine | CySwitch]):
+class GroundConnection(Element["CySimplifiedLine | CySwitch"]):
     """An ideal or impedant connection to the ground."""
 
     element_type: Final = "ground connection"

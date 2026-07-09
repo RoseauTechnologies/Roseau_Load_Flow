@@ -18,8 +18,9 @@ from roseau.load_flow_single.models.terminals import AbstractTerminal
 logger = logging.getLogger(__name__)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class Bus(AbstractTerminal[CyBus]):
+class Bus(AbstractTerminal["CyBus"]):
     """An electrical bus."""
 
     element_type: Final = "bus"

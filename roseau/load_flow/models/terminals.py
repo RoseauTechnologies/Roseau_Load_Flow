@@ -121,8 +121,11 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         in the order ``[Van, Vbn, Vcn]``. If the element does not have a neutral, the voltages are
         phase-to-phase for existing phases in the order ``[Vab, Vbc, Vca]``.
 
-        To always get phase-to-phase voltages, use the property :attr:`.res_voltages_pp`.
-        To always get phase-to-neutral voltages, use the property :attr:`.res_voltages_pn`.
+        See Also:
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pp`: The phase-to-phase
+              voltages of the element. Raises if the element has only one phase.
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pn`: The phase-to-neutral
+              voltages of the element. Raises if the element does not have a neutral.
         """
         return Q_(self._res_voltages_getter(warning=True), "V")
 
@@ -131,6 +134,13 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         """The load flow result of the element's phase-to-phase voltages (V).
 
         Raises an error if the element has only one phase.
+
+        See Also:
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages`: Get the voltages in the
+              natural representation of the element (phase-to-neutral if it has a neutral,
+              phase-to-phase otherwise).
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pn`: The phase-to-neutral
+              voltages of the element. Raises if the element does not have a neutral.
         """
         return Q_(self._res_voltages_pp_getter(warning=True), "V")
 
@@ -139,6 +149,13 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         """The load flow result of the element's phase-to-neutral voltages (V).
 
         Raises an error if the element does not have a neutral.
+
+        See Also:
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages`: Get the voltages in the
+              natural representation of the element (phase-to-neutral if it has a neutral,
+              phase-to-phase otherwise).
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pp`: The phase-to-phase
+              voltages of the element. Raises if the element has only one phase.
         """
         return Q_(self._res_voltages_pn_getter(warning=True), "V")
 

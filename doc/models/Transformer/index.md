@@ -279,12 +279,10 @@ Center_Tapped_Transformer
 ## API Reference
 
 ```{eval-rst}
-.. autoapiclass:: roseau.load_flow.models.TransformerParameters
+.. autoapiclass:: roseau.load_flow.TransformerParameters
    :members:
-   :show-inheritance:
    :no-index:
-.. autoapiclass:: roseau.load_flow.models.Transformer
+.. autoapiclass:: roseau.load_flow.Transformer
    :members:
-   :show-inheritance:
    :no-index:
 ```

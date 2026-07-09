@@ -130,20 +130,16 @@ FlexibleLoad/index
 ## API Reference
 
 ```{eval-rst}
-.. autoapiclass:: roseau.load_flow.models.AbstractLoad
+.. autoapiclass:: roseau.load_flow.AbstractLoad
    :members:
-   :show-inheritance:
    :no-index:
-.. autoapiclass:: roseau.load_flow.models.ImpedanceLoad
+.. autoapiclass:: roseau.load_flow.ImpedanceLoad
    :members:
-   :show-inheritance:
    :no-index:
-.. autoapiclass:: roseau.load_flow.models.CurrentLoad
+.. autoapiclass:: roseau.load_flow.CurrentLoad
     :members:
-    :show-inheritance:
     :no-index:
-.. autoapiclass:: roseau.load_flow.models.PowerLoad
+.. autoapiclass:: roseau.load_flow.PowerLoad
     :members:
-    :show-inheritance:
     :no-index:
 ```

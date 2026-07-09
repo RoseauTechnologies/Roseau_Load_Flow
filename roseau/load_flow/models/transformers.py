@@ -11,13 +11,14 @@ from roseau.load_flow.models.transformer_parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict, ResultState
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import deprecate_renamed_parameters, warn_external
-from roseau.load_flow_engine.cy_engine import CyTransformer
+from roseau.load_flow_engine.cy_engine import CyTransformer  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
+class Transformer(AbstractBranch["TransformerSide", "CyTransformer"]):
     """A generic transformer model.
 
     The model parameters are defined using the ``parameters`` argument.

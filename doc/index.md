@@ -67,7 +67,14 @@ The following tutorials are available to help you get started:
 maxdepth: 2
 caption: Usage
 ---
-usage/index
+usage/Getting_Started
+usage/Connecting_Elements
+usage/Flexible_Loads
+usage/Short_Circuit
+usage/Catalogues
+usage/Plotting
+usage/Extras
+usage/Data_Exchange
 ```
 
 ## Models
@@ -80,7 +87,14 @@ classes are available here:
 maxdepth: 2
 caption: Models
 ---
-models/index
+models/PotentialRef
+models/Ground
+models/Bus
+models/VoltageSource
+models/Load/index
+models/Line/index
+models/Switch
+models/Transformer/index
 ```
 
 ## Advanced
