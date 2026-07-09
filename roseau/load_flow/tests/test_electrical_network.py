@@ -2817,5 +2817,5 @@ def test_can_voltage_source():
     PotentialRef("Pref", bus)
     ElectricalNetwork.from_element(bus)
     np.testing.assert_allclose(bus.initial_potentials.m, [230, -230, 0])
-    np.testing.assert_allclose(calculate_voltages(bus.initial_potentials, bus.phases), vs.voltages)
+    np.testing.assert_allclose(calculate_voltages(bus.initial_potentials, bus.phases).m, vs.voltages.m)
     assert bus.voltage_phases == vs.voltage_phases == ["cn", "an"]
