@@ -343,6 +343,20 @@ class Bus(AbstractTerminal[CyBus]):
         voltage = self._res_voltage_getter(warning)
         return abs(voltage) / self._nominal_voltage
 
+    def _res_agg_power_getter(self, warning: bool) -> complex:
+        """Get the aggregated proper power of the bus (VA)."""
+        power = 0j
+        for e in self._connected_elements:
+            if e.element_type == "load":
+                sign = 1
+            elif e.element_type == "source":
+                sign = -1
+            else:
+                continue
+            power += sign * e._res_power_getter(warning=warning)  # type: ignore
+            warning = False  # warn only once
+        return power
+
     def _res_state_getter(self) -> ResultState:
         """The state of the bus based on its voltage levels and limits."""
         u = self._res_voltage_level_getter(warning=False)
