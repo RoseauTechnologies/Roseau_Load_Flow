@@ -26,7 +26,7 @@ def test_voltage_profile(all_elements_network_with_results):
                 "voltages": None,
                 "min_voltage": None,
                 "max_voltage": None,
-                "power": profile.network.buses["bus0"]._res_agg_loads_power_getter(warning=False) * 1e-3,
+                "power": profile.network.buses["bus0"]._res_agg_power_getter(warning=False) * 1e-3,
                 "powers": None,
                 "state": "unknown",  # no voltage limits
                 "is_tr_bus": False,
@@ -37,7 +37,7 @@ def test_voltage_profile(all_elements_network_with_results):
                 "voltages": None,
                 "min_voltage": 90,
                 "max_voltage": 110,
-                "power": profile.network.buses["bus1"]._res_agg_loads_power_getter(warning=False) * 1e-3,
+                "power": profile.network.buses["bus1"]._res_agg_power_getter(warning=False) * 1e-3,
                 "powers": None,
                 "state": "normal",
                 "is_tr_bus": False,  # because traverse_transformers=False by default
@@ -91,12 +91,13 @@ def test_voltage_profile_traverse_transformers(all_elements_network_with_results
 def test_voltage_profile_parallel_branches():
     bus1 = rlfs.Bus(id="Bus 1", nominal_voltage=400)
     bus2 = rlfs.Bus(id="Bus 2", nominal_voltage=400)
-    lp = rlfs.LineParameters.from_catalogue("U_AL_120")
+    lp = rlfs.LineParameters.from_catalogue("U_AL_3x150+70")
     line1 = rlfs.Line(id="Line 1", bus1=bus1, bus2=bus2, parameters=lp, length=1.0)
     line2 = rlfs.Line(id="Line 2", bus1=bus1, bus2=bus2, parameters=lp, length=2.0)
     src = rlfs.VoltageSource(id="Src", bus=bus1, voltage=400)
 
     # Set fake results
+    src._res_voltage = 400 + 0j
     bus1._res_voltage = 400 + 0j
     bus2._res_voltage = 380 + 0j
     line1.side1._res_current = 50 + 0j
