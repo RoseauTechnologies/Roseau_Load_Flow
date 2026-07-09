@@ -1361,12 +1361,11 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         """Get extra information for a bus to display in the tooltip."""
         bus = self.network.buses[bus_id]
         if isinstance(bus, Bus):
-            phases = bus.phases
             powers = _multiply(bus._res_agg_powers_getter(warning=False), 1e-3)  # Convert to kVA
             return {
                 "active_power": _pp_num(_real(powers)),
                 "reactive_power": _pp_num(_imag(powers)),
-                "phases": phases,
+                "phases": bus.phases,
             }
         else:
             power = bus._res_agg_power_getter(warning=False) / 1e3  # Convert to kVA

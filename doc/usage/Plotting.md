@@ -119,6 +119,12 @@ The simplest way to visualize an electrical network with bus and line geometries
 ... rlf.plotting.plot_interactive_map(en)
 ```
 
+<!-- # To generate the following iframe, run:
+import roseau.load_flow as rlf
+en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
+rlf.plotting.plot_interactive_map(en).save("doc/_static/Plotting/MVFeeder210.html")
+-->
+
 <iframe src="../_static/Plotting/MVFeeder210.html" height="500px" width="100%" frameborder="0"></iframe>
 
 Make sure you have [folium](https://python-visualization.github.io/folium/latest) installed in your Python environment
@@ -159,6 +165,16 @@ the map. The network must have valid results before calling this function. Examp
 ... rlf.plotting.plot_results_interactive_map(en)
 ```
 
+<!-- # To generate the following iframe, run:
+import roseau.load_flow as rlf
+en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
+# Let's create some extreme conditions to see  voltage drops/rises and line overloads
+en.loads["MVLV14633_consumption"].powers = 3.5e6
+en.loads["MVLV15838_production"].powers = -5.5e6
+en.solve_load_flow()
+rlf.plotting.plot_results_interactive_map(en).save("doc/_static/Plotting/MVFeeder210_Results.html")
+-->
+
 <iframe src="../_static/Plotting/MVFeeder210_Results.html" height="500px" width="100%" frameborder="0"></iframe>
 
 The plot shows the buses color-coded according to their voltages and the lines/transformers color-coded according to
@@ -189,6 +205,22 @@ For example, to highlight all buses that have loads with a power >60kW, you can 
 ...     ),
 ... )
 ```
+
+<!-- # To generate the following iframe, run:
+import roseau.load_flow as rlf
+en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
+buses_with_loads_gt_60kva = {
+    load.bus.id
+    for load in en.loads.values()
+    if load.type == "power" and load.powers.m.sum().real > 60e3
+}
+rlf.plotting.plot_interactive_map(
+    en,
+    style_color=lambda el_type, el_id: (
+        "red" if el_type == "bus" and el_id in buses_with_loads_gt_60kva else None
+    ),
+).save("doc/_static/Plotting/MVFeeder210_Highlight.html")
+-->
 
 <iframe src="../_static/Plotting/MVFeeder210_Highlight.html" height="500px" width="100%" frameborder="0"></iframe>
 
