@@ -39,6 +39,16 @@ def one_or_more_repr(items: Collection[object], /, singular: str, plural: str | 
     return f"{plural if plural is not None else singular + 's'} {items!r}", "are"
 
 
+def pretty_unit(v: float, u: str, /) -> str:
+    """Return a pretty string representation of a value with the best unit."""
+    if v < 1e3:
+        return f"{v:.5g} {u}"
+    elif v < 1e6:
+        return f"{v / 1e3:.5g} k{u}"
+    else:
+        return f"{v / 1e6:.5g} M{u}"
+
+
 def ensure_startsupper(s: str, /) -> str:
     """Ensure the string starts with an uppercase letter."""
     return s[:1].upper() + s[1:]

@@ -84,3 +84,12 @@ repos:
     hooks:
       - id: oxipng
         args: ["-o", "4", "--strip", "safe", "--alpha"]
+  - repo: local
+    hooks:
+      - id: minify-html
+        name: Minify HTML files
+        types_or: [html]
+        entry: python scripts/minhtml.py
+        language: python
+        args: ["--overwrite", "--keep-closing-tags", "--minify-css", "--minify-js", "--minify-doctype"]
+        additional_dependencies: [minify-html]
