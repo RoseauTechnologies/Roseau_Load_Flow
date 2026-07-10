@@ -340,6 +340,79 @@ def plot_symmetrical_voltages(
 #
 # Map plotting functions
 #
+_MAP_FIELDS: dict["MapElementType", dict[str, str]] = {
+    "bus": {
+        "id": "Bus ID:",
+        "phases": "Phases:",
+        "nominal_voltage": "Un (V):",
+        "min_voltage_level": "Umin (%):",
+        "max_voltage_level": "Umax (%):",
+    },
+    "line": {
+        "id": "Line ID:",
+        "phases": "Phases:",
+        "bus1_id": "Bus1:",
+        "bus2_id": "Bus2:",
+        "parameters_id": "Parameters ID:",
+        "length": "Length (km):",
+        "line_type": "Line Type:",
+        "material": "Material:",
+        "insulator": "Insulator:",
+        "section": "Section (mm²):",
+        "ampacity": "Ampacity (A):",
+        "max_loading": "Max loading (%):",
+    },
+    "transformer": {
+        "id": "Transformer ID:",
+        "phases": "Phases [ʜv,ʟv]:",
+        "bus_hv_id": "HV Bus:",
+        "bus_lv_id": "LV Bus:",
+        "vg": "Vector Group:",
+        "rating": "Rating:",
+        "parameters_id": "Parameters ID:",
+        "tap": "Tap Position (%):",
+        "max_loading": "Max loading (%):",
+        "nominal_voltages": "Un [ʜv,ʟv] (V):",
+        "min_voltage_levels": "Umin [ʜv,ʟv] (%):",
+        "max_voltage_levels": "Umax [ʜv,ʟv] (%):",
+    },
+    "switch": {
+        "id": "Switch ID:",
+        "phases": "Phases:",
+        "bus1_id": "Bus1:",
+        "bus2_id": "Bus2:",
+        "status": "Status:",
+    },
+}
+_MAP_RESULTS_FIELDS: dict["MapElementType", dict[str, str]] = {
+    "bus": {
+        **_MAP_FIELDS["bus"],
+        "res_separator": "--",
+        "res_voltage": "U (V):",
+        "res_voltage_level": "U (%):",
+        "res_active_power": "P (kW):",
+        "res_reactive_power": "Q (kvar):",
+    },
+    "line": {
+        **_MAP_FIELDS["line"],
+        "res_separator": "--",
+        "res_loading": "Loading (%):",
+    },
+    "transformer": {
+        **_MAP_FIELDS["transformer"],
+        "res_separator": "--",
+        "res_loading": "Loading (%):",
+        "res_voltage_hv": "Uʜv (V):",
+        "res_voltage_lv": "Uʟv (V):",
+        "res_voltage_level_hv": "Uʜv (%):",
+        "res_voltage_level_lv": "Uʟv (%):",
+    },
+    "switch": {
+        **_MAP_FIELDS["switch"],
+    },
+}
+
+
 def _check_folium(func_name: str) -> None:
     """Check if the folium library is installed."""
     try:
@@ -377,16 +450,17 @@ def _map_get_bus_style_dict(
     color_callback: Callable[["MapElementType", Id], str],
 ) -> dict[str, str]:
     vn = nominal_voltages[bus_id]
+    if vn < _LV:
+        radius = 4  # LV
+    elif vn < _MV:
+        radius = 7  # MV
+    else:
+        radius = 10  # HV
+    # Make source buses larger and square to distinguish them from other buses
     if bus_id in source_buses:
-        radius = 12
+        radius += 3
         border_radius = 0  # Source bus: square
     else:
-        if vn < _LV:
-            radius = 4  # LV
-        elif vn < _MV:
-            radius = 7  # MV
-        else:
-            radius = 10  # HV
         border_radius = radius / 2
     color = color_callback("bus", bus_id)
     markup = f"""\
@@ -448,7 +522,7 @@ def _map_get_transformer_style_dict(
     return {"html": markup}
 
 
-def _plot_interactive_map_internal(  # noqa: C901
+def _plot_interactive_map_elements(  # noqa: C901
     network: "ElectricalNetwork | rlfs.ElectricalNetwork",
     dataframes: dict["MapElementType", gpd.GeoDataFrame],
     fields: dict["MapElementType", dict[str, str]],
@@ -456,14 +530,10 @@ def _plot_interactive_map_internal(  # noqa: C901
     highlight_color: str,
     style_function: Callable[["FeatureMap"], "StyleDict | None"] | None,
     highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None,
-    map_kws: Mapping[str, Any] | None,
     add_tooltips: bool,
     add_popups: bool,
-    add_search: bool,
-    fit_bounds: bool,
-) -> "folium.Map":
+) -> dict[str, "folium.GeoJson"]:
     import folium
-    from folium.plugins import FeatureGroupSubGroup, Search
 
     def internal_style_function(feature):
         result = style_function(feature) if style_function is not None else None
@@ -566,6 +636,45 @@ def _plot_interactive_map_internal(  # noqa: C901
             )
     else:
         popups = dict.fromkeys(fields.keys(), None)
+    names = {"bus": "Buses", "line": "Lines", "transformer": "Transformers", "switch": "Switches"}
+    layers = {}
+    for e_type, frame in dataframes.items():
+        if frame.empty:
+            continue
+        marker = (
+            folium.Marker(icon=folium.DivIcon(icon_size=(0, 0), icon_anchor=(0, 0)))
+            if e_type not in ("line", "switch")
+            else None
+        )
+        name = names[e_type]
+        layers[name] = folium.GeoJson(
+            data=frame.assign(element_type=e_type),
+            name=name,
+            marker=marker,
+            style_function=internal_style_function,
+            highlight_function=internal_highlight_function,
+            tooltip=tooltips[e_type],
+            popup=popups[e_type],
+        )
+    return layers
+
+
+def _plot_interactive_map_internal(
+    network: "ElectricalNetwork | rlfs.ElectricalNetwork",
+    dataframes: dict["MapElementType", gpd.GeoDataFrame],
+    fields: dict["MapElementType", dict[str, str]],
+    style_color_callback: Callable[["MapElementType", Id], str],
+    highlight_color: str,
+    style_function: Callable[["FeatureMap"], "StyleDict | None"] | None,
+    highlight_function: Callable[["FeatureMap"], "StyleDict | None"] | None,
+    map_kws: Mapping[str, Any] | None,
+    add_tooltips: bool,
+    add_popups: bool,
+    add_search: bool,
+    fit_bounds: bool,
+) -> "folium.Map":
+    import folium
+    from folium.plugins import FeatureGroupSubGroup, Search
 
     map_kws = dict(map_kws) if map_kws is not None else {}
 
@@ -602,35 +711,152 @@ def _plot_interactive_map_internal(  # noqa: C901
         "});"
     ).add_to(root.script)
     network_layer = folium.FeatureGroup(name=network.name).add_to(m)
-    names = {"bus": "Buses", "line": "Lines", "transformer": "Transformers", "switch": "Switches"}
-    for e_type, frame in dataframes.items():
-        if frame.empty:
-            continue
-        marker = (
-            folium.Marker(icon=folium.DivIcon(icon_size=(0, 0), icon_anchor=(0, 0)))
-            if e_type not in ("line", "switch")
-            else None
-        )
-        name = names[e_type]
-        folium.GeoJson(
-            data=frame,
-            name=name,
-            marker=marker,
-            style_function=internal_style_function,
-            highlight_function=internal_highlight_function,
-            tooltip=tooltips[e_type],
-            popup=popups[e_type],
-        ).add_to(FeatureGroupSubGroup(network_layer, name).add_to(m))
-    folium.LayerControl(
-        collapsed=False,
-        draggable=True,
-        position="bottomright",
-    ).add_to(m)
+    for name, layer in _plot_interactive_map_elements(
+        network=network,
+        dataframes=dataframes,
+        fields=fields,
+        style_color_callback=style_color_callback,
+        highlight_color=highlight_color,
+        style_function=style_function,
+        highlight_function=highlight_function,
+        add_tooltips=add_tooltips,
+        add_popups=add_popups,
+    ).items():
+        layer.add_to(FeatureGroupSubGroup(network_layer, name).add_to(m))
+    folium.LayerControl(collapsed=False, draggable=True, position="bottomright").add_to(m)
     if add_search:
         Search(network_layer, search_label="id", placeholder="Search network elements...").add_to(m)
     if fit_bounds:
         folium.FitOverlays(padding=30).add_to(m)
     return m
+
+
+def _get_buses_data_for_map_plot(network: ElectricalNetwork, with_results: bool) -> gpd.GeoDataFrame:
+    buses_data: dict[str, list[Any]] = {
+        field: [] for field in (_MAP_RESULTS_FIELDS if with_results else _MAP_FIELDS)["bus"]
+    }
+    buses_data["geometry"] = []
+    for bus in network.buses.values():
+        buses_data["id"].append(bus.id)
+        buses_data["phases"].append(bus.phases)
+        buses_data["nominal_voltage"].append(bus._nominal_voltage)
+        buses_data["min_voltage_level"].append(_multiply(bus._min_voltage_level, 100))
+        buses_data["max_voltage_level"].append(_multiply(bus._max_voltage_level, 100))
+        buses_data["geometry"].append(bus.geometry)
+        if not with_results:
+            continue
+        buses_data["res_separator"].append("")  # Results separator
+        buses_data["res_voltage"].append(_pp_num([abs(v) for v in bus._res_voltages_getter(warning=False).tolist()]))
+        buses_data["res_voltage_level"].append(
+            _pp_num(
+                _multiply(
+                    v_levels.tolist()
+                    if (v_levels := bus._res_voltage_levels_getter(warning=False)) is not None
+                    else None,
+                    100,
+                )
+            )
+        )
+        bus_agg_powers = _multiply(bus._res_agg_powers_getter(warning=False), 1e-3)  # Convert to kVA
+        buses_data["res_active_power"].append(_pp_num(_real(bus_agg_powers)))
+        buses_data["res_reactive_power"].append(_pp_num(_imag(bus_agg_powers)))
+    return gpd.GeoDataFrame(buses_data, crs=network.crs)
+
+
+def _get_lines_data_for_map_plot(network: ElectricalNetwork, with_results: bool) -> gpd.GeoDataFrame:
+    lines_data: dict[str, list[Any]] = {
+        field: [] for field in (_MAP_RESULTS_FIELDS if with_results else _MAP_FIELDS)["line"]
+    }
+    lines_data["geometry"] = []
+    for line in network.lines.values():
+        lp = line._parameters
+        lines_data["id"].append(line.id)
+        lines_data["phases"].append(line.phases)
+        lines_data["bus1_id"].append(line.bus1.id)
+        lines_data["bus2_id"].append(line.bus2.id)
+        lines_data["parameters_id"].append(lp.id)
+        lines_data["length"].append(line._length)
+        lines_data["line_type"].append(lp._line_type)
+        lines_data["material"].append(_scalar_if_unique(lp._materials))
+        lines_data["insulator"].append(_scalar_if_unique(lp._insulators))
+        lines_data["section"].append(_scalar_if_unique(lp._sections))
+        lines_data["ampacity"].append(_scalar_if_unique(lp._ampacities))
+        lines_data["max_loading"].append(line._max_loading * 100)
+        lines_data["geometry"].append(line.geometry)
+        if not with_results:
+            continue
+        lines_data["res_separator"].append("")  # Results separator
+        lines_data["res_loading"].append(
+            _pp_num(
+                _multiply(
+                    loading.tolist() if (loading := line._res_loading_getter(warning=False)) is not None else None, 100
+                )
+            )
+        )
+    return gpd.GeoDataFrame(lines_data, crs=network.crs)
+
+
+def _get_transformers_data_for_map_plot(
+    network: ElectricalNetwork, with_results: bool, buses_frame: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    trs_data: dict[str, list[Any]] = {
+        field: [] for field in (_MAP_RESULTS_FIELDS if with_results else _MAP_FIELDS)["transformer"]
+    }
+    trs_data["geometry"] = []
+    buses_frame = buses_frame.set_index("id")
+    for tr in network.transformers.values():
+        tp = tr._parameters
+        trs_data["id"].append(tr.id)
+        trs_data["phases"].append(f"[{tr.phases_hv}, {tr.phases_lv}]")
+        trs_data["bus_hv_id"].append(tr.bus_hv.id)
+        trs_data["bus_lv_id"].append(tr.bus_lv.id)
+        trs_data["tap"].append(tr._tap * 100)  # Convert to percentage
+        trs_data["vg"].append(tp.vg)
+        trs_data["rating"].append(tp._rating_pretty())
+        trs_data["parameters_id"].append(tp.id)
+        trs_data["max_loading"].append(tr._max_loading * 100)
+        trs_data["geometry"].append(tr.bus_hv.geometry)
+        trs_data["nominal_voltages"].append(
+            _pp_num([buses_frame.at[bus.id, "nominal_voltage"] for bus in (tr.bus_hv, tr.bus_lv)])
+        )
+        trs_data["min_voltage_levels"].append(
+            _pp_num([buses_frame.at[bus.id, "min_voltage_level"] for bus in (tr.bus_hv, tr.bus_lv)])
+        )
+        trs_data["max_voltage_levels"].append(
+            _pp_num([buses_frame.at[bus.id, "max_voltage_level"] for bus in (tr.bus_hv, tr.bus_lv)])
+        )
+        if not with_results:
+            continue
+        trs_data["res_separator"].append("")  # Results separator
+        trs_data["res_loading"].append(tr._res_loading_getter(warning=False) * 100)
+        trs_data["res_voltage_hv"].append(buses_frame.at[tr.bus_hv.id, "res_voltage"])
+        trs_data["res_voltage_lv"].append(buses_frame.at[tr.bus_lv.id, "res_voltage"])
+        trs_data["res_voltage_level_hv"].append(buses_frame.at[tr.bus_hv.id, "res_voltage_level"])
+        trs_data["res_voltage_level_lv"].append(buses_frame.at[tr.bus_lv.id, "res_voltage_level"])
+    return gpd.GeoDataFrame(trs_data, crs=network.crs)
+
+
+def _get_switches_data_for_map_plot(network: ElectricalNetwork, with_results: bool) -> gpd.GeoDataFrame:
+    # Switches as lines if their buses are not at the same point
+    switches_data: dict[str, list[Any]] = {
+        field: [] for field in (_MAP_RESULTS_FIELDS if with_results else _MAP_FIELDS)["switch"]
+    }
+    switches_data["geometry"] = []
+    for sw in network.switches.values():
+        geom1, geom2 = sw.bus1.geometry, sw.bus2.geometry
+        if geom1 is None or geom2 is None:
+            continue
+        geom1, geom2 = geom1.centroid, geom2.centroid
+        if geom1.equals(geom2):
+            continue
+        geom = shp.LineString([geom1, geom2])
+        switches_data["id"].append(sw.id)
+        switches_data["phases"].append(sw.phases)
+        switches_data["bus1_id"].append(sw.bus1.id)
+        switches_data["bus2_id"].append(sw.bus2.id)
+        switches_data["status"].append("closed" if sw.closed else "open")
+        switches_data["geometry"].append(geom)
+    return gpd.GeoDataFrame(switches_data, crs=network.crs)
 
 
 def plot_interactive_map(
@@ -715,124 +941,14 @@ def plot_interactive_map(
         raise TypeError(
             "Only multi-phase networks can be plotted. Did you mean to use rlfs.plotting.plot_interactive_map?"
         )
-
-    buses_gdf = network.buses_frame
-    buses_gdf.reset_index(inplace=True)
-    buses_gdf["element_type"] = "bus"
-    buses_gdf["min_voltage_level"] *= 100  # Convert to percentage
-    buses_gdf["max_voltage_level"] *= 100  # Convert to percentage
-
-    lines_gdf = network.lines_frame
-    lines_gdf.reset_index(inplace=True)
-    lines_gdf["element_type"] = "line"
-    lines_gdf["max_loading"] *= 100  # Convert to percentage
-    lines_gdf[["ampacity", "section", "line_type", "material", "insulator"]] = None
-    line_params = {}
-    for idx in lines_gdf.index:
-        line_id: Id = lines_gdf.at[idx, "id"]
-        lp = network.lines[line_id].parameters
-        if lp.id not in line_params:
-            line_params[lp.id] = {
-                "ampacity": _scalar_if_unique(lp._ampacities),
-                "section": _scalar_if_unique(lp._sections),
-                "line_type": lp._line_type,
-                "material": _scalar_if_unique(lp._materials),
-                "insulator": _scalar_if_unique(lp._insulators),
-            }
-        lines_gdf.at[idx, "ampacity"] = line_params[lp.id]["ampacity"]
-        lines_gdf.at[idx, "section"] = line_params[lp.id]["section"]
-        lines_gdf.at[idx, "line_type"] = line_params[lp.id]["line_type"]
-        lines_gdf.at[idx, "material"] = line_params[lp.id]["material"]
-        lines_gdf.at[idx, "insulator"] = line_params[lp.id]["insulator"]
-
-    transformers_gdf = network.transformers_frame
-    transformers_gdf.reset_index(inplace=True)
-    transformers_gdf["element_type"] = "transformer"
-    transformers_gdf["tap"] *= 100  # Convert to percentage
-    transformers_gdf[["hv_side", "lv_side"]] = ""
-    transformers_gdf[["vg", "sn", "uhv", "ulv"]] = None
-    for idx in transformers_gdf.index:
-        tr_id: Id = transformers_gdf.at[idx, "id"]
-        # Replace geometry with that of the HV bus
-        bus_hv_id: Id = transformers_gdf.at[idx, "bus_hv_id"]
-        transformers_gdf.at[idx, "geometry"] = network.buses[bus_hv_id].geometry  # type: ignore
-        lp = network.transformers[tr_id].parameters
-        transformers_gdf.at[idx, "vg"] = lp.vg
-        transformers_gdf.at[idx, "sn"] = lp._sn / 1e3  # Convert to kVA
-        transformers_gdf.at[idx, "uhv"] = lp._uhv
-        transformers_gdf.at[idx, "ulv"] = lp._ulv
-
-    # Switches as lines if their buses are not at the same point
-    switches_data = {
-        "id": [],
-        "phases": [],
-        "element_type": [],
-        "bus1_id": [],
-        "bus2_id": [],
-        "status": [],
-        "geometry": [],
-    }
-    for sw in network.switches.values():
-        if sw.bus1.geometry is None or sw.bus2.geometry is None or sw.bus1.geometry.equals(sw.bus2.geometry):
-            continue
-        switches_data["id"].append(sw.id)
-        switches_data["phases"].append(sw.phases)
-        switches_data["element_type"].append("switch")
-        switches_data["bus1_id"].append(sw.bus1.id)
-        switches_data["bus2_id"].append(sw.bus2.id)
-        switches_data["status"].append("closed" if sw.closed else "open")
-        switches_data["geometry"].append(shp.LineString([sw.bus1.geometry.centroid, sw.bus2.geometry.centroid]))
-    switches_gdf = gpd.GeoDataFrame(switches_data, crs=network.crs)
-
+    buses_gdf = _get_buses_data_for_map_plot(network, with_results=False)
+    lines_gdf = _get_lines_data_for_map_plot(network, with_results=False)
+    transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
+    switches_gdf = _get_switches_data_for_map_plot(network, with_results=False)
     m = _plot_interactive_map_internal(
         network=network,
         dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
-        fields={
-            "bus": {
-                "id": "Id:",
-                "phases": "Phases:",
-                "nominal_voltage": "Un (V):",
-                "min_voltage_level": "Umin (%):",
-                "max_voltage_level": "Umax (%):",
-            },
-            "line": {
-                "id": "Id:",
-                "phases": "Phases:",
-                "bus1_id": "Bus1:",
-                "bus2_id": "Bus2:",
-                "parameters_id": "Parameters:",
-                "length": "Length (km):",
-                "line_type": "Line Type:",
-                "material": "Material:",
-                "insulator": "Insulator:",
-                "section": "Section (mm²):",
-                "ampacity": "Ampacity (A):",
-                "max_loading": "Max loading (%):",
-            },
-            "transformer": {
-                "id": "Id:",
-                "vg": "Vector Group:",
-                "sn": "Sn (kVA):",
-                "tap": "Tap Position (%):",
-                "parameters_id": "Parameters:",
-                "max_loading": "Max loading (%):",
-                "hv_side": "HV Side",
-                "bus_hv_id": "» Bus:",
-                "phases_hv": "» Phases:",
-                "uhv": "» Ur (V):",
-                "lv_side": "LV Side",
-                "bus_lv_id": "» Bus:",
-                "phases_lv": "» Phases:",
-                "ulv": "» Ur (V):",
-            },
-            "switch": {
-                "id": "Id:",
-                "bus1_id": "Bus1:",
-                "bus2_id": "Bus2:",
-                "phases": "Phases:",
-                "status": "Status:",
-            },
-        },
+        fields=_MAP_FIELDS,
         style_color_callback=_make_style_color_callback(style_color, lambda et, eid: _DEFAULT_MAP_STYLE_COLORS[et]),
         highlight_color=highlight_color,
         style_function=style_function,
@@ -846,7 +962,7 @@ def plot_interactive_map(
     return m
 
 
-def _default_map_style_color(
+def _default_map_results_style_color(
     et: "MapElementType", eid: Id, network: "ElectricalNetwork | rlfs.ElectricalNetwork"
 ) -> str:
     if et == "bus":
@@ -956,234 +1072,21 @@ def plot_results_interactive_map(
         The `folium.Map` object with the network plot.
     """
     _check_folium(func_name="plot_results_interactive_map")
-
     if not network.is_multi_phase:
         raise TypeError(
             "Only multi-phase networks can be plotted. Did you mean to use rlfs.plotting.plot_results_interactive_map?"
         )
     network._check_valid_results()
-
-    buses_data: dict[str, list[Any]] = {
-        "id": [],
-        "phases": [],
-        "element_type": [],
-        "nominal_voltage": [],
-        "min_voltage_level": [],
-        "max_voltage_level": [],
-        "geometry": [],
-        "res_separator": [],
-        "res_voltage": [],
-        "res_voltage_level": [],
-        "res_active_power": [],
-        "res_reactive_power": [],
-    }
-    buses_ids: list[Id] = []
-    for bus in network.buses.values():
-        buses_ids.append(bus.id)
-        buses_data["id"].append(bus.id)
-        buses_data["phases"].append(bus.phases)
-        buses_data["element_type"].append("bus")
-        buses_data["nominal_voltage"].append(bus._nominal_voltage)
-        buses_data["min_voltage_level"].append(_multiply(bus._min_voltage_level, 100))
-        buses_data["max_voltage_level"].append(_multiply(bus._max_voltage_level, 100))
-        buses_data["geometry"].append(bus.geometry)
-        buses_data["res_separator"].append("")  # Results separator
-        buses_data["res_voltage"].append(_pp_num([abs(v) for v in bus._res_voltages_getter(warning=False).tolist()]))
-        buses_data["res_voltage_level"].append(
-            _pp_num(
-                _multiply(
-                    v_levels.tolist()
-                    if (v_levels := bus._res_voltage_levels_getter(warning=False)) is not None
-                    else None,
-                    100,
-                )
-            )
-        )
-        bus_agg_powers = _multiply(bus._res_agg_powers_getter(warning=False), 1e-3)  # Convert to kVA
-        buses_data["res_active_power"].append(_pp_num(_real(bus_agg_powers)))
-        buses_data["res_reactive_power"].append(_pp_num(_imag(bus_agg_powers)))
-
-    lines_data: dict[str, list[Any]] = {
-        "id": [],
-        "phases": [],
-        "element_type": [],
-        "bus1_id": [],
-        "bus2_id": [],
-        "parameters_id": [],
-        "length": [],
-        "line_type": [],
-        "material": [],
-        "insulator": [],
-        "section": [],
-        "ampacity": [],
-        "geometry": [],
-        "res_separator": [],  # Results separator
-        "max_loading": [],
-        "res_loading": [],
-    }
-    for line in network.lines.values():
-        lines_data["id"].append(line.id)
-        lines_data["phases"].append(line.phases)
-        lines_data["element_type"].append("line")
-        lines_data["bus1_id"].append(line.bus1.id)
-        lines_data["bus2_id"].append(line.bus2.id)
-        lines_data["parameters_id"].append(line._parameters.id)
-        lines_data["length"].append(line._length)
-        lines_data["line_type"].append(line._parameters._line_type)
-        lines_data["material"].append(_scalar_if_unique(line._parameters._materials))
-        lines_data["insulator"].append(_scalar_if_unique(line._parameters._insulators))
-        lines_data["section"].append(_scalar_if_unique(line._parameters._sections))
-        lines_data["ampacity"].append(_scalar_if_unique(line._parameters._ampacities))
-        lines_data["geometry"].append(line.geometry)
-        lines_data["res_separator"].append("")  # Results separator
-        lines_data["max_loading"].append(line._max_loading * 100)
-        lines_data["res_loading"].append(
-            _pp_num(
-                _multiply(
-                    loading.tolist() if (loading := line._res_loading_getter(warning=False)) is not None else None, 100
-                )
-            )
-        )
-
-    def _get_tr_buses_data(tr: Transformer, field: str) -> str:
-        return _pp_num([buses_data[field][buses_ids.index(bus_id)] for bus_id in (tr.bus_hv.id, tr.bus_lv.id)])
-
-    transformers_data: dict[str, list[Any]] = {
-        "id": [],
-        "phases": [],
-        "element_type": [],
-        "bus_hv_id": [],
-        "bus_lv_id": [],
-        "parameters_id": [],
-        "geometry": [],
-        "vg": [],
-        "sn": [],
-        "tap": [],
-        "rated_voltages": [],
-        "max_loading": [],
-        "nominal_voltages": [],
-        "min_voltage_levels": [],
-        "max_voltage_levels": [],
-        "res_separator": [],
-        "res_loading": [],
-        "res_voltage_hv": [],
-        "res_voltage_lv": [],
-        "res_voltage_level_hv": [],
-        "res_voltage_level_lv": [],
-    }
-    for tr in network.transformers.values():
-        transformers_data["id"].append(tr.id)
-        transformers_data["phases"].append(f"[{tr.phases_hv}, {tr.phases_lv}]")
-        transformers_data["element_type"].append("transformer")
-        transformers_data["bus_hv_id"].append(tr.bus_hv.id)
-        transformers_data["bus_lv_id"].append(tr.bus_lv.id)
-        transformers_data["parameters_id"].append(tr._parameters.id)
-        transformers_data["geometry"].append(tr.bus_hv.geometry)
-        transformers_data["vg"].append(tr._parameters.vg)
-        transformers_data["sn"].append(tr._parameters._sn / 1e3)  # Convert to kVA
-        transformers_data["tap"].append(tr._tap * 100)  # Convert to percentage
-        transformers_data["rated_voltages"].append(_pp_num([tr._parameters._uhv, tr._parameters._ulv]))
-        transformers_data["max_loading"].append(tr._max_loading * 100)
-        transformers_data["nominal_voltages"].append(_get_tr_buses_data(tr, "nominal_voltage"))
-        transformers_data["min_voltage_levels"].append(_get_tr_buses_data(tr, "min_voltage_level"))
-        transformers_data["max_voltage_levels"].append(_get_tr_buses_data(tr, "max_voltage_level"))
-        transformers_data["res_separator"].append("")  # Results separator
-        transformers_data["res_loading"].append(tr._res_loading_getter(warning=False) * 100)
-        bus_hv_idx = buses_ids.index(tr.bus_hv.id)
-        bus_lv_idx = buses_ids.index(tr.bus_lv.id)
-        transformers_data["res_voltage_hv"].append(buses_data["res_voltage"][bus_hv_idx])
-        transformers_data["res_voltage_lv"].append(buses_data["res_voltage"][bus_lv_idx])
-        transformers_data["res_voltage_level_hv"].append(buses_data["res_voltage_level"][bus_hv_idx])
-        transformers_data["res_voltage_level_lv"].append(buses_data["res_voltage_level"][bus_lv_idx])
-
-    switches_data = {
-        "id": [],
-        "phases": [],
-        "element_type": [],
-        "bus1_id": [],
-        "bus2_id": [],
-        "status": [],
-        "geometry": [],
-    }
-    for sw in network.switches.values():
-        if sw.bus1.geometry is None or sw.bus2.geometry is None or sw.bus1.geometry.equals(sw.bus2.geometry):
-            continue
-        switches_data["id"].append(sw.id)
-        switches_data["phases"].append(sw.phases)
-        switches_data["element_type"].append("switch")
-        switches_data["bus1_id"].append(sw.bus1.id)
-        switches_data["bus2_id"].append(sw.bus2.id)
-        switches_data["status"].append("closed" if sw.closed else "open")
-        switches_data["geometry"].append(shp.LineString([sw.bus1.geometry.centroid, sw.bus2.geometry.centroid]))
-
-    buses_gdf = gpd.GeoDataFrame(buses_data, crs=network.crs)
-    lines_gdf = gpd.GeoDataFrame(lines_data, crs=network.crs)
-    transformers_gdf = gpd.GeoDataFrame(transformers_data, crs=network.crs)
-    switches_gdf = gpd.GeoDataFrame(switches_data, crs=network.crs)
-
+    buses_gdf = _get_buses_data_for_map_plot(network, with_results=True)
+    lines_gdf = _get_lines_data_for_map_plot(network, with_results=True)
+    transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
+    switches_gdf = _get_switches_data_for_map_plot(network, with_results=True)
     m = _plot_interactive_map_internal(
         network=network,
         dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
-        fields={
-            "bus": {
-                "id": "Id:",
-                "phases": "Phases:",
-                "nominal_voltage": "Un (V):",
-                "min_voltage_level": "Umin (%):",
-                "max_voltage_level": "Umax (%):",
-                "res_separator": "--",
-                "res_voltage": "U (V):",
-                "res_voltage_level": "U (%):",
-                "res_active_power": "P (kW):",
-                "res_reactive_power": "Q (kvar):",
-            },
-            "line": {
-                "id": "Id:",
-                "phases": "Phases:",
-                "bus1_id": "Bus1:",
-                "bus2_id": "Bus2:",
-                "parameters_id": "Parameters:",
-                "length": "Length (km):",
-                "line_type": "Line Type:",
-                "material": "Material:",
-                "insulator": "Insulator:",
-                "section": "Section (mm²):",
-                "ampacity": "Ampacity (A):",
-                "max_loading": "Max loading (%):",
-                "res_separator": "--",
-                "res_loading": "Loading (%):",
-            },
-            "transformer": {
-                "id": "Id:",
-                "bus_hv_id": "HV Bus:",
-                "bus_lv_id": "LV Bus:",
-                "phases": "Bus phases [ʜv,ʟv]:",
-                "vg": "Vector Group:",
-                "sn": "Sn (kVA):",
-                "rated_voltages": "Ur [ʜv,ʟv] (V):",
-                "tap": "Tap Position (%):",
-                "parameters_id": "Parameters:",
-                "max_loading": "Max loading (%):",
-                "nominal_voltages": "Un [ʜv,ʟv] (V):",
-                "min_voltage_levels": "Umin [ʜv,ʟv] (%):",
-                "max_voltage_levels": "Umax [ʜv,ʟv] (%):",
-                "res_separator": "--",
-                "res_loading": "Loading (%):",
-                "res_voltage_hv": "Uʜv (V):",
-                "res_voltage_lv": "Uʟv (V):",
-                "res_voltage_level_hv": "Uʜv (%):",
-                "res_voltage_level_lv": "Uʟv (%):",
-            },
-            "switch": {
-                "id": "Id:",
-                "bus1_id": "Bus1:",
-                "bus2_id": "Bus2:",
-                "phases": "Phases:",
-                "status": "Status:",
-            },
-        },
+        fields=_MAP_RESULTS_FIELDS,
         style_color_callback=_make_style_color_callback(
-            style_color, partial(_default_map_style_color, network=network)
+            style_color, partial(_default_map_results_style_color, network=network)
         ),
         highlight_color=highlight_color,
         style_function=style_function,

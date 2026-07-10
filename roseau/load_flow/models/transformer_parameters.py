@@ -15,7 +15,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.types import TransformerCooling, TransformerInsulation
 from roseau.load_flow.typing import Complex, Float, Id, JsonDict, QtyOrMag
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, warn_external
+from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, pretty_unit, warn_external
 from roseau.load_flow_engine.cy_engine import (
     CyCenterTransformer,
     CySingleTransformer,
@@ -405,6 +405,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def insulation(self) -> TransformerInsulation | None:
         """The insulation technology of the transformer (dry-type, liquid-immersed, gas-filled)."""
         return self._insulation
+
+    def _rating_pretty(self) -> str:
+        """Return a pretty string representation of the transformer rating."""
+        return f"{pretty_unit(self._sn, 'VA')} - {pretty_unit(self._uhv, 'V')} / {pretty_unit(self._ulv, 'V')}"
 
     @classmethod
     def _compute_zy(
