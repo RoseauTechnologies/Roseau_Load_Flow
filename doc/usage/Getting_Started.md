@@ -31,7 +31,7 @@ In this tutorial you will learn how to:
 
 ## Creating a network
 
-An electrical network can be built by assembling basic elements described in the [Models section](../models/index.md).
+An electrical network can be built by assembling basic elements described in the [Models section](../index.md#models).
 The following is a summary of the available elements:
 
 - Buses:
@@ -208,9 +208,9 @@ An `ElectricalNetwork` object can now be created using the `from_element` constr
 to this constructor. All the elements connected to this bus are automatically included into the network.
 
 ```pycon
->>> en = rlf.ElectricalNetwork.from_element(mv_bus)
+>>> en = rlf.ElectricalNetwork.from_element(mv_bus, name="My first network")
 ... en
-<ElectricalNetwork: 3 buses, 1 line, 1 transformer, 0 switches, 1 load, 1 source, 1 ground, 2 potential refs>
+<ElectricalNetwork 'My first network': 3 buses, 1 line, 1 transformer, 0 switches, 1 load, 1 source, 1 ground, 2 potential refs, 1 ground connection>
 ```
 
 ## Solving a load flow
@@ -253,7 +253,7 @@ The results returned by the `res_` properties are also `Quantity` objects.
 
 ### Available results
 
-The available results depend on the type of element. The [models page](../models/index.md) of each element lists its
+The available results depend on the type of element. The [models page](../index.md#models) of each element lists its
 available results.
 
 ### Getting results per object

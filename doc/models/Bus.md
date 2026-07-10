@@ -139,8 +139,7 @@ en.res_lines[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)])
 ## API Reference
 
 ```{eval-rst}
-.. autoapiclass:: roseau.load_flow.models.Bus
+.. autoapiclass:: roseau.load_flow.Bus
    :members:
-   :show-inheritance:
    :no-index:
 ```

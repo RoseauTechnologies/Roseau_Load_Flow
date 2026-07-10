@@ -22,8 +22,9 @@ if TYPE_CHECKING:
     from roseau.load_flow.models.grounds import Ground
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class Bus(AbstractTerminal[CyBus]):
+class Bus(AbstractTerminal["CyBus"]):
     """A multi-phase electrical bus."""
 
     element_type: Final = "bus"
@@ -450,7 +451,14 @@ class Bus(AbstractTerminal[CyBus]):
 
     @property
     def res_voltage_levels(self) -> Q_[FloatArray] | None:
-        """The load flow result of the bus voltage levels (p.u.)."""
+        """The load flow result of the bus voltage levels (p.u.).
+
+        See Also:
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels_pp`: The phase-to-phase voltage levels
+              of the bus. Raises if the bus has only one phase.
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels_pn`: The phase-to-neutral voltage
+              levels of the bus. Raises if the bus does not have a neutral.
+        """
         voltage_levels = self._res_voltage_levels_getter(warning=True)
         return None if voltage_levels is None else Q_(voltage_levels, "")
 
@@ -459,6 +467,12 @@ class Bus(AbstractTerminal[CyBus]):
         """The load flow result of the bus's phase-to-phase voltage levels (p.u.).
 
         Raises an error if the element has only one phase.
+
+        See Also:
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels`: The voltage levels of the bus in the
+              natural representation (phase-to-neutral if it has a neutral, phase-to-phase otherwise).
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels_pn`: The phase-to-neutral voltage
+              levels of the bus. Raises if the bus does not have a neutral.
         """
         voltage_levels = self._res_voltage_levels_pp_getter(warning=True)
         return None if voltage_levels is None else Q_(voltage_levels, "")
@@ -468,6 +482,12 @@ class Bus(AbstractTerminal[CyBus]):
         """The load flow result of the bus's phase-to-neutral voltage levels (p.u.).
 
         Raises an error if the element does not have a neutral.
+
+        See Also:
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels`: The voltage levels of the bus in the
+              natural representation (phase-to-neutral if it has a neutral, phase-to-phase otherwise).
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels_pp`: The phase-to-phase voltage levels
+              of the bus. Raises if the bus has only one phase.
         """
         voltage_levels = self._res_voltage_levels_pn_getter(warning=True)
         return None if voltage_levels is None else Q_(voltage_levels, "")

@@ -204,8 +204,9 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
         return results
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | CyDeltaFlexibleLoad]):
+class PowerLoad(AbstractLoad["CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | CyDeltaFlexibleLoad"]):
     """A constant power load."""
 
     type: Final = "power"
@@ -380,8 +381,9 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
         return Q_(self._res_flexible_powers_getter(warning=True), "VA")
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
+class CurrentLoad(AbstractLoad["CyCurrentLoad | CyDeltaCurrentLoad"]):
     """A constant current load."""
 
     type: Final = "current"
@@ -454,8 +456,9 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
             self._cy_element.update_currents(self._currents)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad | CyDeltaAdmittanceLoad]):
+class ImpedanceLoad(AbstractLoad["CyAdmittanceLoad | CyDeltaAdmittanceLoad"]):
     """A constant impedance load."""
 
     type: Final = "impedance"

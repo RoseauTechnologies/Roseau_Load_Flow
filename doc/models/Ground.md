@@ -180,12 +180,10 @@ do that but in case you do, create multiple `Ground` elements and use them indep
 ## API Reference
 
 ```{eval-rst}
-.. autoapiclass:: roseau.load_flow.models.Ground
+.. autoapiclass:: roseau.load_flow.Ground
    :members:
-   :show-inheritance:
    :no-index:
-.. autoapiclass:: roseau.load_flow.models.GroundConnection
+.. autoapiclass:: roseau.load_flow.GroundConnection
    :members:
-   :show-inheritance:
    :no-index:
 ```

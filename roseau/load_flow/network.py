@@ -100,6 +100,12 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             galvanically isolated section of the network is expected. A potential reference can be
             connected to a bus or to a ground.
 
+        ground_connections:
+            The ground connections of the network. Either a list of ground connections or a
+            dictionary of ground connections with their IDs as keys. A ground connection connects
+            a terminal's phase to a ground element. It is typically used to model the connection of
+            the neutral of buses to the ground. A groud connection can be ideal or have an impedance.
+
         crs:
             An optional Coordinate Reference System to use with geo data frames. Can be anything
             accepted by geopandas and pyproj, such as an authority string or WKT string.
@@ -109,36 +115,58 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             The name of the network.
 
         buses (dict[Id, roseau.load_flow.Bus]):
-            Dictionary of buses of the network indexed by their IDs. Also available as a
-            :attr:`GeoDataFrame<buses_frame>`.
+            Dictionary of buses of the network indexed by their IDs.
+
+            See Also:
+                :attr:`buses_frame` for a GeoDataFrame version of the buses.
 
         lines (dict[Id, roseau.load_flow.Line]):
-            Dictionary of lines of the network indexed by their IDs. Also available as a
-            :attr:`GeoDataFrame<lines_frame>`.
+            Dictionary of lines of the network indexed by their IDs.
+
+            See Also:
+                :attr:`lines_frame` for a GeoDataFrame version of the lines.
 
         transformers (dict[Id, roseau.load_flow.Transformer]):
-            Dictionary of transformers of the network indexed by their IDs. Also available as a
-            :attr:`GeoDataFrame<transformers_frame>`.
+            Dictionary of transformers of the network indexed by their IDs.
+
+            See Also:
+                :attr:`transformers_frame` for a GeoDataFrame version of the transformers.
 
         switches (dict[Id, roseau.load_flow.Switch]):
-            Dictionary of switches of the network indexed by their IDs. Also available as a
-            :attr:`GeoDataFrame<switches_frame>`.
+            Dictionary of switches of the network indexed by their IDs.
+
+            See Also:
+                :attr:`switches_frame` for a GeoDataFrame version of the switches.
 
         loads (dict[Id, roseau.load_flow.AbstractLoad]):
-            Dictionary of loads of the network indexed by their IDs. Also available as a
-            :attr:`DataFrame<loads_frame>`.
+            Dictionary of loads of the network indexed by their IDs.
+
+            See Also:
+                :attr:`loads_frame` for a DataFrame version of the loads.
 
         sources (dict[Id, roseau.load_flow.VoltageSource]):
-            Dictionary of voltage sources of the network indexed by their IDs. Also available as a
-            :attr:`DataFrame<sources_frame>`.
+            Dictionary of voltage sources of the network indexed by their IDs.
+
+            See Also:
+                :attr:`sources_frame` for a DataFrame version of the sources.
 
         grounds (dict[Id, roseau.load_flow.Ground]):
-            Dictionary of grounds of the network indexed by their IDs. Also available as a
-            :attr:`DataFrame<grounds_frame>`.
+            Dictionary of grounds of the network indexed by their IDs.
+
+            See Also:
+                :attr:`grounds_frame` for a DataFrame version of the grounds.
 
         potential_refs (dict[Id, roseau.load_flow.PotentialRef]):
-            Dictionary of potential references of the network indexed by their IDs. Also available
-            as a :attr:`DataFrame<potential_refs_frame>`.
+            Dictionary of potential references of the network indexed by their IDs.
+
+            See Also:
+                :attr:`potential_refs_frame` for a DataFrame version of the potential references.
+
+        ground_connections (dict[Id, roseau.load_flow.GroundConnection]):
+            Dictionary of ground connections of the network indexed by their IDs.
+
+            See Also:
+                :attr:`ground_connections_frame` for a DataFrame version of the ground connections.
     """
 
     is_multi_phase: Final = True
@@ -1365,6 +1393,3 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         network = cls.from_json(path)
         network.name = f"{name} ({load_point_name})"
         return network
-
-    # TODO: delete the alias when we know how to teach sphinx to include the docstring of the parent class
-    tool_data = AbstractNetwork.tool_data

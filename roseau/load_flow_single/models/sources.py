@@ -13,8 +13,9 @@ from roseau.load_flow_single.models.connectables import AbstractDisconnectable
 logger = logging.getLogger(__name__)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class VoltageSource(AbstractDisconnectable[CyVoltageSource]):
+class VoltageSource(AbstractDisconnectable["CyVoltageSource"]):
     """A voltage source fixes the voltage of the bus it is connected to.
 
     See Also:

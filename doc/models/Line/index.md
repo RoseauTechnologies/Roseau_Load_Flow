@@ -262,12 +262,10 @@ SimplifiedLine
 ## API Reference
 
 ```{eval-rst}
-.. autoapiclass:: roseau.load_flow.models.LineParameters
+.. autoapiclass:: roseau.load_flow.LineParameters
    :members:
-   :show-inheritance:
    :no-index:
-.. autoapiclass:: roseau.load_flow.models.Line
+.. autoapiclass:: roseau.load_flow.Line
    :members:
-   :show-inheritance:
    :no-index:
 ```

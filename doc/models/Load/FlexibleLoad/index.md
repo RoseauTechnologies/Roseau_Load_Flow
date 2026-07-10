@@ -83,16 +83,13 @@ results are available for flexible loads:
 ## API Reference
 
 ```{eval-rst}
-.. autoapiclass:: roseau.load_flow.models.Control
+.. autoapiclass:: roseau.load_flow.Control
    :members:
-   :show-inheritance:
    :no-index:
-.. autoapiclass:: roseau.load_flow.models.Projection
+.. autoapiclass:: roseau.load_flow.Projection
    :members:
-   :show-inheritance:
    :no-index:
-.. autoapiclass:: roseau.load_flow.models.FlexibleParameter
+.. autoapiclass:: roseau.load_flow.FlexibleParameter
     :members:
-    :show-inheritance:
     :no-index:
 ```

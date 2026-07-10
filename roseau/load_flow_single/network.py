@@ -806,6 +806,3 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         """
         en_m = MultiElectricalNetwork.from_catalogue(name=name, load_point_name=load_point_name)
         return cls.from_rlf(en_m, on_incompatible="ignore")
-
-    # TODO: delete the alias when we know how to teach sphinx to include the docstring of the parent class
-    tool_data = AbstractNetwork.tool_data

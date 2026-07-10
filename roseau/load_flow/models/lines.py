@@ -17,8 +17,9 @@ from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
 logger = logging.getLogger(__name__)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
+class Line(AbstractBranch["LineSide", "CyShuntLine | CySimplifiedLine"]):
     """An electrical line PI model with series impedance and optional shunt admittance."""
 
     element_type: Final = "line"

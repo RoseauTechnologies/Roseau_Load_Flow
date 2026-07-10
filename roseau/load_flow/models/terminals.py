@@ -121,8 +121,11 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         in the order ``[Van, Vbn, Vcn]``. If the element does not have a neutral, the voltages are
         phase-to-phase for existing phases in the order ``[Vab, Vbc, Vca]``.
 
-        To always get phase-to-phase voltages, use the property :attr:`.res_voltages_pp`.
-        To always get phase-to-neutral voltages, use the property :attr:`.res_voltages_pn`.
+        See Also:
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pp`: The phase-to-phase
+              voltages of the element. Raises if the element has only one phase.
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pn`: The phase-to-neutral
+              voltages of the element. Raises if the element does not have a neutral.
         """
         return Q_(self._res_voltages_getter(warning=True), "V")
 
@@ -131,6 +134,13 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         """The load flow result of the element's phase-to-phase voltages (V).
 
         Raises an error if the element has only one phase.
+
+        See Also:
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages`: Get the voltages in the
+              natural representation of the element (phase-to-neutral if it has a neutral,
+              phase-to-phase otherwise).
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pn`: The phase-to-neutral
+              voltages of the element. Raises if the element does not have a neutral.
         """
         return Q_(self._res_voltages_pp_getter(warning=True), "V")
 
@@ -139,6 +149,13 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         """The load flow result of the element's phase-to-neutral voltages (V).
 
         Raises an error if the element does not have a neutral.
+
+        See Also:
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages`: Get the voltages in the
+              natural representation of the element (phase-to-neutral if it has a neutral,
+              phase-to-phase otherwise).
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pp`: The phase-to-phase
+              voltages of the element. Raises if the element has only one phase.
         """
         return Q_(self._res_voltages_pn_getter(warning=True), "V")
 
@@ -149,36 +166,31 @@ class AbstractTerminal(Element[_CyE_co], ABC):
             definition:
                 The definition of the voltage unbalance, one of the following:
 
-                - ``VUF``: The Voltage Unbalance Factor defined by the IEC (default). This is also
-                  called the "True Definition".
-                - ``LVUR``: The Line Voltage Unbalance Rate defined by NEMA.
-                - ``PVUR``: The Phase Voltage Unbalance Rate defined by IEEE.
+                - ``VUF``: The `Voltage Unbalance Factor` defined by the IEC, also called the "True
+                  Definition" (default):
+
+                  :math:`VUF = \\dfrac{V_\\mathrm{2}}{V_\\mathrm{1}} \\times 100 \\, (\\%)`
+
+                  Where :math:`V_{\\mathrm{1}}` and :math:`V_{\\mathrm{2}}` are the magnitudes of
+                  the positive-sequence and negative-sequence voltages, respectively.
+                - ``LVUR``: The `Line Voltage Unbalance Rate` defined by NEMA:
+
+                  :math:`LVUR = \\dfrac{\\Delta V_\\mathrm{Line,Max}}{\\Delta V_\\mathrm{Line,Mean}} \\times 100 (\\%)`.
+
+                  Where :math:`\\Delta V_\\mathrm{Line,Mean}` is the arithmetic mean of the line
+                  voltages and :math:`\\Delta V_\\mathrm{Line,Max}` is the maximum deviation
+                  between the measured line voltages and :math:`\\Delta V_\\mathrm{Line,Mean}`.
+                - ``PVUR``: The `Phase Voltage Unbalance Rate` defined by IEEE:
+
+                  :math:`PVUR = \\dfrac{\\Delta V_\\mathrm{Phase,Max}}{\\Delta V_\\mathrm{Phase,Mean}} \\times 100 (\\%)`.
+
+                  Where :math:`\\Delta V_\\mathrm{Phase,Mean}` is the arithmetic mean of the
+                  phase voltages and :math:`\\Delta V_\\mathrm{Phase,Max}` is the maximum
+                  deviation between the measured phase voltages and
+                  :math:`\\Delta V_\\mathrm{Phase,Mean}`.
 
         Returns:
             The voltage unbalance in percent.
-
-        The calculation depends on the definition of voltage unbalance:
-
-        - Voltage Unbalance Factor (VUF):
-
-          :math:`VUF = \\dfrac{V_\\mathrm{2}}{V_\\mathrm{1}} \\times 100 \\, (\\%)`
-
-          Where :math:`V_{\\mathrm{2}}` is the magnitude of the negative-sequence (inverse) voltage
-          and :math:`V_{\\mathrm{1}}` is the magnitude of the positive-sequence (direct) voltage.
-        - Line Voltage Unbalance Rate (LVUR):
-
-          :math:`LVUR = \\dfrac{\\Delta V_\\mathrm{Line,Max}}{\\Delta V_\\mathrm{Line,Mean}} \\times 100 (\\%)`.
-
-          Where :math:`\\Delta V_\\mathrm{Line,Mean}` is the arithmetic mean of the line voltages
-          and :math:`\\Delta V_\\mathrm{Line,Max}` is the maximum deviation between the measured
-          line voltages and :math:`\\Delta V_\\mathrm{Line,Mean}`.
-        - The Phase Voltage Unbalance Rate (PVUR):
-
-          :math:`PVUR = \\dfrac{\\Delta V_\\mathrm{Phase,Max}}{\\Delta V_\\mathrm{Phase,Mean}} \\times 100 (\\%)`.
-
-          Where :math:`\\Delta V_\\mathrm{Phase,Mean}` is the arithmetic mean of the phase voltages
-          and :math:`\\Delta V_\\mathrm{Phase,Max}` is the maximum deviation between the measured
-          phase voltages and :math:`\\Delta V_\\mathrm{Phase,Mean}`.
         """
         if self.phases not in {"abc", "abcn"}:
             msg = (

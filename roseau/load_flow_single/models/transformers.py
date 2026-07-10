@@ -15,8 +15,9 @@ from roseau.load_flow_single.models.transformer_parameters import TransformerPar
 logger = logging.getLogger(__name__)
 
 
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
 @final
-class Transformer(AbstractBranch["TransformerSide", CySingleTransformer]):
+class Transformer(AbstractBranch["TransformerSide", "CySingleTransformer"]):
     """A generic transformer model.
 
     The model parameters are defined using the ``parameters`` argument.
