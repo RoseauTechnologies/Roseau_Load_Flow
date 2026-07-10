@@ -7,19 +7,13 @@ requires-python = ">=3.12"
 license = "BSD-3-Clause"
 license-files = ["LICENSE.md"]
 authors = [
-  { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
-  { name = "Sébastien Vallet", email = "sebastien.vallet@roseautechnologies.com" },
-  { name = "Benoît Vinot", email = "benoit.vinot@roseautechnologies.com" },
-  { name = "Florent Cadoux", email = "florent.cadoux@roseautechnologies.com" },
-  { name = "Louise Muller", email = "louise.muller@roseautechnologies.com" },
-  { name = "Audrey Ficot", email = "audrey.ficot@roseautechnologies.com" },
-  { name = "Victor Gouin" },
+  { name = "Roseau Technologies", email = "contact@roseautechnologies.com" },
 ]
 maintainers = [
-  { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
+  { name = "Roseau Technologies", email = "contact@roseautechnologies.com" },
 ]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Operating System :: MacOS :: MacOS X",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX :: Linux",
