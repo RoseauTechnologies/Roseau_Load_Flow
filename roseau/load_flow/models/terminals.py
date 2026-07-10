@@ -166,36 +166,31 @@ class AbstractTerminal(Element[_CyE_co], ABC):
             definition:
                 The definition of the voltage unbalance, one of the following:
 
-                - ``VUF``: The Voltage Unbalance Factor defined by the IEC (default). This is also
-                  called the "True Definition".
-                - ``LVUR``: The Line Voltage Unbalance Rate defined by NEMA.
-                - ``PVUR``: The Phase Voltage Unbalance Rate defined by IEEE.
+                - ``VUF``: The `Voltage Unbalance Factor` defined by the IEC, also called the "True
+                  Definition" (default):
+
+                  :math:`VUF = \\dfrac{V_\\mathrm{2}}{V_\\mathrm{1}} \\times 100 \\, (\\%)`
+
+                  Where :math:`V_{\\mathrm{1}}` and :math:`V_{\\mathrm{2}}` are the magnitudes of
+                  the positive-sequence and negative-sequence voltages, respectively.
+                - ``LVUR``: The `Line Voltage Unbalance Rate` defined by NEMA:
+
+                  :math:`LVUR = \\dfrac{\\Delta V_\\mathrm{Line,Max}}{\\Delta V_\\mathrm{Line,Mean}} \\times 100 (\\%)`.
+
+                  Where :math:`\\Delta V_\\mathrm{Line,Mean}` is the arithmetic mean of the line
+                  voltages and :math:`\\Delta V_\\mathrm{Line,Max}` is the maximum deviation
+                  between the measured line voltages and :math:`\\Delta V_\\mathrm{Line,Mean}`.
+                - ``PVUR``: The `Phase Voltage Unbalance Rate` defined by IEEE:
+
+                  :math:`PVUR = \\dfrac{\\Delta V_\\mathrm{Phase,Max}}{\\Delta V_\\mathrm{Phase,Mean}} \\times 100 (\\%)`.
+
+                  Where :math:`\\Delta V_\\mathrm{Phase,Mean}` is the arithmetic mean of the
+                  phase voltages and :math:`\\Delta V_\\mathrm{Phase,Max}` is the maximum
+                  deviation between the measured phase voltages and
+                  :math:`\\Delta V_\\mathrm{Phase,Mean}`.
 
         Returns:
             The voltage unbalance in percent.
-
-        The calculation depends on the definition of voltage unbalance:
-
-        - Voltage Unbalance Factor (VUF):
-
-          :math:`VUF = \\dfrac{V_\\mathrm{2}}{V_\\mathrm{1}} \\times 100 \\, (\\%)`
-
-          Where :math:`V_{\\mathrm{2}}` is the magnitude of the negative-sequence (inverse) voltage
-          and :math:`V_{\\mathrm{1}}` is the magnitude of the positive-sequence (direct) voltage.
-        - Line Voltage Unbalance Rate (LVUR):
-
-          :math:`LVUR = \\dfrac{\\Delta V_\\mathrm{Line,Max}}{\\Delta V_\\mathrm{Line,Mean}} \\times 100 (\\%)`.
-
-          Where :math:`\\Delta V_\\mathrm{Line,Mean}` is the arithmetic mean of the line voltages
-          and :math:`\\Delta V_\\mathrm{Line,Max}` is the maximum deviation between the measured
-          line voltages and :math:`\\Delta V_\\mathrm{Line,Mean}`.
-        - The Phase Voltage Unbalance Rate (PVUR):
-
-          :math:`PVUR = \\dfrac{\\Delta V_\\mathrm{Phase,Max}}{\\Delta V_\\mathrm{Phase,Mean}} \\times 100 (\\%)`.
-
-          Where :math:`\\Delta V_\\mathrm{Phase,Mean}` is the arithmetic mean of the phase voltages
-          and :math:`\\Delta V_\\mathrm{Phase,Max}` is the maximum deviation between the measured
-          phase voltages and :math:`\\Delta V_\\mathrm{Phase,Mean}`.
         """
         if self.phases not in {"abc", "abcn"}:
             msg = (
