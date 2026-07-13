@@ -23,7 +23,7 @@ In addition to the following **unique** set of features:
 - _Floating neutrals_ for loads, sources, and transformers
 - Actual four-wire multi-phase modelling with no Kron's reduction and no transformations
 - Ideal or impedant ground connections at any point in the network
-- _flexible loads_ with Volt-Watt and Volt-VAr control directly in the Newton loop, which is more stable and results in
+- _Flexible loads_ with Volt-Watt and Volt-VAr control directly in the Newton loop, which is more stable and results in
   a faster convergence than with the traditional outer loop approach
 - Out-of-the-box support for Single-Wire Earth Return (SWER), American bi-phase systems with center-tapped transformers,
   zero-sequence modelling, and other non-standard configurations
