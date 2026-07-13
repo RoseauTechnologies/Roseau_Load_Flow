@@ -1458,7 +1458,7 @@ wheels = [
 
 [[package]]
 name = "roseau-load-flow"
-version = "0.14.2"
+version = "0.15.0"
 source = { editable = "." }
 dependencies = [
     { name = "certifi" },
