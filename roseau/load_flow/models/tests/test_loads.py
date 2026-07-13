@@ -399,7 +399,7 @@ def test_loads_to_dict():
     flex_load = PowerLoad(id="load_f1", bus=bus, phases="abcn", powers=values, flexible_params=fp)
     assert flex_load.flexible_params is not None
     assert_json_close(flex_load.to_dict(include_results=False), expected_dict)
-    parsed_flex_load = PowerLoad.from_dict(expected_dict | {"bus": Bus(id="bus", phases="abcn")})
+    parsed_flex_load = PowerLoad._from_dict(expected_dict | {"bus": Bus(id="bus", phases="abcn")})
     assert isinstance(parsed_flex_load, PowerLoad)
     assert parsed_flex_load.id == flex_load.id
     assert parsed_flex_load.bus.id == flex_load.bus.id

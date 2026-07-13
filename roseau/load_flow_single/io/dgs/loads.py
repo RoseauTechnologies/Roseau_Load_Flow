@@ -18,7 +18,7 @@ from roseau.load_flow.io.dgs.utils import DGSData, clean_id
 from roseau.load_flow.typing import Id
 from roseau.load_flow.utils import warn_external
 from roseau.load_flow_single.io.dgs.pwf import STA_CUBIC_FID_INDEX, STA_CUBIC_OBJ_ID_INDEX
-from roseau.load_flow_single.models import AbstractLoad, Bus, PowerLoad
+from roseau.load_flow_single.models import Bus, Load, PowerLoad
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 #
 def elm_lod_all_to_loads(
     elm_lod: pd.DataFrame,
-    loads: dict[Id, AbstractLoad],
+    loads: dict[Id, Load],
     buses: dict[str, Bus],
     sta_cubic: pd.DataFrame,
     factor: float,
@@ -104,7 +104,7 @@ def elm_lod_all_to_loads(
 #
 # RLF -> DGS
 #
-def loads_to_elm_lod(loads: Iterable[AbstractLoad], fid_counter: Iterator[str], sta_cubic: dict[Id, list]) -> DGSData:
+def loads_to_elm_lod(loads: Iterable[Load], fid_counter: Iterator[str], sta_cubic: dict[Id, list]) -> DGSData:
     attributes: list[str] = [
         "FID",  # Unique identifier for DGS file
         "OP",  # Operation (C=create, U=update, D=delete, M=merge, I=ignore)

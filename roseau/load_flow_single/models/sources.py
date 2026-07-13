@@ -1,5 +1,5 @@
 import logging
-from typing import Final, Self
+from typing import Final, Self, final
 
 import numpy as np
 
@@ -13,7 +13,9 @@ from roseau.load_flow_single.models.connectables import AbstractDisconnectable
 logger = logging.getLogger(__name__)
 
 
-class VoltageSource(AbstractDisconnectable[CyVoltageSource]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class VoltageSource(AbstractDisconnectable["CyVoltageSource"]):
     """A voltage source fixes the voltage of the bus it is connected to.
 
     See Also:
@@ -42,13 +44,12 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource]):
         self._cy_connect()
 
     @property
-    @ureg_wraps("V", (None,))
     def voltage(self) -> Q_[complex]:
         """The complex voltage of the source (V).
 
         Setting the voltage will update the source voltage and invalidate the network results.
         """
-        return self._voltage
+        return Q_(self._voltage, "V")
 
     @voltage.setter
     @ureg_wraps(None, (None, "V"))
@@ -63,7 +64,7 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         self = cls(id=data["id"], bus=data["bus"], voltage=complex(*data["voltage"]))
         self._parse_results_from_dict(data, include_results=include_results)
         return self

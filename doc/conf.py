@@ -5,6 +5,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os
+import re
+
+from sphinx import addnodes
 
 # -- Path setup --------------------------------------------------------------
 
@@ -24,8 +27,8 @@ copyright = "2018, Roseau Technologies SAS"
 # author = "Benoît Vinot"
 
 # The full version, including alpha/beta/rc tags
-version = "0.14"
-release = "0.14.1"
+version = "0.15"
+release = "0.15.0"
 
 # -- General configuration ---------------------------------------------------
 
@@ -123,13 +126,15 @@ rst_prolog = """
 .. role:: roseau-primary
 .. role:: roseau-secondary
 .. role:: roseau-tertiary
+.. role:: color-black
+.. role:: color-gray
 """
 
 
 # -- Options for autodoc ----------------------------------------------------
 autodoc_default_options = {"ignore-module-all": False, "inherited-members": True}
 autodoc_member_order = "bysource"
-autodoc_typehints = "signature"
+autodoc_typehints = "description"
 autodoc_inherit_docstrings = True
 autoclass_content = "both"  # show both class and __init__ docstrings
 autodoc_mock_imports = ["roseau.load_flow_engine"]  # Ignore missing dependencies when building the documentation
@@ -137,6 +142,9 @@ autodoc_mock_imports = ["roseau.load_flow_engine"]  # Ignore missing dependencie
 
 # -- Options for AutoAPI -------------------------------------------------
 autoapi_dirs = ["../roseau"]
+# Override the generated top-level index.rst to mark it as `:orphan:` since it is deliberately not
+# included in any toctree (classes are cross-linked individually from the narrative doc pages instead).
+autoapi_template_dir = "_templates/autoapi"
 autoapi_ignore = [
     # Tests
     "**/tests/**",
@@ -149,9 +157,27 @@ autoapi_ignore = [
     # RLF Single
     "**/roseau/load_flow_single/**",
 ]
-autoapi_options = ["members", "show-inheritance", "show-module-summary", "imported-members"]
+autoapi_options = ["members", "show-module-summary", "imported-members", "inherited-members"]
 autoapi_python_class_content = "both"  # without this, the __init__ docstring is not shown
 autoapi_python_use_implicit_namespaces = True
+
+
+# Type hints are stringified as `roseau.load_flow.models.<submodule>.<Name>`, which is never a
+# registered/linkable object here. Rewrite unresolved xrefs to the public `roseau.load_flow.<Name>`.
+_SQUASHED_MODELS_SUBMODULE_RE = re.compile(r"\broseau\.load_flow\.models\.[a-z_][a-z0-9_]*\.([A-Z]\w*)\b")
+
+
+def _flatten_squashed_module_xrefs(app, doctree):
+    for node in doctree.findall(addnodes.pending_xref):
+        target = node.get("reftarget")
+        if target:
+            node["reftarget"] = _SQUASHED_MODELS_SUBMODULE_RE.sub(r"roseau.load_flow.\1", target)
+
+
+def setup(app):
+    app.connect("doctree-read", _flatten_squashed_module_xrefs)
+
+
 suppress_warnings = ["autoapi.python_import_resolution"]  # For the import of roseau.load_flow_engine.cy_engine
 
 # -- Options for intersphinx -------------------------------------------------

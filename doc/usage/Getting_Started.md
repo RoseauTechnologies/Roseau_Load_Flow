@@ -31,7 +31,7 @@ In this tutorial you will learn how to:
 
 ## Creating a network
 
-An electrical network can be built by assembling basic elements described in the [Models section](../models/index.md).
+An electrical network can be built by assembling basic elements described in the [Models section](../index.md#models).
 The following is a summary of the available elements:
 
 - Buses:
@@ -159,17 +159,17 @@ can explicitly set its phases to `"abcn"`:
 ```pycon
 >>> # A star-connected source has "abcn" phases
 ... vs_star = rlf.VoltageSource(
-...     id="Y Source", bus=mv_bus, voltages=un / rlf.SQRT3, phases="abcn"
+...     id="Y Source", bus=mv_bus, voltages=20e3 / rlf.SQRT3, phases="abcn"
 ... )
 ```
 
-Here, the source voltages become phase-to-neutral (`un / rlf.SQRT3`), and not phase-to-phase (`un`). This is because,
-everywhere in `roseau-load-flow`, the `voltages` of an element depend on the element's `phases`. Voltages of elements
-connected in a _Star (wye)_ configuration (elements that have a neutral connection indicated by the presence of the
-`'n'` character in their `phases` attribute) are the **phase-to-neutral** voltages. Voltages of elements connected in a
-_Delta_ configuration (elements that do not have a neutral connection indicated by the absence of the `'n'` char from
-their `phases` attribute) are the **phase-to-phase** voltages. To see between which phases the voltage is defined, you
-can use the `voltage_phases` property of the element.
+Here, the source voltages become phase-to-neutral ({math}`\frac{20}{\sqrt{3}} kV`), and not phase-to-phase
+({math}`20 kV`). This is because, everywhere in `roseau-load-flow`, the `voltages` of an element depend on the element's
+`phases`. Voltages of elements connected in a _Star (wye)_ configuration (elements that have a neutral connection
+indicated by the presence of `'n'` in their `phases` attribute) are the **phase-to-neutral** voltages. Voltages of
+elements connected in a _Delta_ configuration (elements that do not have a neutral connection indicated by the absence
+of `'n'` in their `phases` attribute) are the **phase-to-phase** voltages. To see between which phases the voltage is
+defined, you can use the `voltage_phases` property of the element.
 
 ```pycon
 >>> vs.voltage_phases
@@ -208,9 +208,9 @@ An `ElectricalNetwork` object can now be created using the `from_element` constr
 to this constructor. All the elements connected to this bus are automatically included into the network.
 
 ```pycon
->>> en = rlf.ElectricalNetwork.from_element(mv_bus)
+>>> en = rlf.ElectricalNetwork.from_element(mv_bus, name="My first network")
 ... en
-<ElectricalNetwork: 3 buses, 1 line, 1 transformer, 0 switches, 1 load, 1 source, 1 ground, 2 potential refs>
+<ElectricalNetwork 'My first network': 3 buses, 1 line, 1 transformer, 0 switches, 1 load, 1 source, 1 ground, 2 potential refs, 1 ground connection>
 ```
 
 ## Solving a load flow
@@ -253,7 +253,7 @@ The results returned by the `res_` properties are also `Quantity` objects.
 
 ### Available results
 
-The available results depend on the type of element. The [models page](../models/index.md) of each element lists its
+The available results depend on the type of element. The [models page](../index.md#models) of each element lists its
 available results.
 
 ### Getting results per object

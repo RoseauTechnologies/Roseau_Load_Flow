@@ -28,6 +28,7 @@ from roseau.load_flow.utils.helpers import (
     geom_mapping,
     id_sort_key,
     one_or_more_repr,
+    pretty_unit,
     warn_external,
 )
 from roseau.load_flow.utils.log import set_logging_config
@@ -62,6 +63,7 @@ __all__ = [
     # General purpose
     "count_repr",
     "one_or_more_repr",
+    "pretty_unit",
     "id_sort_key",
     "ensure_startsupper",
     "geom_mapping",

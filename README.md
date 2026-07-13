@@ -3,6 +3,7 @@
 ![CI](https://github.com/RoseauTechnologies/Roseau_Load_Flow/workflows/CI/badge.svg)
 ![pre-commit](https://github.com/RoseauTechnologies/Roseau_Load_Flow/actions/workflows/pre-commit.yml/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/roseau-load-flow/badge/?version=latest)](https://roseau-load-flow.readthedocs.io/en/latest/?badge=latest)
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/RoseauTechnologies/Roseau_Load_Flow?utm_source=badge)
 
 <!-- start rlf-pitch -->
 
@@ -13,15 +14,19 @@ _Roseau Load Flow_ is a powerful load flow solver and static analysis tool that 
 - A catalogue of real-world transformer and line models
 - An ergonomic object-oriented Python interface with unit-aware quantities
 - A comprehensive documentation with code examples
-- Real-world distribution network data samples in the library (with more available on request)
+- Advanced built-in plotting tools for network visualization on interactive maps and voltage profile plots
+- Real-world distribution network data samples in the library (with more available
+  [here](https://github.com/RoseauTechnologies/Representative_French_Power_Grids))
 
 In addition to the following **unique** set of features:
 
-- Support for _floating neutrals_ for loads and sources
-- Four-wire multi-phase modelling with no Kron's reduction, no transformations, no assumptions on the network topology
-  and no implicit earthing everywhere
-- Support for **flexible**, voltage-dependent, loads directly in the Newton algorithm for better convergence and
-  stability
+- _Floating neutrals_ for loads, sources, and transformers
+- Actual four-wire multi-phase modelling with no Kron's reduction and no transformations
+- Ideal or impedant ground connections at any point in the network
+- _Flexible loads_ with Volt-Watt and Volt-VAr control directly in the Newton loop, which is more stable and results in
+  a faster convergence than with the traditional outer loop approach
+- Out-of-the-box support for Single-Wire Earth Return (SWER), American bi-phase systems with center-tapped transformers,
+  zero-sequence modelling, and other non-standard configurations
 
 <!-- end rlf-pitch -->
 
@@ -34,7 +39,7 @@ can find the complete documentation at https://roseau-load-flow.roseautechnologi
 ## License
 
 This project is _partially_ open source but using the solver requires a license. The license key
-`A8C6DA-9405FB-E74FB9-C71C3C-207661-V3` can be used free of charge with networks containing up to 10 buses. To obtain a
+`A8C6DA-9405FB-E74FB9-C71C3C-207661-V3` can be used free of charge with networks containing up to 50 buses. To obtain a
 personal or commercial license, please contact us at
 [contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
 

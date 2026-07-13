@@ -174,10 +174,9 @@ class FlexibleParameter(MultiFlexibleParameter):
         )
 
     @property
-    @ureg_wraps("VA", (None,))
     def s_max(self) -> Q_[float]:
         """The apparent power of the flexible load (VA). It is the radius of the feasible circle."""
-        return self._s_max  # type: ignore
+        return Q_(self._s_max, "VA")
 
     @s_max.setter
     @ureg_wraps(None, (None, "VA"))
@@ -202,10 +201,9 @@ class FlexibleParameter(MultiFlexibleParameter):
         return self._q_min_value if self._q_min_value is not None else -self._s_max
 
     @property
-    @ureg_wraps("VAr", (None,))
     def q_min(self) -> Q_[float]:
         """The minimum reactive power of the flexible load (VAr)."""
-        return self._q_min  # type: ignore
+        return Q_(self._q_min, "VAr")
 
     @q_min.setter
     @ureg_wraps(None, (None, "VAr"))
@@ -236,10 +234,9 @@ class FlexibleParameter(MultiFlexibleParameter):
         return self._q_max_value if self._q_max_value is not None else self._s_max
 
     @property
-    @ureg_wraps("VAr", (None,))
     def q_max(self) -> Q_[float]:
         """The maximum reactive power of the flexible load (VAr)."""
-        return self._q_max  # type: ignore
+        return Q_(self._q_max, "VAr")
 
     @q_max.setter
     @ureg_wraps(None, (None, "VAr"))

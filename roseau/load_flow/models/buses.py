@@ -1,6 +1,7 @@
 import logging
+import math
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any, Final, Self
+from typing import TYPE_CHECKING, Any, Final, Self, final
 
 import numpy as np
 import pandas as pd
@@ -21,7 +22,9 @@ if TYPE_CHECKING:
     from roseau.load_flow.models.grounds import Ground
 
 
-class Bus(AbstractTerminal[CyBus]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class Bus(AbstractTerminal["CyBus"]):
     """A multi-phase electrical bus."""
 
     element_type: Final = "bus"
@@ -101,10 +104,9 @@ class Bus(AbstractTerminal[CyBus]):
         return f"{type(self).__name__}(id={self.id!r}, phases={self.phases!r})"
 
     @property
-    @ureg_wraps("V", (None,))
     def initial_potentials(self) -> Q_[ComplexArray]:
         """An array of initial potentials of the bus (V)."""
-        return self._initial_potentials
+        return Q_(self._initial_potentials, "V")
 
     @initial_potentials.setter
     @ureg_wraps(None, (None, "V"))
@@ -317,7 +319,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._nominal_voltage is None
                     or element._nominal_voltage is None
-                    or np.isclose(element._nominal_voltage, self._nominal_voltage)
+                    or math.isclose(element._nominal_voltage, self._nominal_voltage)
                 ):
                     msg = (
                         f"Cannot propagate the nominal voltage ({self._nominal_voltage} V) of bus {self.id!r} "
@@ -329,7 +331,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._min_voltage_level is None
                     or element._min_voltage_level is None
-                    or np.isclose(element._min_voltage_level, self._min_voltage_level)
+                    or math.isclose(element._min_voltage_level, self._min_voltage_level)
                 ):
                     msg = (
                         f"Cannot propagate the minimum voltage level ({self._min_voltage_level}) of bus {self.id!r} "
@@ -341,7 +343,7 @@ class Bus(AbstractTerminal[CyBus]):
                     force
                     or self._max_voltage_level is None
                     or element._max_voltage_level is None
-                    or np.isclose(element._max_voltage_level, self._max_voltage_level)
+                    or math.isclose(element._max_voltage_level, self._max_voltage_level)
                 ):
                     msg = (
                         f"Cannot propagate the maximum voltage level ({self._max_voltage_level}) of bus {self.id!r} "
@@ -406,6 +408,23 @@ class Bus(AbstractTerminal[CyBus]):
         voltages_abs = abs(self._res_voltages_pn_getter(warning=warning))
         return SQRT3 * voltages_abs / self._nominal_voltage
 
+    def _res_agg_powers_getter(self, warning: bool) -> list[complex]:
+        """Get the aggregated proper powers of the bus (VA) per phase."""
+        powers = dict.fromkeys(self.phases, 0j)
+        for e in self._connected_elements:
+            if e.element_type == "load":
+                sign = 1
+            elif e.element_type == "source":
+                sign = -1
+            else:
+                continue
+            for phase, power in zip(e.phases, e._res_powers_getter(warning=warning).tolist(), strict=True):  # type: ignore
+                if phase not in powers:
+                    continue
+                powers[phase] += sign * power
+            warning = False  # warn only once
+        return list(powers.values())
+
     def _res_state_getter(self) -> ResultState:
         """The state of the bus based on its voltage levels and limits."""
         u_array = self._res_voltage_levels_getter(warning=False)
@@ -432,7 +451,14 @@ class Bus(AbstractTerminal[CyBus]):
 
     @property
     def res_voltage_levels(self) -> Q_[FloatArray] | None:
-        """The load flow result of the bus voltage levels (p.u.)."""
+        """The load flow result of the bus voltage levels (p.u.).
+
+        See Also:
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels_pp`: The phase-to-phase voltage levels
+              of the bus. Raises if the bus has only one phase.
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels_pn`: The phase-to-neutral voltage
+              levels of the bus. Raises if the bus does not have a neutral.
+        """
         voltage_levels = self._res_voltage_levels_getter(warning=True)
         return None if voltage_levels is None else Q_(voltage_levels, "")
 
@@ -441,6 +467,12 @@ class Bus(AbstractTerminal[CyBus]):
         """The load flow result of the bus's phase-to-phase voltage levels (p.u.).
 
         Raises an error if the element has only one phase.
+
+        See Also:
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels`: The voltage levels of the bus in the
+              natural representation (phase-to-neutral if it has a neutral, phase-to-phase otherwise).
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels_pn`: The phase-to-neutral voltage
+              levels of the bus. Raises if the bus does not have a neutral.
         """
         voltage_levels = self._res_voltage_levels_pp_getter(warning=True)
         return None if voltage_levels is None else Q_(voltage_levels, "")
@@ -450,6 +482,12 @@ class Bus(AbstractTerminal[CyBus]):
         """The load flow result of the bus's phase-to-neutral voltage levels (p.u.).
 
         Raises an error if the element does not have a neutral.
+
+        See Also:
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels`: The voltage levels of the bus in the
+              natural representation (phase-to-neutral if it has a neutral, phase-to-phase otherwise).
+            - :attr:`~roseau.load_flow.Bus.res_voltage_levels_pp`: The phase-to-phase voltage levels
+              of the bus. Raises if the bus has only one phase.
         """
         voltage_levels = self._res_voltage_levels_pn_getter(warning=True)
         return None if voltage_levels is None else Q_(voltage_levels, "")
@@ -478,7 +516,7 @@ class Bus(AbstractTerminal[CyBus]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         if (initial_potentials := data.get("initial_potentials")) is not None:
             initial_potentials = [complex(*v) for v in initial_potentials]
         self = cls(
@@ -499,12 +537,12 @@ class Bus(AbstractTerminal[CyBus]):
             data["initial_potentials"] = [[v.real, v.imag] for v in self._initial_potentials.tolist()]
         if self.geometry is not None:
             data["geometry"] = self.geometry.__geo_interface__
-        if self.nominal_voltage is not None:
-            data["nominal_voltage"] = self.nominal_voltage.magnitude
-        if self.min_voltage_level is not None:
-            data["min_voltage_level"] = self.min_voltage_level.magnitude
-        if self.max_voltage_level is not None:
-            data["max_voltage_level"] = self.max_voltage_level.magnitude
+        if self._nominal_voltage is not None:
+            data["nominal_voltage"] = self._nominal_voltage
+        if self._min_voltage_level is not None:
+            data["min_voltage_level"] = self._min_voltage_level
+        if self._max_voltage_level is not None:
+            data["max_voltage_level"] = self._max_voltage_level
         if include_results:
             data["results"] = data.pop("results")  # move results to the end
         return data

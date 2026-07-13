@@ -19,6 +19,41 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Version 0.15.0
+
+```{important}
+The public license key can now be used with networks containing up to 50 buses. It was previously limited to 10 buses.
+```
+
+- {gh-pr}`475` {gh-issue}`446` Show more information when hovering over elements in the voltage profile and interactive
+  map plots. The hover box of buses now shows the net (load - source) active and reactive powers consumed by the bus.
+  Hovering over elements in the voltage profile plots now shows more relevant information about the element.
+- {gh-pr}`474` Wrap long element IDs in the hover box of the voltage profile plots.
+- {gh-pr}`473` Add support for custom color per element in the interactive map plots by accepting a callback as the
+  `style_color` argument. The callable accepts two positional arguments: the element type and the element ID, and
+  returns a color string or `None` to use the default color for that element.
+- {gh-pr}`472` Many improvements and fixes for the interactive map plots.
+  - Fix highlighting of buses and transformers on hover
+  - Reduce the size of the markers for better visibility of networks with many elements
+  - Use `"CartoDB Positron"` as default tiles for better visibility of the elements. Pass `tiles="OpenStreetMap"` to use
+    OpenStreetMap tiles.
+- {gh-pr}`471` Include switch phases in the interactive map plots.
+- {gh-pr}`467` Avoid unnecessary copies when deserializing networks from JSON or dict and remove `from_dict` methods
+  from element classes, these methods did not work correctly because they depend on other elements.
+- {gh-pr}`466` Avoid unnecessary copies of already array inputs.
+- {gh-pr}`465` Make results access on elements between 2x and 3x faster by making the `Q_` class lazy.
+- {gh-pr}`464` Support compact JSON output with `indent=False` and improve performance by using `orjson` if installed.
+- {gh-pr}`462` Add `name` attribute to `ElectricalNetwork` to store the name of the network. The `crs` parameter of
+  `ElectricalNetwork.from_element` is now keyword-only.
+- {gh-pr}`460` Modify the load flow convergence check to use residuals and tolerance comparison. This fixes the case of
+  convergence at exactly the number of iterations specified by the `max_iterations` parameter.
+- {gh-pr}`459` Add support for three-phase transformers with "untrue" vector groups
+- {gh-pr}`458` Drop support for the experimental Python 3.13t (free-threaded) following end of support in cibuildwheel
+- {gh-pr}`457` Fix a rare bug where modifying the tap of an inverted single-phase transformer (vector groups "Ii6" and
+  "Iii6") after its creation would incorrectly invert back its orientation.
+- {gh-pr}`456` Support single-phase transformer parameters conversion from OpenDSS.
+- {gh-pr}`454` Fix conversion of transformer parameters from OpenDSS when `loadloss` is non-zero.
+
 ## Version 0.14.1
 
 - {gh-pr}`451` Plot switches that are represented as lines in the interactive map plots.

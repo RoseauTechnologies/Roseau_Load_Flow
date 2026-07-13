@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict, Side
-from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import abstractattrs
 from roseau.load_flow_engine.cy_engine import CyBranch
 from roseau.load_flow_single.models.buses import Bus
@@ -77,16 +77,14 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         return voltage * current.conjugate() * SQRT3
 
     @property
-    @ureg_wraps("A", (None,))
     def res_current(self) -> Q_[complex]:
         """The load flow result of the element's current (A)."""
-        return self._res_current_getter(warning=True)  # type: ignore
+        return Q_(self._res_current_getter(warning=True), "A")
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_power(self) -> Q_[complex]:
         """The load flow result of the element's power (VA)."""
-        return self._res_power_getter(warning=True)  # type: ignore
+        return Q_(self._res_power_getter(warning=True), "VA")
 
     #
     # Json Mixin interface

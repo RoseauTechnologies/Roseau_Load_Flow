@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict, Side
-from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import SIDE_DESC, SIDE_INDEX, SIDE_SUFFIX
 from roseau.load_flow_single.models.core import Element, _CyE_co
 
@@ -49,10 +49,9 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         return self._res_getter(self._res_voltage, warning)
 
     @property
-    @ureg_wraps("V", (None,))
     def res_voltage(self) -> Q_[complex]:
         """The load flow result of the element's voltage (V)."""
-        return self._res_voltage_getter(warning=True)  # type: ignore
+        return Q_(self._res_voltage_getter(warning=True), "V")
 
     #
     # Json Mixin interface

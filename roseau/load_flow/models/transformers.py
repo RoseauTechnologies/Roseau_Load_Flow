@@ -1,6 +1,6 @@
 import logging
 from functools import cached_property
-from typing import Final
+from typing import Final, final
 
 from shapely.geometry.base import BaseGeometry
 
@@ -11,12 +11,14 @@ from roseau.load_flow.models.transformer_parameters import TransformerParameters
 from roseau.load_flow.typing import Id, JsonDict, ResultState
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import deprecate_renamed_parameters, warn_external
-from roseau.load_flow_engine.cy_engine import CyTransformer
+from roseau.load_flow_engine.cy_engine import CyTransformer  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
 
-class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class Transformer(AbstractBranch["TransformerSide", "CyTransformer"]):
     """A generic transformer model.
 
     The model parameters are defined using the ``parameters`` argument.
@@ -198,8 +200,7 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
         self._tap = value
         self._invalidate_network_results()
         if self._cy_initialized:
-            z2, ym, k = self.parameters._z2, self.parameters._ym, self.parameters._k
-            self._cy_element.update_transformer_parameters(z2, ym, k * value)
+            self._cy_update_parameters(tap=value, parameters=self.parameters)
 
     @property
     def parameters(self) -> TransformerParameters:
@@ -221,16 +222,12 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
         self._invalidate_network_results()
         self._parameters = value
         if self._cy_initialized:
-            z2, ym, k = value._z2, value._ym, value._k
-            if value.type in ("single-phase", "center-tapped"):
-                k *= value.orientation
-            self._cy_element.update_transformer_parameters(z2, ym, k * self.tap)
+            self._cy_update_parameters(tap=self.tap, parameters=value)
 
     @property
-    @ureg_wraps("", (None,))
     def max_loading(self) -> Q_[float]:
         """The maximum loading of the transformer (unitless)"""
-        return self._max_loading
+        return Q_(self._max_loading, "")
 
     @max_loading.setter
     @ureg_wraps(None, (None, ""))
@@ -249,10 +246,15 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
         return self._parameters.sn
 
     @property
-    @ureg_wraps("VA", (None,))
     def max_power(self) -> Q_[float]:
         """The maximum power loading of the transformer (in VA)."""
-        return self.parameters._sn * self._max_loading  # type: ignore
+        return Q_(self.parameters._sn * self._max_loading, "VA")
+
+    def _cy_update_parameters(self, tap: float, parameters: TransformerParameters) -> None:
+        z2, ym, k = parameters._z2, parameters._ym, parameters._k
+        if parameters.type in ("single-phase", "center-tapped"):
+            k *= parameters.orientation
+        self._cy_element.update_transformer_parameters(z2, ym, k * tap)
 
     def _compute_phases_three(
         self,
@@ -401,18 +403,16 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
             return "normal"
 
     @property
-    @ureg_wraps("", (None,))
     def res_loading(self) -> Q_[float]:
         """Get the loading of the transformer (unitless)."""
-        return self._res_loading_getter(warning=True)
+        return Q_(self._res_loading_getter(warning=True), "")
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[complex]:
         """Get the total power losses in the transformer (in VA)."""
         powers_hv = self._side1._res_powers_getter(warning=True)
         powers_lv = self._side2._res_powers_getter(warning=False)  # warn only once
-        return sum(powers_hv) + sum(powers_lv)
+        return Q_(sum(powers_hv) + sum(powers_lv), "VA")
 
     @property
     def res_violated(self) -> bool:
@@ -447,6 +447,7 @@ class Transformer(AbstractBranch["TransformerSide", CyTransformer]):
         return results
 
 
+@final
 class TransformerSide(AbstractBranchSide):
     element_type = "transformer"
     allowed_phases = Transformer.allowed_phases  # type: ignore

@@ -20,18 +20,7 @@ from roseau.load_flow.utils import DTYPES, AbstractNetwork, LoadTypeDtype, count
 from roseau.load_flow_engine.cy_engine import CyGround, CyPotentialRef
 from roseau.load_flow_single.io import network_from_dgs, network_from_dict, network_to_dgs, network_to_dict
 from roseau.load_flow_single.io.rlf import OnIncompatibleType, network_from_rlf
-from roseau.load_flow_single.models import (
-    AbstractLoad,
-    Bus,
-    CurrentLoad,
-    Element,
-    ImpedanceLoad,
-    Line,
-    PowerLoad,
-    Switch,
-    Transformer,
-    VoltageSource,
-)
+from roseau.load_flow_single.models import Bus, Element, Line, Load, Switch, Transformer, VoltageSource
 
 if TYPE_CHECKING:
     from networkx import MultiGraph
@@ -48,6 +37,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
     :meth:`solve_load_flow` method.
 
     Args:
+        name:
+            The name of the network. Defaults to ``"Network"``.
+
         buses:
             The buses of the network. Either a list of buses or a dictionary of buses with
             their IDs as keys. Buses are the nodes of the network. They connect other elements
@@ -80,6 +72,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             accepted by geopandas and pyproj, such as an authority string or WKT string.
 
     Attributes:
+        name (str):
+            The name of the network.
+
         buses (dict[Id, roseau.load_flow_single.Bus]):
             Dictionary of buses of the network indexed by their IDs. Also available as a
             :attr:`GeoDataFrame<buses_frame>`.
@@ -113,11 +108,12 @@ class ElectricalNetwork(AbstractNetwork[Element]):
     def __init__(
         self,
         *,
+        name: str = "Network",
         buses: MapOrSeq[Bus],
         lines: MapOrSeq[Line],
         transformers: MapOrSeq[Transformer],
         switches: MapOrSeq[Switch],
-        loads: MapOrSeq[AbstractLoad],
+        loads: MapOrSeq[Load],
         sources: MapOrSeq[VoltageSource],
         crs: CRSLike | None = None,
     ) -> None:
@@ -127,9 +123,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             transformers, RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_ID
         )
         self.switches: dict[Id, Switch] = self._elements_as_dict(switches, RoseauLoadFlowExceptionCode.BAD_SWITCH_ID)
-        self.loads: dict[Id, AbstractLoad | PowerLoad | CurrentLoad | ImpedanceLoad] = self._elements_as_dict(
-            loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID
-        )
+        self.loads: dict[Id, Load] = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
         self.sources: dict[Id, VoltageSource] = self._elements_as_dict(
             sources, RoseauLoadFlowExceptionCode.BAD_SOURCE_ID
         )
@@ -152,11 +146,11 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             "load": self.loads,
             "source": self.sources,
         }
-        super().__init__(crs=crs)
+        super().__init__(name=name, crs=crs)
 
     def __repr__(self) -> str:
         return (
-            f"<{type(self).__name__}:"
+            f"<{type(self).__name__} {self.name!r}:"
             f" {count_repr(self.buses, 'bus', 'buses')},"
             f" {count_repr(self.lines, 'line', 'lines')},"
             f" {count_repr(self.transformers, 'transformer', 'transformers')},"
@@ -269,7 +263,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             A networkx multi-graph representing the electrical network.
         """
         nx = optional_deps.networkx
-        graph = nx.MultiGraph()
+        graph = nx.MultiGraph(name=self.name)
         for bus in self.buses.values():
             graph.add_node(
                 bus.id,
@@ -698,7 +692,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
     # Data exchange
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         """Construct an electrical network from a dict created with :meth:`to_dict`.
 
         Args:
@@ -812,6 +806,3 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         """
         en_m = MultiElectricalNetwork.from_catalogue(name=name, load_point_name=load_point_name)
         return cls.from_rlf(en_m, on_incompatible="ignore")
-
-    # TODO: delete the alias when we know how to teach sphinx to include the docstring of the parent class
-    tool_data = AbstractNetwork.tool_data

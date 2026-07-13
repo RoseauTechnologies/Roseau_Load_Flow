@@ -637,6 +637,6 @@ def test_to_from_dict_roundtrip():
         initial_potentials=[230 + 0j, 0j],
     )
     bus_dict = bus.to_dict(include_results=False)
-    bus2 = Bus.from_dict(bus_dict)
+    bus2 = Bus._from_dict(bus_dict)
     bus2_dict = bus2.to_dict(include_results=False)
     assert_json_close(bus_dict, bus2_dict)

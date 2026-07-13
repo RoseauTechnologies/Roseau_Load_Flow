@@ -87,7 +87,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             self._with_shunt = False
         else:
             self._y_shunt = self._check_value(id=id, value=y_shunt, name="y_shunt")
-            self._with_shunt = not cmath.isclose(self._y_shunt, 0)
+            self._with_shunt = not cmath.isclose(self._y_shunt, 0, abs_tol=1e-8)
 
         # Parameters that are not used in the load flow
         self.line_type = line_type
@@ -114,16 +114,14 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return s
 
     @property
-    @ureg_wraps("ohm/km", (None,))
     def z_line(self) -> Q_[complex]:
         """The positive-sequence impedance of the line (Ohm/km)."""
-        return self._z_line
+        return Q_(self._z_line, "ohm/km")
 
     @property
-    @ureg_wraps("S/km", (None,))
     def y_shunt(self) -> Q_[complex]:
         """The positive-sequence shunt admittance of the line (S/km)."""
-        return self._y_shunt
+        return Q_(self._y_shunt, "S/km")
 
     @property
     def with_shunt(self) -> bool:
@@ -495,7 +493,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             id=id,
             z_line=r1 + 1j * x1,
             y_shunt=1j * 2 * math.pi * basefreq * c1 * 1e-9,
-            ampacity=np.array(params["ampacities"]).item(0),  # make it scalar if needed
+            ampacity=np.asarray(params["ampacities"]).item(0),  # make it scalar if needed
             line_type=params["line_type"],
         )
 
@@ -755,7 +753,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         """Line parameters constructor from dict.
 
         Args:
@@ -817,7 +815,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode[f"BAD_{name.upper()}_VALUE"])
 
         # Ensure that z_line is not 0
-        if name == "z_line" and cmath.isclose(value, 0):
+        if name == "z_line" and cmath.isclose(value, 0, abs_tol=1e-8):
             msg = f"The z_line value of line type {id!r} can't be zero: {value}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_LINE_VALUE)

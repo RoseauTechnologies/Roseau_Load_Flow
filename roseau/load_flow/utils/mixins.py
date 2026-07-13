@@ -5,10 +5,17 @@ import textwrap
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
+from copy import deepcopy
 from heapq import heappop, heappush
 from importlib import resources
 from pathlib import Path
 from typing import Any, ClassVar, Generic, NoReturn, Self, overload
+
+try:
+    import orjson
+
+except ImportError:
+    orjson = None  # ty:ignore[invalid-assignment]
 
 import numpy as np
 import pandas as pd
@@ -45,6 +52,20 @@ def _json_encoder_default(obj: object) -> object:
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
+def _json_dump(obj: object, /, path: StrPath, indent: bool) -> Path:
+    """Dump an object to a JSON file."""
+    path = Path(path).expanduser().resolve()
+    if orjson is not None:
+        option = orjson.OPT_SERIALIZE_NUMPY
+        if indent:
+            option |= orjson.OPT_INDENT_2 | orjson.OPT_APPEND_NEWLINE
+        path.write_bytes(orjson.dumps(obj, option=option))
+    else:
+        with path.open("w", encoding="utf-8") as fp:
+            json.dump(obj, fp, ensure_ascii=False, indent=2 if indent else None, default=_json_encoder_default)
+    return path
+
+
 @abstractattrs("is_multi_phase")
 class RLFObject(metaclass=ABCMeta):
     """Base class for all objects in the library."""
@@ -68,57 +89,11 @@ class Identifiable(RLFObject, metaclass=ABCMeta):
         return f"{type(self).__name__}(id={self.id!r})"
 
 
-class JsonMixin(metaclass=ABCMeta):
-    """Mixin for classes that can be serialized to and from JSON."""
+class ToJsonMixin(metaclass=ABCMeta):
+    """Mixin for classes that can be serialized to JSON."""
 
     _no_results = True
     _results_valid = False
-
-    @classmethod
-    @abstractmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
-        """Create an element from a dictionary created with :meth:`to_dict`.
-
-        Note:
-            This method does not work on all classes that define it as some of them require
-            additional information to be constructed. It can only be safely used on the
-            `ElectricNetwork`, `LineParameters` and `TransformerParameters` classes.
-
-        Args:
-            data:
-                The dictionary containing the element's data.
-
-            include_results:
-                If True (default) and the results of the load flow are included in the dictionary,
-                the results are also loaded into the element.
-
-        Returns:
-            The constructed element.
-        """
-        raise NotImplementedError
-
-    @classmethod
-    def from_json(cls, path: StrPath, *, include_results: bool = True) -> Self:
-        """Construct an element from a JSON file created with :meth:`to_json`.
-
-        Note:
-            This method does not work on all classes that define it as some of them require
-            additional information to be constructed. It can only be safely used on the
-            `ElectricNetwork`, `LineParameters` and `TransformerParameters` classes.
-
-        Args:
-            path:
-                The path to the network data file.
-
-            include_results:
-                If True (default) and the results of the load flow are included in the file,
-                the results are also loaded into the element.
-
-        Returns:
-            The constructed element.
-        """
-        data = json.loads(Path(path).read_text())
-        return cls.from_dict(data=data, include_results=include_results)
 
     @abstractmethod
     def _to_dict(self, include_results: bool) -> JsonDict:
@@ -147,7 +122,7 @@ class JsonMixin(metaclass=ABCMeta):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
         return self._to_dict(include_results=include_results)
 
-    def to_json(self, path: StrPath, *, include_results: bool = True) -> Path:
+    def to_json(self, path: StrPath, *, include_results: bool = True, indent: bool = True) -> Path:
         """Save this element to a JSON file.
 
         .. note::
@@ -166,14 +141,15 @@ class JsonMixin(metaclass=ABCMeta):
                 If True (default), the results of the load flow are included in the JSON file.
                 If no results are available, this option is ignored.
 
+            indent:
+                If True (default), the JSON output is pretty-printed with 2-space indentation.
+                Set to False for compact output.
+
         Returns:
             The expanded and resolved path of the written file.
         """
         res = self.to_dict(include_results=include_results)
-        path = Path(path).expanduser().resolve()
-        with path.open("w", encoding="utf-8") as fp:
-            json.dump(res, fp, ensure_ascii=False, indent=2, default=_json_encoder_default)
-        return path
+        return _json_dump(res, path=path, indent=indent)
 
     @abstractmethod
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
@@ -220,7 +196,7 @@ class JsonMixin(metaclass=ABCMeta):
         """
         return self._results_to_dict(warning=True, full=full)
 
-    def results_to_json(self, path: StrPath, *, full: bool = False) -> Path:
+    def results_to_json(self, path: StrPath, *, full: bool = False, indent: bool = True) -> Path:
         """Write the results of the load flow to a json file.
 
         .. note::
@@ -239,14 +215,70 @@ class JsonMixin(metaclass=ABCMeta):
                 If `True`, all the results are added in the resulting dictionary, including results computed from other
                 results (such as voltages that could be computed from potentials). `False` by default.
 
+            indent:
+                If True (default), the JSON output is pretty-printed with 2-space indentation.
+                Set to False for compact output.
+
         Returns:
             The expanded and resolved path of the written file.
         """
         dict_results = self._results_to_dict(warning=True, full=full)
-        path = Path(path).expanduser().resolve()
-        with path.open("w", encoding="utf-8") as fp:
-            json.dump(dict_results, fp, ensure_ascii=False, indent=2, default=_json_encoder_default)
-        return path
+        return _json_dump(dict_results, path=path, indent=indent)
+
+
+class JsonMixin(ToJsonMixin):
+    """Mixin for classes that can be serialized to and from JSON."""
+
+    @classmethod
+    @abstractmethod
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+        raise NotImplementedError
+
+    @classmethod
+    def from_dict(cls, data: JsonDict, *, include_results: bool = True, copy: bool = True) -> Self:
+        """Create an instance from a dictionary created with :meth:`to_dict`.
+
+        Args:
+            data:
+                The dictionary containing the data.
+
+            include_results:
+                If True (default) and the results of the load flow are included in the dictionary,
+                the results are also loaded.
+
+            copy:
+                If True (default), the input dictionary is deep-copied before processing so the
+                original is never modified. Pass ``False`` when the dictionary is a throwaway (e.g.
+                freshly parsed from JSON) to avoid the copy overhead.
+
+        Returns:
+            The constructed instance.
+        """
+        if copy:
+            data = deepcopy(data)
+        return cls._from_dict(data=data, include_results=include_results)
+
+    @classmethod
+    def from_json(cls, path: StrPath, *, include_results: bool = True) -> Self:
+        """Construct an instance from a JSON file created with :meth:`to_json`.
+
+        Args:
+            path:
+                The path to the data file.
+
+            include_results:
+                If True (default) and the results of the load flow are included in the file,
+                the results are also loaded.
+
+        Returns:
+            The constructed instance.
+        """
+        if orjson is not None:
+            data = orjson.loads(Path(path).read_bytes())
+        else:
+            with open(path, "rb") as fp:
+                data = json.load(fp)
+        return cls._from_dict(data=data, include_results=include_results)
 
 
 class CatalogueMixin[T](metaclass=ABCMeta):
@@ -375,7 +407,7 @@ class CatalogueMixin[T](metaclass=ABCMeta):
 
 
 @abstractattrs("element_type")
-class AbstractElement(Identifiable, JsonMixin, Generic[_N_co, _CyE_co]):
+class AbstractElement(Identifiable, ToJsonMixin, Generic[_N_co, _CyE_co]):
     """An abstract class of an element in an Electrical network."""
 
     element_type: ClassVar[str]
@@ -596,7 +628,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
     _DEFAULT_SOLVER: Solver = "newton_goldstein"
 
     @abstractmethod
-    def __init__(self, *, crs: CRSLike | None = None) -> None:
+    def __init__(self, *, name: str = "Network", crs: CRSLike | None = None) -> None:
         for elements in self._elements_by_type.values():
             for element in elements.values():
                 element._check_compatible_phase_tech(self)
@@ -613,6 +645,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         self._create_network()
         self._valid = True
         self._solver = AbstractSolver.from_dict(data={"name": self._DEFAULT_SOLVER, "params": {}}, network=self)
+        self.name: str = name
         self.crs: CRSLike | None = crs
         self._tool_data = ToolData()
 
@@ -624,7 +657,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             self._add_parameters("transformer", transformer.parameters)  # type: ignore
 
     @classmethod
-    def from_element(cls, initial_bus: AbstractElement, crs: CRSLike | None = None) -> Self:
+    def from_element(cls, initial_bus: AbstractElement, *, name: str = "Network", crs: CRSLike | None = None) -> Self:
         """Construct the network from only one element (bus) and add the others automatically.
 
         Args:
@@ -632,9 +665,12 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
                 Any bus of the network. The network is constructed from this bus and all the
                 elements connected to it. This is usually the main source bus of the network.
 
-        crs:
-            An optional Coordinate Reference System to use with geo data frames. Can be anything
-            accepted by geopandas and pyproj, such as an authority string or WKT string.
+            name:
+                The name of the network. Defaults to ``"Network"``.
+
+            crs:
+                An optional Coordinate Reference System to use with geo data frames. Can be anything
+                accepted by geopandas and pyproj, such as an authority string or WKT string.
 
         Returns:
             The network constructed from the given bus and all the elements connected to it.
@@ -661,7 +697,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             elements_kwargs["potential_refs"] = elements_by_type["potential ref"]
             elements_kwargs["grounds"] = elements_by_type["ground"]
             elements_kwargs["ground_connections"] = elements_by_type["ground connection"]
-        return cls(**elements_kwargs, crs=crs)
+        return cls(**elements_kwargs, name=name, crs=crs)
 
     def solve_load_flow(
         self,

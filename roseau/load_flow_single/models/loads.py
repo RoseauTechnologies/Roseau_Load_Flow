@@ -1,7 +1,7 @@
 import cmath
 import logging
 from abc import ABC, abstractmethod
-from typing import Final
+from typing import Final, final
 
 import numpy as np
 from typing_extensions import TypeVar
@@ -49,12 +49,12 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "AbstractLoad":
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "Load":
         load_type = data["type"]
         if load_type == "power":
             power = complex(data["power"][0], data["power"][1])
             if (fp_data := data.get("flexible_param")) is not None:
-                fp = FlexibleParameter.from_dict(data=fp_data, include_results=include_results)
+                fp = FlexibleParameter._from_dict(data=fp_data, include_results=include_results)
             else:
                 fp = None
             self = PowerLoad(id=data["id"], bus=data["bus"], power=power, flexible_param=fp)
@@ -83,7 +83,9 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
         return load_dict
 
 
-class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class PowerLoad(AbstractLoad["CyPowerLoad | CyFlexibleLoad"]):
     """A constant power load."""
 
     type: Final = "power"
@@ -140,13 +142,12 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
         return self._flexible_param is not None
 
     @property
-    @ureg_wraps("VA", (None,))
     def power(self) -> Q_[complex]:
         """The power of the load (VA).
 
         Setting the power will update the load's power values and invalidate the network results.
         """
-        return self._power
+        return Q_(self._power, "VA")
 
     @power.setter
     @ureg_wraps(None, (None, "VA"))
@@ -192,7 +193,9 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyFlexibleLoad]):
         return data
 
 
-class CurrentLoad(AbstractLoad[CyCurrentLoad]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class CurrentLoad(AbstractLoad["CyCurrentLoad"]):
     """A constant current load."""
 
     type: Final = "current"
@@ -226,13 +229,12 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad]):
         self._cy_connect()
 
     @property
-    @ureg_wraps("A", (None,))
     def current(self) -> Q_[complex]:
         """The current of the load (Amps).
 
         Setting the current will update the load's current and invalidate the network results.
         """
-        return self._current
+        return Q_(self._current, "A")
 
     @current.setter
     @ureg_wraps(None, (None, "A"))
@@ -243,7 +245,9 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad]):
             self._cy_element.update_current(self._current)
 
 
-class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class ImpedanceLoad(AbstractLoad["CyAdmittanceLoad"]):
     """A constant impedance load."""
 
     type: Final = "impedance"
@@ -271,20 +275,19 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
 
     def _validate_value(self, value: Complex) -> complex:
         # A load cannot have a zero impedance
-        if cmath.isclose(value, 0):
+        if cmath.isclose(value, 0, abs_tol=1e-8):
             msg = f"The impedance of the load {self.id!r} is null"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_Z_VALUE)
         return super()._validate_value(value)
 
     @property
-    @ureg_wraps("ohm", (None,))
     def impedance(self) -> Q_[complex]:
         """The impedance of the load (Ohms).
 
         Setting the impedance will update the load's impedance and invalidate the network results.
         """
-        return self._impedance
+        return Q_(self._impedance, "ohm")
 
     @impedance.setter
     @ureg_wraps(None, (None, "ohm"))
@@ -293,3 +296,7 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad]):
         self._invalidate_network_results()
         if self._cy_initialized:
             self._cy_element.update_admittance(1.0 / self._impedance)
+
+
+type Load = PowerLoad | CurrentLoad | ImpedanceLoad
+"""Alias to the union of all load types."""

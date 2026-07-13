@@ -394,6 +394,20 @@ def generate_c33210_lv_underground_parameters(extras: bool = False) -> pl.DataFr
         ("3x150+1x150", 38.5, 50.8, approx(3000), 390, 0.206, 0.206, 300, 324, 0.51),  # Source: NF-C-33-210
         ("3x240+1x95", 45.5, 58.7, 3900, 470, 0.125, 0.320, 388, 439, 0.31),
     ]
+    # Notes
+    # -----
+    # 1. The 3x150+1x150 is not common for public distribution but is mentioned in the NF C33-210
+    #    standard. It is mostly used for private MV installations.
+    # 2. Enedis references "3x150+1x95 M", "3x240+1x115 M", and "3x240+1x120 M" where "M" stands for
+    #    for "Massif", meaning that the neutral conductor is made of a solid aluminum core instead
+    #    of stranded. Some documents also use the notation "3x240+1x120M (95E)", where "E" stands
+    #    for "Section Électrique". So maybe add them as aliases to the catalogue?)
+    #
+    #    | Used designation                     | C33-210 equivalent |
+    #    | ------------------------------------ | ------------------ |
+    #    | 3x150+1x95 M or 3x150+1x95 M (70E)   | 3x150+1x70         |
+    #    | 3x240+1x115 M or 3x240+1x115 M (95E) | 3x240+1x95         |
+    #    | 3x240+1x120 M or 3x240+1x120 M (95E) | 3x240+1x95         |
     if extras:
         # Extra IEC 60502-1 compliant sizes used in some countries
         data += [

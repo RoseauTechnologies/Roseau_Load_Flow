@@ -1,25 +1,19 @@
 [project]
 name = "roseau-load-flow"
-version = "0.14.1"
+version = "0.15.0"
 description = "Highly capable multi-phase load flow solver"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "BSD-3-Clause"
 license-files = ["LICENSE.md"]
 authors = [
-  { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
-  { name = "Sébastien Vallet", email = "sebastien.vallet@roseautechnologies.com" },
-  { name = "Benoît Vinot", email = "benoit.vinot@roseautechnologies.com" },
-  { name = "Florent Cadoux", email = "florent.cadoux@roseautechnologies.com" },
-  { name = "Louise Muller", email = "louise.muller@roseautechnologies.com" },
-  { name = "Audrey Ficot", email = "audrey.ficot@roseautechnologies.com" },
-  { name = "Victor Gouin" },
+  { name = "Roseau Technologies", email = "contact@roseautechnologies.com" },
 ]
 maintainers = [
-  { name = "Ali Hamdan", email = "ali.hamdan@roseautechnologies.com" },
+  { name = "Roseau Technologies", email = "contact@roseautechnologies.com" },
 ]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Operating System :: MacOS :: MacOS X",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX :: Linux",
@@ -37,7 +31,7 @@ dependencies = [
   "pint>=0.21.0",
   "platformdirs>=4.0.0",
   "pyproj>=3.3.0",
-  "roseau-load-flow-engine==0.19.0",
+  "roseau-load-flow-engine==0.19.1",
   "shapely>=2.0.0",
   "typing-extensions>=4.6.2",
 ]
@@ -49,6 +43,7 @@ issues = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/issues/"
 repository = "https://github.com/RoseauTechnologies/Roseau_Load_Flow/"
 
 [project.optional-dependencies]
+fast-json = ["orjson>=3.6.0"]
 graph = ["networkx>=3.3.0"]
 plot = ["matplotlib>=3.9.0"]
 
@@ -57,6 +52,7 @@ dev = [
   "covdefaults>=2.3.0",
   "folium>=0.20.0",
   "pytest>=9.0.0",
+  "pytest-codspeed>=5.0.3",
   "pytest-cov>=5.0.0",
 ]
 doc = [
@@ -74,7 +70,7 @@ doc = [
 ]
 
 [build-system]
-requires = ["uv_build>=0.9.26,<0.12.0"]
+requires = ["uv_build>=0.11.28,<0.12"]
 build-backend = "uv_build"
 
 # Coverage

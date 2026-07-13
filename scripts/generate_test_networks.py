@@ -201,7 +201,7 @@ def generate_all_element_network() -> None:
         ground_connections=[gc0],
     )
     en.solve_load_flow()
-    en.to_json(TEST_NETWORKS_PATH / "all_element_network.json")
+    en.to_json(TEST_NETWORKS_PATH / "all_elements_network.json")
 
 
 if __name__ == "__main__":

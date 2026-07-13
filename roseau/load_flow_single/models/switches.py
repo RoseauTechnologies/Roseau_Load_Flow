@@ -1,5 +1,5 @@
 import logging
-from typing import Final, Literal
+from typing import Final, Literal, final
 
 from shapely.geometry.base import BaseGeometry
 
@@ -15,7 +15,9 @@ from roseau.load_flow_single.models.sources import VoltageSource
 logger = logging.getLogger(__name__)
 
 
-class Switch(AbstractBranch["SwitchSide", CySwitch | CyOpenSwitch]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class Switch(AbstractBranch["SwitchSide", "CySwitch | CyOpenSwitch"]):
     """A general purpose switch branch."""
 
     element_type: Final = "switch"

@@ -81,7 +81,7 @@ def test_switch_dict_roundtrip():
     sw_dict = sw.to_dict(include_results=True)
     sw_dict["bus1"] = bus1
     sw_dict["bus2"] = bus2
-    sw2 = Switch.from_dict(sw_dict, include_results=True)
+    sw2 = Switch._from_dict(sw_dict, include_results=True)
     assert sw2.id == sw.id
     assert sw2.bus1.id == sw.bus1.id
     assert sw2.bus2.id == sw.bus2.id

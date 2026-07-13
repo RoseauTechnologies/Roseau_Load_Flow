@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, overload
 
 import numpy as np
 from numpy.typing import NDArray
-from pint.registry import Quantity, Unit, UnitRegistry
+from pint.registry import Unit, UnitRegistry
 from pint.util import UnitsContainer, to_units_container
 
 __all__ = ["ureg", "Q_", "ureg_wraps"]
@@ -44,59 +44,86 @@ ureg: UnitRegistry = UnitRegistry(
 )
 ureg.define("volt_ampere_reactive = 1 * volt_ampere = VAr")
 
+# Copy types defined in pint but not exposed publicly
+type Scalar = int | float | Decimal | Fraction | complex | np.number[Any]
+type Array = np.ndarray[Any, Any]
+type UnitLike = str | dict[str, Scalar] | UnitsContainer | Unit
+type Magnitude = Scalar | Array
+M_co = TypeVar("M_co", covariant=True, bound=Magnitude)
+
+
 if TYPE_CHECKING:
-    # Copy types defined in pint but not exposed publicly
-    type Scalar = int | float | Decimal | Fraction | complex | np.number[Any]
-    type Array = np.ndarray[Any, Any]
-    type UnitLike = str | dict[str, Scalar] | UnitsContainer | Unit
-    type Magnitude = Scalar | Array
-    M_co = TypeVar("M_co", covariant=True, bound=Magnitude)
-
-    # Redefine Q_ with support for sequences and better type hints
-    class Q_(Quantity[M_co], Generic[M_co]):  # noqa: N801, UP046
-        @overload  # Known magnitude type
-        def __new__[M: Magnitude](cls, value: M, units: UnitLike | None = None) -> "Q_[M]": ...
-
-        @overload  # Unknown magnitude type
-        def __new__(cls, value: str, units: UnitLike | None = None) -> "Q_[Any]": ...
-
-        @overload  # int sequence becomes int64 array
-        def __new__(
-            cls, value: Sequence[int | Sequence[int]], units: UnitLike | None = None
-        ) -> "Q_[NDArray[np.int64]]": ...
-
-        @overload  # float sequence becomes float64 array
-        def __new__(
-            cls, value: Sequence[float | Sequence[float]], units: UnitLike | None = None
-        ) -> "Q_[NDArray[np.float64]]": ...
-
-        @overload  # complex sequence becomes complex128 array
-        def __new__(
-            cls, value: Sequence[complex | Sequence[complex]], units: UnitLike | None = None
-        ) -> "Q_[NDArray[np.complex128]]": ...
-
-        @overload  # numpy number sequence becomes array with same dtype
-        def __new__[N: np.number](
-            cls, value: Sequence[N | Sequence[N]], units: UnitLike | None = None
-        ) -> "Q_[NDArray[N]]": ...
-
-        @overload  # quantity gets passed through (copied) when units are None
-        def __new__[M: Magnitude](cls, value: "Q_[M]", units: None = None) -> "Q_[M]": ...
-
-        @overload  # quantity may get altered when units are not None (conversion)
-        def __new__(cls, value: "Q_[Any]", units: UnitLike | None = None) -> "Q_[Any]": ...
-
-        def __new__(cls, value: M_co, units: UnitLike | None = None) -> "Q_[M_co]":  # type: ignore
-            return super().__new__(cls, value, units)  # type: ignore
-
-        def __init__(self, value: M_co | Sequence, units: UnitLike | None = None) -> None:
-            super().__init__(value, units)  # type: ignore  # for PyCharm only, it does not recognize __new__ alone
-
-        def __getattr__(self, name: str) -> Any: ...  # attributes of the magnitude are accessible on the quantity
-
+    from pint.registry import Quantity
 else:
-    ureg.Quantity.__class_getitem__ = classmethod(GenericAlias)
-    globals()["Q_"] = ureg.Quantity  # Use globals() to trick PyCharm
+    Quantity = ureg.Quantity
+    Quantity.__class_getitem__ = classmethod(GenericAlias)
+
+_Q_SEQ = (list, tuple)
+
+
+class Q_(Quantity[M_co], Generic[M_co]):  # noqa: N801, UP046  # ty:ignore[invalid-generic-class]
+    __slots__ = ("_cv", "_cu", "_cq", "_cm")
+
+    @overload  # Known magnitude type
+    def __new__[M: Magnitude](cls, value: M, units: UnitLike | None = None) -> "Q_[M]": ...
+    @overload  # Unknown magnitude type
+    def __new__(cls, value: str, units: UnitLike | None = None) -> "Q_[Any]": ...
+    @overload  # int sequence becomes int64 array
+    def __new__(
+        cls, value: Sequence[int | Sequence[int]], units: UnitLike | None = None
+    ) -> "Q_[NDArray[np.int64]]": ...
+    @overload  # float sequence becomes float64 array
+    def __new__(
+        cls, value: Sequence[float | Sequence[float]], units: UnitLike | None = None
+    ) -> "Q_[NDArray[np.float64]]": ...
+    @overload  # complex sequence becomes complex128 array
+    def __new__(
+        cls, value: Sequence[complex | Sequence[complex]], units: UnitLike | None = None
+    ) -> "Q_[NDArray[np.complex128]]": ...
+    @overload  # numpy number sequence becomes array with same dtype
+    def __new__[N: np.number](
+        cls, value: Sequence[N | Sequence[N]], units: UnitLike | None = None
+    ) -> "Q_[NDArray[N]]": ...
+    @overload  # quantity gets passed through (copied) when units are None
+    def __new__[M1: Magnitude](cls, value: "Q_[M1]", units: None = None) -> "Q_[M1]": ...
+    @overload  # quantity may get altered when units are not None (conversion)
+    def __new__(cls, value: "Q_[Any]", units: UnitLike | None = None) -> "Q_[Any]": ...
+    def __new__(cls, value, units=None):
+        self = object.__new__(cls)
+        self._cv = value  # cached value
+        self._cu = units  # cached units
+        self._cq = None  # cached quantity
+        self._cm = None  # cached magnitude
+        return self
+
+    @property
+    def m(self) -> M_co:
+        """Quantity's magnitude."""
+        val = self._cv
+        # Fast path: scalar value
+        if not (is_seq := isinstance(val, _Q_SEQ)) and not isinstance(val, Quantity):
+            return val
+        # Slow path: list/tuple/Quantity — compute and cache
+        m = self._cm
+        if m is None:
+            if is_seq:
+                self._cm = m = np.array(val)
+            else:  # Quantity
+                cu = self._cu
+                self._cm = m = val.m if cu is None else ureg.convert(val.m, val.units, cu)
+        return m  # type: ignore
+
+    magnitude = m
+
+    def __getattr__(self, name: str) -> Any:
+        qty = self._cq
+        if qty is None:
+            qty = ureg.Quantity(self._cv, self._cu)
+            self._cq = qty
+        res = getattr(qty, name)
+        self.__dict__[name] = res  # cache the result
+        return res
+
 
 type OptionalUnits = str | Unit | None | tuple[str | Unit | None, ...] | list[str | Unit | None]
 
@@ -157,7 +184,7 @@ def _parse_wrap_args(args: Iterable[str | Unit | None]) -> Callable:
     return _converter
 
 
-def _apply_defaults(sig: Signature, args: tuple[Any], kwargs: dict[str, Any]) -> tuple[list[Any], dict[str, Any]]:
+def _apply_defaults(sig: Signature, args: tuple[Any, ...], kwargs: dict[str, Any]) -> tuple[list[Any], dict[str, Any]]:
     """Apply default keyword arguments.
 
     Named keywords may have been left blank. This function applies the default
@@ -165,7 +192,7 @@ def _apply_defaults(sig: Signature, args: tuple[Any], kwargs: dict[str, Any]) ->
     """
     n = len(args)
     for i, param in enumerate(sig.parameters.values()):
-        if i >= n and param.default != Parameter.empty and param.name not in kwargs:
+        if i >= n and param.default is not Parameter.empty and param.name not in kwargs:
             kwargs[param.name] = param.default
     return list(args), kwargs
 
@@ -239,14 +266,12 @@ def wraps(ureg: UnitRegistry, ret: OptionalUnits, args: OptionalUnits) -> _Ident
             result = func(*new_values, **new_kw)
 
             if is_ret_container:
-                return ret.__class__(
-                    res if unit is None else ureg.Quantity(res, unit) for unit, res in zip_longest(ret, result)
-                )
+                return ret.__class__(res if unit is None else Q_(res, unit) for unit, res in zip_longest(ret, result))
 
             if ret is None:
                 return result
 
-            return ureg.Quantity(result, ret)
+            return Q_(result, ret)
 
         return wrapper
 

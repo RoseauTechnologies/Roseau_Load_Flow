@@ -1,5 +1,5 @@
 import logging
-from typing import Final, Self
+from typing import Final, Self, final
 
 import numpy as np
 
@@ -14,7 +14,9 @@ from roseau.load_flow_engine.cy_engine import CyDeltaVoltageSource, CyVoltageSou
 logger = logging.getLogger(__name__)
 
 
-class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSource]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class VoltageSource(AbstractDisconnectable["CyVoltageSource | CyDeltaVoltageSource"]):
     """A voltage source fixes the voltages on the phases of the bus it is connected to.
 
     The source can be connected in a wye or star configuration (i.e with a neutral) or in a delta
@@ -83,7 +85,6 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSourc
         self._cy_connect()
 
     @property
-    @ureg_wraps("V", (None,))
     def voltages(self) -> Q_[ComplexArray]:
         """The complex voltages of the source (V).
 
@@ -97,7 +98,7 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSourc
             of the second and third phases are -120° and 120°, respectively (120° phase shift
             clockwise).
         """
-        return self._voltages
+        return Q_(self._voltages, "V")
 
     @voltages.setter
     @ureg_wraps(None, (None, "V"))
@@ -113,7 +114,7 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSourc
                 voltages = value * PositiveSequence
         else:
             voltages = value
-        voltages = np.array(voltages, dtype=np.complex128)
+        voltages = np.asarray(voltages, dtype=np.complex128)
         if len(voltages) != self._size:
             msg = f"Incorrect number of voltages: {len(voltages)} instead of {self._size}"
             logger.error(msg)
@@ -127,7 +128,7 @@ class VoltageSource(AbstractDisconnectable[CyVoltageSource | CyDeltaVoltageSourc
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         self = cls(
             id=data["id"],
             bus=data["bus"],

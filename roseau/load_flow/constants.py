@@ -52,7 +52,7 @@ EPSILON_0: Final = Q_(8.8541878128e-12, "F/m")
 F: Final = Q_(50.0, "Hz")
 """Network frequency :math:`f = 50` (Hz)."""
 
-OMEGA: Final = Q_(2 * PI * F, "rad/s")
+OMEGA: Final = Q_(2 * PI * F.m, "rad/s")
 """Angular frequency :math:`\\omega = 2 \\pi f` (rad/s)."""
 
 RHO: Final[dict[Material, Q_[float]]] = {

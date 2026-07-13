@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from typing import Final
+from typing import Final, final
 
 import numpy as np
 from typing_extensions import TypeVar
@@ -89,24 +89,22 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
         return voltages * currents.conjugate()
 
     @property
-    @ureg_wraps("A", (None,))
     def res_inner_currents(self) -> Q_[ComplexArray]:
         """The load flow result of the currents that flow in the inner components of the load (A)."""
-        return self._res_inner_currents_getter(warning=True)
+        return Q_(self._res_inner_currents_getter(warning=True), "A")
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_inner_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the powers that flow in the inner components of the load (VA).
 
         Unlike `res_powers`, the inner powers do not depend on the reference of potentials. They
         are the physical powers consumed by each of the load dipoles.
         """
-        return self._res_inner_powers_getter(warning=True)
+        return Q_(self._res_inner_powers_getter(warning=True), "VA")
 
     def _validate_value(self, value: ComplexScalarOrArrayLike1D) -> ComplexArray:
-        values = [value for _ in range(self._size)] if np.isscalar(value) else value
-        values = np.array(values, dtype=np.complex128)
+        values = ([value] * self._size) if np.isscalar(value) else value
+        values = np.asarray(values, dtype=np.complex128)
         if len(values) != self._size:
             msg = f"Incorrect number of {self.type}s: {len(values)} instead of {self._size}"
             logger.error(msg)
@@ -135,12 +133,12 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
                 )
 
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "AbstractLoad":
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "Load":
         load_type = data["type"]
         if load_type == "power":
             if (fp_data_list := data.get("flexible_params")) is not None:
                 fp = [
-                    FlexibleParameter.from_dict(data=fp_dict, include_results=include_results)
+                    FlexibleParameter._from_dict(data=fp_dict, include_results=include_results)
                     for fp_dict in fp_data_list
                 ]
             else:
@@ -206,7 +204,9 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
         return results
 
 
-class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | CyDeltaFlexibleLoad]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class PowerLoad(AbstractLoad["CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | CyDeltaFlexibleLoad"]):
     """A constant power load."""
 
     type: Final = "power"
@@ -313,13 +313,12 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
         return self._flexible_params is not None
 
     @property
-    @ureg_wraps("VA", (None,))
     def powers(self) -> Q_[ComplexArray]:
         """The powers of the load (VA).
 
         Setting the powers will update the load's power values and invalidate the network results.
         """
-        return self._powers
+        return Q_(self._powers, "VA")
 
     @powers.setter
     @ureg_wraps(None, (None, "VA"))
@@ -365,7 +364,6 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
         return self._res_getter(value=self._res_flexible_powers, warning=warning)
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_flexible_powers(self) -> Q_[ComplexArray]:
         """The load flow result of the load flexible powers (VA).
 
@@ -380,10 +378,12 @@ class PowerLoad(AbstractLoad[CyPowerLoad | CyDeltaPowerLoad | CyFlexibleLoad | C
             msg = f"The load {self.id!r} is not flexible and does not have flexible powers"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_TYPE)
-        return self._res_flexible_powers_getter(warning=True)
+        return Q_(self._res_flexible_powers_getter(warning=True), "VA")
 
 
-class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class CurrentLoad(AbstractLoad["CyCurrentLoad | CyDeltaCurrentLoad"]):
     """A constant current load."""
 
     type: Final = "current"
@@ -440,13 +440,12 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
         self._cy_connect()
 
     @property
-    @ureg_wraps("A", (None,))
     def currents(self) -> Q_[ComplexArray]:
         """The currents of the load (Amps).
 
         Setting the currents will update the load's currents and invalidate the network results.
         """
-        return self._currents
+        return Q_(self._currents, "A")
 
     @currents.setter
     @ureg_wraps(None, (None, "A"))
@@ -457,7 +456,9 @@ class CurrentLoad(AbstractLoad[CyCurrentLoad | CyDeltaCurrentLoad]):
             self._cy_element.update_currents(self._currents)
 
 
-class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad | CyDeltaAdmittanceLoad]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class ImpedanceLoad(AbstractLoad["CyAdmittanceLoad | CyDeltaAdmittanceLoad"]):
     """A constant impedance load."""
 
     type: Final = "impedance"
@@ -512,10 +513,9 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad | CyDeltaAdmittanceLoad]):
         self._cy_connect()
 
     @property
-    @ureg_wraps("ohm", (None,))
     def impedances(self) -> Q_[ComplexArray]:
         """The impedances of the load (Ohms)."""
-        return self._impedances
+        return Q_(self._impedances, "ohm")
 
     @impedances.setter
     @ureg_wraps(None, (None, "ohm"))
@@ -524,3 +524,7 @@ class ImpedanceLoad(AbstractLoad[CyAdmittanceLoad | CyDeltaAdmittanceLoad]):
         self._invalidate_network_results()
         if self._cy_initialized:
             self._cy_element.update_admittances(1.0 / self._impedances)
+
+
+type Load = PowerLoad | CurrentLoad | ImpedanceLoad
+"""Alias to the union of all load types."""

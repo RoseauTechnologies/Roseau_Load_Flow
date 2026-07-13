@@ -10,7 +10,7 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.models.core import Element, _CyE_co
 from roseau.load_flow.sym import phasor_to_sym
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict, Side
-from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import SIDE_DESC, SIDE_INDEX, SIDE_SUFFIX
 
 logger = logging.getLogger(__name__)
@@ -109,13 +109,11 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         return _calculate_voltages(potentials, self.phases)
 
     @property
-    @ureg_wraps("V", (None,))
     def res_potentials(self) -> Q_[ComplexArray]:
         """The load flow result of the element potentials (V)."""
-        return self._res_potentials_getter(warning=True)
+        return Q_(self._res_potentials_getter(warning=True), "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def res_voltages(self) -> Q_[ComplexArray]:
         """The load flow result of the element voltages (V).
 
@@ -123,30 +121,44 @@ class AbstractTerminal(Element[_CyE_co], ABC):
         in the order ``[Van, Vbn, Vcn]``. If the element does not have a neutral, the voltages are
         phase-to-phase for existing phases in the order ``[Vab, Vbc, Vca]``.
 
-        To always get phase-to-phase voltages, use the property :attr:`.res_voltages_pp`.
-        To always get phase-to-neutral voltages, use the property :attr:`.res_voltages_pn`.
+        See Also:
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pp`: The phase-to-phase
+              voltages of the element. Raises if the element has only one phase.
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pn`: The phase-to-neutral
+              voltages of the element. Raises if the element does not have a neutral.
         """
-        return self._res_voltages_getter(warning=True)
+        return Q_(self._res_voltages_getter(warning=True), "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def res_voltages_pp(self) -> Q_[ComplexArray]:
         """The load flow result of the element's phase-to-phase voltages (V).
 
         Raises an error if the element has only one phase.
+
+        See Also:
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages`: Get the voltages in the
+              natural representation of the element (phase-to-neutral if it has a neutral,
+              phase-to-phase otherwise).
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pn`: The phase-to-neutral
+              voltages of the element. Raises if the element does not have a neutral.
         """
-        return self._res_voltages_pp_getter(warning=True)
+        return Q_(self._res_voltages_pp_getter(warning=True), "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def res_voltages_pn(self) -> Q_[ComplexArray]:
         """The load flow result of the element's phase-to-neutral voltages (V).
 
         Raises an error if the element does not have a neutral.
-        """
-        return self._res_voltages_pn_getter(warning=True)
 
-    @ureg_wraps("percent", (None, None))
+        See Also:
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages`: Get the voltages in the
+              natural representation of the element (phase-to-neutral if it has a neutral,
+              phase-to-phase otherwise).
+            - :attr:`~roseau.load_flow.AbstractTerminal.res_voltages_pp`: The phase-to-phase
+              voltages of the element. Raises if the element has only one phase.
+        """
+        return Q_(self._res_voltages_pn_getter(warning=True), "V")
+
     def res_voltage_unbalance(self, definition: Literal["VUF", "LVUR", "PVUR"] = "VUF") -> Q_[float]:
         """Calculate the voltage unbalance (VU) on this element.
 
@@ -154,36 +166,31 @@ class AbstractTerminal(Element[_CyE_co], ABC):
             definition:
                 The definition of the voltage unbalance, one of the following:
 
-                - ``VUF``: The Voltage Unbalance Factor defined by the IEC (default). This is also
-                  called the "True Definition".
-                - ``LVUR``: The Line Voltage Unbalance Rate defined by NEMA.
-                - ``PVUR``: The Phase Voltage Unbalance Rate defined by IEEE.
+                - ``VUF``: The `Voltage Unbalance Factor` defined by the IEC, also called the "True
+                  Definition" (default):
+
+                  :math:`VUF = \\dfrac{V_\\mathrm{2}}{V_\\mathrm{1}} \\times 100 \\, (\\%)`
+
+                  Where :math:`V_{\\mathrm{1}}` and :math:`V_{\\mathrm{2}}` are the magnitudes of
+                  the positive-sequence and negative-sequence voltages, respectively.
+                - ``LVUR``: The `Line Voltage Unbalance Rate` defined by NEMA:
+
+                  :math:`LVUR = \\dfrac{\\Delta V_\\mathrm{Line,Max}}{\\Delta V_\\mathrm{Line,Mean}} \\times 100 (\\%)`.
+
+                  Where :math:`\\Delta V_\\mathrm{Line,Mean}` is the arithmetic mean of the line
+                  voltages and :math:`\\Delta V_\\mathrm{Line,Max}` is the maximum deviation
+                  between the measured line voltages and :math:`\\Delta V_\\mathrm{Line,Mean}`.
+                - ``PVUR``: The `Phase Voltage Unbalance Rate` defined by IEEE:
+
+                  :math:`PVUR = \\dfrac{\\Delta V_\\mathrm{Phase,Max}}{\\Delta V_\\mathrm{Phase,Mean}} \\times 100 (\\%)`.
+
+                  Where :math:`\\Delta V_\\mathrm{Phase,Mean}` is the arithmetic mean of the
+                  phase voltages and :math:`\\Delta V_\\mathrm{Phase,Max}` is the maximum
+                  deviation between the measured phase voltages and
+                  :math:`\\Delta V_\\mathrm{Phase,Mean}`.
 
         Returns:
             The voltage unbalance in percent.
-
-        The calculation depends on the definition of voltage unbalance:
-
-        - Voltage Unbalance Factor (VUF):
-
-          :math:`VUF = \\dfrac{V_\\mathrm{2}}{V_\\mathrm{1}} \\times 100 \\, (\\%)`
-
-          Where :math:`V_{\\mathrm{2}}` is the magnitude of the negative-sequence (inverse) voltage
-          and :math:`V_{\\mathrm{1}}` is the magnitude of the positive-sequence (direct) voltage.
-        - Line Voltage Unbalance Rate (LVUR):
-
-          :math:`LVUR = \\dfrac{\\Delta V_\\mathrm{Line,Max}}{\\Delta V_\\mathrm{Line,Mean}} \\times 100 (\\%)`.
-
-          Where :math:`\\Delta V_\\mathrm{Line,Mean}` is the arithmetic mean of the line voltages
-          and :math:`\\Delta V_\\mathrm{Line,Max}` is the maximum deviation between the measured
-          line voltages and :math:`\\Delta V_\\mathrm{Line,Mean}`.
-        - The Phase Voltage Unbalance Rate (PVUR):
-
-          :math:`PVUR = \\dfrac{\\Delta V_\\mathrm{Phase,Max}}{\\Delta V_\\mathrm{Phase,Mean}} \\times 100 (\\%)`.
-
-          Where :math:`\\Delta V_\\mathrm{Phase,Mean}` is the arithmetic mean of the phase voltages
-          and :math:`\\Delta V_\\mathrm{Phase,Max}` is the maximum deviation between the measured
-          phase voltages and :math:`\\Delta V_\\mathrm{Phase,Mean}`.
         """
         if self.phases not in {"abc", "abcn"}:
             msg = (
@@ -200,17 +207,18 @@ class AbstractTerminal(Element[_CyE_co], ABC):
             # Indeed |V2_pp| / |V1_pp| = |V2 (1-α²)| / |V1(1-α)| = |V2| / |V1|
             potentials = self._res_potentials_getter(warning=True)
             _, v1, v2 = phasor_to_sym(potentials[:3])  # (0, +, -)
-            return abs(v2) / abs(v1) * 100  # type: ignore
+            result = abs(v2) / abs(v1) * 100
         elif definition == "LVUR":
             voltages = abs(self._res_voltages_pp_getter(warning=True))
             avg = sum(voltages) / 3
-            return max(abs(voltages - avg)) / avg * 100  # type: ignore
+            result = max(abs(voltages - avg)) / avg * 100
         elif definition == "PVUR":
             voltages = abs(self._res_voltages_pn_getter(warning=True))
             avg = sum(voltages) / 3
-            return max(abs(voltages - avg)) / avg * 100  # type: ignore
+            result = max(abs(voltages - avg)) / avg * 100
         else:
             raise ValueError(f"Invalid voltage unbalance definition: {definition!r}.")
+        return Q_(result, "percent")
 
     #
     # Json Mixin interface

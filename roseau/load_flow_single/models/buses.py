@@ -1,7 +1,7 @@
 import logging
 import math
 from collections.abc import Iterator
-from typing import Final, Self
+from typing import Final, Self, final
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,9 @@ from roseau.load_flow_single.models.terminals import AbstractTerminal
 logger = logging.getLogger(__name__)
 
 
-class Bus(AbstractTerminal[CyBus]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class Bus(AbstractTerminal["CyBus"]):
     """An electrical bus."""
 
     element_type: Final = "bus"
@@ -92,10 +94,9 @@ class Bus(AbstractTerminal[CyBus]):
         return f"{type(self).__name__}(id={self.id!r})"
 
     @property
-    @ureg_wraps("V", (None,))
     def initial_voltage(self) -> Q_[complex]:
         """Initial voltage of the bus (V)."""
-        return self._initial_voltage
+        return Q_(self._initial_voltage, "V")
 
     @initial_voltage.setter
     @ureg_wraps(None, (None, "V"))
@@ -343,6 +344,20 @@ class Bus(AbstractTerminal[CyBus]):
         voltage = self._res_voltage_getter(warning)
         return abs(voltage) / self._nominal_voltage
 
+    def _res_agg_power_getter(self, warning: bool) -> complex:
+        """Get the aggregated proper power of the bus (VA)."""
+        power = 0j
+        for e in self._connected_elements:
+            if e.element_type == "load":
+                sign = 1
+            elif e.element_type == "source":
+                sign = -1
+            else:
+                continue
+            power += sign * e._res_power_getter(warning=warning)  # type: ignore
+            warning = False  # warn only once
+        return power
+
     def _res_state_getter(self) -> ResultState:
         """The state of the bus based on its voltage levels and limits."""
         u = self._res_voltage_level_getter(warning=False)
@@ -390,7 +405,7 @@ class Bus(AbstractTerminal[CyBus]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         if (initial_voltage := data.get("initial_voltage")) is not None:
             initial_voltage = complex(initial_voltage[0], initial_voltage[1])
         self = cls(
@@ -410,12 +425,12 @@ class Bus(AbstractTerminal[CyBus]):
             data["initial_voltage"] = [self._initial_voltage.real, self._initial_voltage.imag]
         if self.geometry is not None:
             data["geometry"] = self.geometry.__geo_interface__
-        if self.nominal_voltage is not None:
-            data["nominal_voltage"] = self.nominal_voltage.magnitude
-        if self.min_voltage_level is not None:
-            data["min_voltage_level"] = self.min_voltage_level.magnitude
-        if self.max_voltage_level is not None:
-            data["max_voltage_level"] = self.max_voltage_level.magnitude
+        if self._nominal_voltage is not None:
+            data["nominal_voltage"] = self._nominal_voltage
+        if self._min_voltage_level is not None:
+            data["min_voltage_level"] = self._min_voltage_level
+        if self._max_voltage_level is not None:
+            data["max_voltage_level"] = self._max_voltage_level
         if include_results:
             data["results"] = data.pop("results")  # move results to the end
         return data

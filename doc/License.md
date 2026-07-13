@@ -34,7 +34,7 @@ this project is not open source. You need a valid license key to use it.
 
 ### Trial license (free)
 
-The license key **`A8C6DA-9405FB-E74FB9-C71C3C-207661-V3`** can be used with networks containing up to 10 buses. For
+The license key **`A8C6DA-9405FB-E74FB9-C71C3C-207661-V3`** can be used with networks containing up to 50 buses. For
 example, this key can be used to follow the tutorials in this documentation or for personal projects. This key is valid
 indefinitely.
 

@@ -39,10 +39,10 @@ from roseau.load_flow_single.io.dgs.transformers import (
     typ_tr2_to_tp,
 )
 from roseau.load_flow_single.models import (
-    AbstractLoad,
     Bus,
     Line,
     LineParameters,
+    Load,
     Switch,
     Transformer,
     TransformerParameters,
@@ -101,7 +101,7 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     # ElectricalNetwork elements
     buses: dict[str, Bus] = {}  # key is the FID
     sources: dict[Id, VoltageSource] = {}
-    loads: dict[Id, AbstractLoad] = {}
+    loads: dict[Id, Load] = {}
     lines: dict[Id, Line] = {}
     transformers: dict[Id, Transformer] = {}
     switches: dict[Id, Switch] = {}

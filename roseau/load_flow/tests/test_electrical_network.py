@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
+from roseau.load_flow.converters import calculate_voltages
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models import (
     Bus,
@@ -43,15 +44,15 @@ from roseau.load_flow.utils.testing import (
 
 # The following networks are generated using the scripts/generate_test_networks.py script
 @pytest.fixture
-def all_element_network(test_networks_path) -> ElectricalNetwork:
+def all_elements_network(test_networks_path) -> ElectricalNetwork:
     # Load the network from the JSON file (without results)
-    return ElectricalNetwork.from_json(path=test_networks_path / "all_element_network.json", include_results=False)
+    return ElectricalNetwork.from_json(path=test_networks_path / "all_elements_network.json", include_results=False)
 
 
 @pytest.fixture
-def all_element_network_with_results(test_networks_path) -> ElectricalNetwork:
+def all_elements_network_with_results(test_networks_path) -> ElectricalNetwork:
     # Load the network from the JSON file (with results, no need to invoke the solver)
-    return ElectricalNetwork.from_json(path=test_networks_path / "all_element_network.json", include_results=True)
+    return ElectricalNetwork.from_json(path=test_networks_path / "all_elements_network.json", include_results=True)
 
 
 @pytest.fixture
@@ -1567,8 +1568,8 @@ def test_load_flow_results_frames(small_network_with_results):
     assert_frame_equal(en.res_loads_flexible_powers, expected_res_flex_powers, rtol=1e-5)
 
 
-def test_res_buses_voltages(all_element_network_with_results):
-    en = all_element_network_with_results
+def test_res_buses_voltages(all_elements_network_with_results):
+    en = all_elements_network_with_results
     dtypes = {  # in the expected order
         "bus_id": object,
         "phase": VoltagePhaseDtype,
@@ -1662,8 +1663,8 @@ def test_res_buses_voltages(all_element_network_with_results):
     assert_frame_equal(en.res_buses_voltages_pn, expected_df)
 
 
-def test_res_loads_voltages(all_element_network_with_results):
-    en = all_element_network_with_results
+def test_res_loads_voltages(all_elements_network_with_results):
+    en = all_elements_network_with_results
     dtypes = {  # in the expected order
         "load_id": object,
         "phase": VoltagePhaseDtype,
@@ -1732,8 +1733,8 @@ def test_res_loads_voltages(all_element_network_with_results):
     assert_frame_equal(en.res_loads_voltages_pn, expected_df)
 
 
-def test_res_sources_voltages(all_element_network_with_results):
-    en = all_element_network_with_results
+def test_res_sources_voltages(all_elements_network_with_results):
+    en = all_elements_network_with_results
     dtypes = {  # in the expected order
         "source_id": object,
         "phase": VoltagePhaseDtype,
@@ -2057,20 +2058,20 @@ def test_get_catalogue():
     assert catalogue.empty
 
 
-def test_to_graph(all_element_network: ElectricalNetwork):
-    g = all_element_network.to_graph()
+def test_to_graph(all_elements_network: ElectricalNetwork):
+    g = all_elements_network.to_graph()
     assert isinstance(g, nx.MultiGraph)
-    assert sorted(g.nodes) == sorted(all_element_network.buses)
+    assert sorted(g.nodes) == sorted(all_elements_network.buses)
     assert sorted(g.edges) == sorted(
         (b.bus1.id, b.bus2.id, 0)
         for b in it.chain(
-            all_element_network.lines.values(),
-            all_element_network.transformers.values(),
-            all_element_network.switches.values(),
+            all_elements_network.lines.values(),
+            all_elements_network.transformers.values(),
+            all_elements_network.switches.values(),
         )
     )
 
-    for bus in all_element_network.buses.values():
+    for bus in all_elements_network.buses.values():
         node_data = g.nodes[bus.id]
         assert node_data == {
             "nominal_voltage": bus._nominal_voltage,
@@ -2079,7 +2080,7 @@ def test_to_graph(all_element_network: ElectricalNetwork):
             "geom": bus.geometry.__geo_interface__ if bus.geometry is not None else None,
         }
 
-    for line in all_element_network.lines.values():
+    for line in all_elements_network.lines.values():
         edge_data = g.edges[line.bus1.id, line.bus2.id, 0]
         ampacities = line.ampacities.magnitude.tolist() if line.ampacities is not None else None
         assert edge_data == {
@@ -2093,7 +2094,7 @@ def test_to_graph(all_element_network: ElectricalNetwork):
             "geom": line.geometry.__geo_interface__ if line.geometry is not None else None,
         }
 
-    for transformer in all_element_network.transformers.values():
+    for transformer in all_elements_network.transformers.values():
         edge_data = g.edges[transformer.bus1.id, transformer.bus2.id, 0]
         max_loading = transformer.max_loading.magnitude if transformer.max_loading is not None else None
         assert edge_data == {
@@ -2108,7 +2109,7 @@ def test_to_graph(all_element_network: ElectricalNetwork):
             "geom": transformer.geometry.__geo_interface__ if transformer.geometry is not None else None,
         }
 
-    for switch in all_element_network.switches.values():
+    for switch in all_elements_network.switches.values():
         edge_data = g.edges[switch.bus1.id, switch.bus2.id, 0]
         assert edge_data == {
             "id": switch.id,
@@ -2161,8 +2162,8 @@ def test_to_graph(all_element_network: ElectricalNetwork):
     json.dumps(json_data, ensure_ascii=False)
 
 
-def test_propagate_nominal_voltages(all_element_network, small_network):
-    en = all_element_network
+def test_propagate_nominal_voltages(all_elements_network, small_network):
+    en = all_elements_network
     # Test that it works even if some nominal voltages are missing
     assert en.buses["bus0"].nominal_voltage is None
     assert en.buses["bus4"].nominal_voltage is None
@@ -2205,7 +2206,7 @@ def test_propagate_nominal_voltages(all_element_network, small_network):
     npt.assert_allclose(list(nominal_voltages.values()), 20e3 * np.sqrt(3))
 
 
-def test_serialization(all_element_network, all_element_network_with_results):
+def test_serialization(all_elements_network, all_elements_network_with_results):
     def assert_results(en_dict: dict, included: bool):
         for bus_data in en_dict["buses"]:
             assert ("results" in bus_data) == included
@@ -2227,7 +2228,7 @@ def test_serialization(all_element_network, all_element_network_with_results):
             assert ("results" in gc_data) == included
 
     # No results: include_results is ignored
-    en = all_element_network
+    en = all_elements_network
     en_dict_with_results = en.to_dict(include_results=True)
     en_dict_without_results = en.to_dict(include_results=False)
     assert_results(en_dict_with_results, included=False)
@@ -2237,7 +2238,7 @@ def test_serialization(all_element_network, all_element_network_with_results):
     assert new_en.to_dict() == en_dict_without_results
 
     # Has results: include_results is respected
-    en = all_element_network_with_results
+    en = all_elements_network_with_results
     en_dict_with_results = en.to_dict(include_results=True)
     en_dict_without_results = en.to_dict(include_results=False)
     assert_results(en_dict_with_results, included=True)
@@ -2263,8 +2264,8 @@ def test_serialization(all_element_network, all_element_network_with_results):
     assert ElectricalNetwork.from_dict(en_dict_without_results).to_dict() == en_dict_without_results
 
 
-def test_results_to_dict(all_element_network_with_results):
-    en = all_element_network_with_results
+def test_results_to_dict(all_elements_network_with_results):
+    en = all_elements_network_with_results
 
     # By default full=False
     res_network = en.results_to_dict()
@@ -2367,8 +2368,8 @@ def test_results_to_dict(all_element_network_with_results):
         assert not res_gc, res_gc
 
 
-def test_results_to_dict_full(all_element_network_with_results):
-    en = all_element_network_with_results
+def test_results_to_dict_full(all_elements_network_with_results):
+    en = all_elements_network_with_results
 
     # Here, `full` is True
     res_network = en.results_to_dict(full=True)
@@ -2808,3 +2809,13 @@ def test_tool_metadata(small_network: ElectricalNetwork):
     }
     en.tool_data.clear()
     assert en.tool_data.to_dict() == {}
+
+
+def test_can_voltage_source():
+    bus = Bus("Bus", phases="can")
+    vs = VoltageSource("Src", bus, phases="can", voltages=230)
+    PotentialRef("Pref", bus)
+    ElectricalNetwork.from_element(bus)
+    np.testing.assert_allclose(bus.initial_potentials.m, [230, -230, 0])
+    np.testing.assert_allclose(calculate_voltages(bus.initial_potentials, bus.phases).m, vs.voltages.m)
+    assert bus.voltage_phases == vs.voltage_phases == ["cn", "an"]

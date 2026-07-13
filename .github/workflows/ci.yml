@@ -28,13 +28,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13", "3.13t", "3.14", "3.14t"]
+        python-version: ["3.12", "3.13", "3.14", "3.14t"]
 
     permissions:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7.0.0
         with:
           lfs: false
           persist-credentials: false
@@ -43,7 +43,7 @@ jobs:
         run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
 
       - name: Cache git LFS
-        uses: actions/cache@v5
+        uses: actions/cache@v6.1.0
         with:
           path: .git/lfs
           key: git-lfs-v1-${{ matrix.python-version }}-${{ hashFiles('.lfs-assets-id') }}
@@ -66,7 +66,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --frozen --all-extras
+          # TODO orjson (fast-json extra) does not yet support free-threaded Python
+          uv sync --frozen --all-extras ${{ matrix.python-version == '3.14t' && '--no-extra fast-json' || '' }}
 
       - name: Test with pytest
         run: |

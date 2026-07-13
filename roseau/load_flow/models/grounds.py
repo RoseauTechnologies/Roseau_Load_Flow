@@ -1,5 +1,6 @@
+import cmath
 import logging
-from typing import TYPE_CHECKING, Final, Literal, Self
+from typing import TYPE_CHECKING, Final, Literal, Self, final
 
 import numpy as np
 from typing_extensions import deprecated
@@ -18,7 +19,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class Ground(Element[CyGround]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class Ground(Element["CyGround"]):
     """A ground element represents the earth in the network.
 
     The ground itself is modeled as an ideal infinite plane. The ground potential is NOT assumed to
@@ -91,16 +94,15 @@ class Ground(Element[CyGround]):
         return self._res_getter(self._res_potential, warning)
 
     @property
-    @ureg_wraps("V", (None,))
     def res_potential(self) -> Q_[complex]:
         """The load flow result of the ground potential (V)."""
-        return self._res_potential_getter(warning=True)  # type: ignore
+        return Q_(self._res_potential_getter(warning=True), "V")
 
     #
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         results = data.pop("results", None)
         self = cls(**data)
         if include_results and results:
@@ -121,7 +123,9 @@ class Ground(Element[CyGround]):
         return {"id": self.id, "potential": [v.real, v.imag]}
 
 
-class GroundConnection(Element[CySimplifiedLine | CySwitch]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class GroundConnection(Element["CySimplifiedLine | CySwitch"]):
     """An ideal or impedant connection to the ground."""
 
     element_type: Final = "ground connection"
@@ -250,17 +254,16 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self._element._side_value
 
     @property
-    @ureg_wraps("ohm", (None,))
     def impedance(self) -> Q_[complex]:
         """The impedance of the connection to the ground (ohm)."""
-        return self._impedance  # type: ignore
+        return Q_(self._impedance, "ohm")
 
     @impedance.setter
     @ureg_wraps(None, (None, "ohm"))
     def impedance(self, value: Complex | Q_[Complex]) -> None:
         self._impedance = complex(value)
         self._invalidate_network_results()
-        if np.isclose(self._impedance, 0):
+        if cmath.isclose(self._impedance, 0, abs_tol=1e-8):
             if not (self._cy_initialized and isinstance(self._cy_element, CySwitch)):
                 if self._cy_initialized:
                     self._cy_element.disconnect()
@@ -321,16 +324,15 @@ class GroundConnection(Element[CySimplifiedLine | CySwitch]):
         return self._res_getter(value=self._res_current, warning=warning)
 
     @property
-    @ureg_wraps("A", (None,))
     def res_current(self) -> Q_[complex]:
         """The load flow result of the current flowing through this connection to the ground (A)."""
-        return self._res_current_getter(warning=True)  # type: ignore
+        return Q_(self._res_current_getter(warning=True), "A")
 
     #
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         results = data.pop("results", None)
         data["impedance"] = complex(*data.pop("impedance"))
         self = cls(**data)

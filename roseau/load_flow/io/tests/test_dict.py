@@ -121,6 +121,7 @@ def test_to_dict():
     # Dict content
     lp1.ampacities = 1000
     res = en.to_dict(include_results=False)
+    assert res["name"] == "Network"  # default name
     res_bus0, res_bus1 = res["buses"]
     res_line0, res_line1 = res["lines"]
     assert "geometry" in res_bus0
@@ -141,6 +142,14 @@ def test_to_dict():
     assert "results" not in res_bus1
     assert "results" not in res_line0
     assert "results" not in res_line1
+
+    # Custom name is serialized and round-trips correctly
+    en.name = "My Network"
+    res = en.to_dict(include_results=False)
+    assert res["name"] == "My Network"
+    en2 = ElectricalNetwork.from_dict(res)
+    assert en2.name == "My Network"
+    assert repr(en2).startswith("<ElectricalNetwork 'My Network':")
 
     # Same id, different transformer parameters -> fail
     ground = Ground("ground")
@@ -191,6 +200,7 @@ def test_all_converters():
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
+    expected_dict["name"] = "Network"  # default name added in current format
     assert_json_close(net_dict, expected_dict)
 
 
@@ -208,6 +218,7 @@ def test_from_dict_v0():
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
+    expected_dict["name"] = "Network"  # default name added in current format
     assert_json_close(net_dict, expected_dict)
 
 
@@ -224,6 +235,7 @@ def test_from_dict_v1():
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
+    expected_dict["name"] = "Network"  # default name added in current format
     assert_json_close(net_dict, expected_dict)
 
     # Test with `include_results=False`
@@ -236,6 +248,7 @@ def test_from_dict_v1():
         expected_dict_no_results = v2_to_v3_converter(expected_dict_no_results)
         expected_dict_no_results = v3_to_v4_converter(expected_dict_no_results)
         expected_dict_no_results = v4_to_v5_converter(expected_dict_no_results)
+    expected_dict_no_results["name"] = "Network"  # default name added in current format
     assert_json_close(net_dict, expected_dict_no_results)
 
 
@@ -260,7 +273,7 @@ def test_from_dict_v2():
         expected_dict = v2_to_v3_converter(expected_dict)
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
-
+    expected_dict["name"] = "Network"  # default name added in current format
     assert_json_close(net_dict, expected_dict)
 
     # Test max loading of transformers
@@ -279,7 +292,7 @@ def test_from_dict_v3():
     with warnings.catch_warnings(action="ignore"):
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
-
+    expected_dict["name"] = "Network"  # default name added in current format
     assert_json_close(net_dict, expected_dict)
 
     # Test vector group of transformers

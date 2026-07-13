@@ -1,19 +1,21 @@
 import logging
-from typing import Final, Self
+from typing import Final, Self, final
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.grounds import Ground
 from roseau.load_flow.typing import Id, JsonDict
-from roseau.load_flow.units import Q_, ureg_wraps
+from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import one_or_more_repr
 from roseau.load_flow_engine.cy_engine import CyDeltaPotentialRef, CyPotentialRef
 
 logger = logging.getLogger(__name__)
 
 
-class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class PotentialRef(Element["CyPotentialRef | CyDeltaPotentialRef"]):
     """A potential reference.
 
     This element sets the reference for the potentials in a network. Only one potential reference
@@ -118,19 +120,18 @@ class PotentialRef(Element[CyPotentialRef | CyDeltaPotentialRef]):
         return self._res_getter(self._res_current, warning)
 
     @property
-    @ureg_wraps("A", (None,))
     def res_current(self) -> Q_[complex]:
         """The sum of the currents (A) of the connection associated to the potential reference.
 
         This sum should be equal to 0 after the load flow.
         """
-        return self._res_current_getter(warning=True)
+        return Q_(self._res_current_getter(warning=True), "A")
 
     #
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         self = cls(id=data["id"], element=data["element"], phases=data.get("phases"))
         if include_results and "results" in data:
             self._res_current = complex(*data["results"]["current"])

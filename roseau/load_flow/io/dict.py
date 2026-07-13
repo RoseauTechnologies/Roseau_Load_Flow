@@ -6,7 +6,6 @@ from and to dictionaries, or the methods `ElectricalNetwork.from_json` and `Elec
 to read and write networks from and to JSON files.
 """
 
-import copy
 import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING, Final
@@ -25,6 +24,7 @@ from roseau.load_flow.models import (
     GroundConnection,
     Line,
     LineParameters,
+    Load,
     PotentialRef,
     Switch,
     Transformer,
@@ -62,8 +62,6 @@ def network_from_dict(  # noqa: C901
         connections to construct the electrical network and a boolean indicating if the network has
         results.
     """
-    data = copy.deepcopy(data)  # Make a copy to avoid modifying the original
-
     version = data.get("version", 0)
     if version <= 4:
         warn_external(
@@ -90,6 +88,9 @@ def network_from_dict(  # noqa: C901
     is_multiphase = data.get("is_multiphase", True)
     assert is_multiphase, f"Unsupported phase selection {is_multiphase=}."
 
+    # Name
+    name = data.get("name", "Network")
+
     # CRS
     crs_dict = data.get("crs", {"data": None, "normalize": False})
     crs = CRS(crs_dict["data"]) if crs_dict["normalize"] else crs_dict["data"]
@@ -99,36 +100,36 @@ def network_from_dict(  # noqa: C901
 
     # Lines and transformers parameters
     lines_params = {
-        lp["id"]: LineParameters.from_dict(data=lp, include_results=include_results) for lp in data["lines_params"]
+        lp["id"]: LineParameters._from_dict(data=lp, include_results=include_results) for lp in data["lines_params"]
     }
     transformers_params = {
-        tp["id"]: TransformerParameters.from_dict(data=tp, include_results=include_results)
+        tp["id"]: TransformerParameters._from_dict(data=tp, include_results=include_results)
         for tp in data["transformers_params"]
     }
 
     # Grounds
     grounds: dict[Id, Ground] = {}
     for ground_data in data["grounds"]:
-        ground = Ground.from_dict(data=ground_data, include_results=include_results)
+        ground = Ground._from_dict(data=ground_data, include_results=include_results)
         grounds[ground.id] = ground
         has_results = has_results and not ground._no_results
 
     # Buses, loads and sources
     buses: dict[Id, Bus] = {}
     for bus_data in data["buses"]:
-        bus = Bus.from_dict(data=bus_data, include_results=include_results)
+        bus = Bus._from_dict(data=bus_data, include_results=include_results)
         buses[bus.id] = bus
         has_results = has_results and not bus._no_results
-    loads: dict[Id, AbstractLoad] = {}
+    loads: dict[Id, Load] = {}
     for load_data in data["loads"]:
         load_data["bus"] = buses[load_data["bus"]]
-        load = AbstractLoad.from_dict(data=load_data, include_results=include_results)
+        load = AbstractLoad._from_dict(data=load_data, include_results=include_results)
         loads[load.id] = load
         has_results = has_results and not load._no_results
     sources: dict[Id, VoltageSource] = {}
     for source_data in data["sources"]:
         source_data["bus"] = buses[source_data["bus"]]
-        source = VoltageSource.from_dict(data=source_data, include_results=include_results)
+        source = VoltageSource._from_dict(data=source_data, include_results=include_results)
         sources[source.id] = source
         has_results = has_results and not source._no_results
 
@@ -143,7 +144,7 @@ def network_from_dict(  # noqa: C901
             msg = f"Potential reference data {pref_data['id']} missing bus or ground."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.JSON_PREF_INVALID)
-        p_ref = PotentialRef.from_dict(data=pref_data, include_results=include_results)
+        p_ref = PotentialRef._from_dict(data=pref_data, include_results=include_results)
         potential_refs[p_ref.id] = p_ref
         has_results = has_results and not p_ref._no_results
 
@@ -155,7 +156,7 @@ def network_from_dict(  # noqa: C901
         line_data["parameters"] = lines_params[line_data.pop("params_id")]
         if (ground_id := line_data.pop("ground", None)) is not None:
             line_data["ground"] = grounds[ground_id]
-        line = Line.from_dict(data=line_data, include_results=include_results)
+        line = Line._from_dict(data=line_data, include_results=include_results)
         lines[line.id] = line
         has_results = has_results and not line._no_results
 
@@ -165,7 +166,7 @@ def network_from_dict(  # noqa: C901
         transformer_data["bus_hv"] = buses[transformer_data["bus_hv"]]
         transformer_data["bus_lv"] = buses[transformer_data["bus_lv"]]
         transformer_data["parameters"] = transformers_params[transformer_data.pop("params_id")]
-        transformer = Transformer.from_dict(data=transformer_data, include_results=include_results)
+        transformer = Transformer._from_dict(data=transformer_data, include_results=include_results)
         transformers[transformer.id] = transformer
         has_results = has_results and not transformer._no_results
 
@@ -174,7 +175,7 @@ def network_from_dict(  # noqa: C901
     for switch_data in data["switches"]:
         switch_data["bus1"] = buses[switch_data["bus1"]]
         switch_data["bus2"] = buses[switch_data["bus2"]]
-        switch = Switch.from_dict(data=switch_data, include_results=include_results)
+        switch = Switch._from_dict(data=switch_data, include_results=include_results)
         switches[switch.id] = switch
         has_results = has_results and not switch._no_results
 
@@ -199,7 +200,7 @@ def network_from_dict(  # noqa: C901
                 gc_data["element"] = getattr(switches[element["id"]], f"side{SIDE_SUFFIX[side]}")
             case what:
                 raise AssertionError(f"Unknown element type {what!r} for ground connection {gc_data['id']!r}.")
-        gc = GroundConnection.from_dict(data=gc_data, include_results=include_results)
+        gc = GroundConnection._from_dict(data=gc_data, include_results=include_results)
         ground_connections[gc.id] = gc
         has_results = has_results and not gc._no_results
 
@@ -216,6 +217,7 @@ def network_from_dict(  # noqa: C901
 
     return (
         {
+            "name": name,
             "buses": buses,
             "lines": lines,
             "transformers": transformers,
@@ -310,6 +312,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
 
     res = {
         "version": NETWORK_JSON_VERSION,
+        "name": en.name,
         "is_multiphase": True,
         "crs": crs,
         "grounds": grounds,

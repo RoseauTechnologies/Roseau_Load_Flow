@@ -1,4 +1,6 @@
+import cmath
 import logging
+import math
 import re
 import warnings
 from collections.abc import Sequence
@@ -116,13 +118,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         super().__init__(id)
         self._z_line: ComplexMatrix
         self._y_shunt: ComplexMatrix
-        self._z_line = np.array(z_line, dtype=np.complex128)
+        self._z_line = np.asarray(z_line, dtype=np.complex128)
         if y_shunt is None:
             self._with_shunt = False
             self._y_shunt = np.zeros_like(self._z_line, dtype=np.complex128)
         else:
             self._with_shunt = not np.allclose(y_shunt, 0)
-            self._y_shunt = np.array(y_shunt, dtype=np.complex128)
+            self._y_shunt = np.asarray(y_shunt, dtype=np.complex128)
         self._size = self._z_line.shape[0]
         self._ampacities = None
         self.ampacities = ampacities
@@ -153,14 +155,12 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         return s
 
     @property
-    @ureg_wraps("ohm/km", (None,))
     def z_line(self) -> Q_[ComplexMatrix]:
-        return self._z_line
+        return Q_(self._z_line, "ohm/km")
 
     @property
-    @ureg_wraps("S/km", (None,))
     def y_shunt(self) -> Q_[ComplexMatrix]:
-        return self._y_shunt
+        return Q_(self._y_shunt, "S/km")
 
     @property
     def with_shunt(self) -> bool:
@@ -365,7 +365,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 yn = bn * 1j  # Neutral shunt admittance (Siemens/km)
                 ypn = bpn * 1j  # Phase-to-neutral shunt admittance (Siemens/km)
 
-                if np.isclose(zpn, 0) and np.isclose(zn, 0):
+                if cmath.isclose(zpn, 0, abs_tol=1e-8) and cmath.isclose(zn, 0, abs_tol=1e-8):
                     warn_external(
                         f"The line model {id!r} does not have neutral elements. It will be modelled as a 3 wires line "
                         f"instead.",
@@ -379,7 +379,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
             # Check the validity of the resulting matrices
             det_z = nplin.det(z_line)
-            if np.isclose(abs(det_z), 0):
+            if math.isclose(abs(det_z), 0, abs_tol=1e-8):
                 if choice == 0:
                     # Warn the user that the PwF data are bad...
                     logger.warning(
@@ -1618,7 +1618,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         """Line parameters constructor from dict.
 
         Args:
@@ -1764,7 +1764,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode[f"BAD_{name.upper()}_VALUE"])
             else:
-                return np.array([value for _ in range(size)], dtype=np.float64)
+                return np.array([value] * size, dtype=np.float64)
         else:
             if np.all(value_isna):
                 return None
@@ -1777,7 +1777,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode[f"BAD_{name.upper()}_VALUE"])
 
             # Build the numpy array fails with pd.NA inside
-            values = np.array(value, dtype=np.float64)
+            values = np.asarray(value, dtype=np.float64)
             if len(value) != size:
                 msg = f"Incorrect number of {name}: {len(value)} instead of {size}."
                 logger.error(msg)

@@ -177,8 +177,7 @@ en.res_switches[["current1"]].transform([np.abs, ft.partial(np.angle, deg=True)]
 ## API Reference
 
 ```{eval-rst}
-.. autoapiclass:: roseau.load_flow.models.Switch
+.. autoapiclass:: roseau.load_flow.Switch
    :members:
-   :show-inheritance:
    :no-index:
 ```

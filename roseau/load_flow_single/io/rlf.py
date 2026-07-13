@@ -9,13 +9,13 @@ from roseau.load_flow.typing import ComplexArray, Id, JsonDict
 from roseau.load_flow.utils import warn_external
 from roseau.load_flow_single.io.common import NetworkElements
 from roseau.load_flow_single.models import (
-    AbstractLoad,
     Bus,
     CurrentLoad,
     FlexibleParameter,
     ImpedanceLoad,
     Line,
     LineParameters,
+    Load,
     PowerLoad,
     Switch,
     Transformer,
@@ -272,7 +272,7 @@ def network_from_rlf(  # noqa: C901
         sources[src_s.id] = src_s
 
     # Convert loads
-    loads: dict[Id, AbstractLoad] = {}
+    loads: dict[Id, Load] = {}
     for ld_m in en_m.loads.values():
         ph = ld_m.phases
         if "abc" not in ph:
@@ -314,6 +314,7 @@ def network_from_rlf(  # noqa: C901
 
     return (
         {
+            "name": en_m.name,
             "buses": buses,
             "lines": lines,
             "transformers": transformers,

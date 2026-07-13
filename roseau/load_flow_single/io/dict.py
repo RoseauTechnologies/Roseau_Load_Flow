@@ -6,7 +6,6 @@ from and to dictionaries, or the methods `ElectricalNetwork.from_json` and `Elec
 to read and write networks from and to JSON files.
 """
 
-import copy
 import logging
 from typing import TYPE_CHECKING
 
@@ -22,6 +21,7 @@ from roseau.load_flow_single.models import (
     Bus,
     Line,
     LineParameters,
+    Load,
     Switch,
     Transformer,
     TransformerParameters,
@@ -51,8 +51,6 @@ def network_from_dict(
         The buses, lines, transformers, switches, loads, and sources to construct the electrical
         network and a boolean indicating if the network has results.
     """
-    data = copy.deepcopy(data)  # Make a copy to avoid modifying the original
-
     # Check that the network is single phase with a clear error message
     is_multiphase = data.get("is_multiphase", True)
     if is_multiphase:
@@ -60,6 +58,9 @@ def network_from_dict(
             "Trying to import a multi-phase network as a single-phase network. Did you mean to use "
             "`rlf.ElectricalNetwork` instead of `rlfs.ElectricalNetwork`?"
         )
+
+    # Name
+    name = data.get("name", "Network")
 
     # Check the version, 3 was the first version to support RLFS
     version = data["version"]
@@ -90,29 +91,29 @@ def network_from_dict(
 
     # Lines and transformers parameters
     lines_params = {
-        lp["id"]: LineParameters.from_dict(data=lp, include_results=include_results) for lp in data["lines_params"]
+        lp["id"]: LineParameters._from_dict(data=lp, include_results=include_results) for lp in data["lines_params"]
     }
     transformers_params = {
-        tp["id"]: TransformerParameters.from_dict(data=tp, include_results=include_results)
+        tp["id"]: TransformerParameters._from_dict(data=tp, include_results=include_results)
         for tp in data["transformers_params"]
     }
 
     # Buses, loads and sources
     buses: dict[Id, Bus] = {}
     for bus_data in data["buses"]:
-        bus = Bus.from_dict(data=bus_data, include_results=include_results)
+        bus = Bus._from_dict(data=bus_data, include_results=include_results)
         buses[bus.id] = bus
         has_results = has_results and not bus._no_results
-    loads: dict[Id, AbstractLoad] = {}
+    loads: dict[Id, Load] = {}
     for load_data in data["loads"]:
         load_data["bus"] = buses[load_data["bus"]]
-        load = AbstractLoad.from_dict(data=load_data, include_results=include_results)
+        load = AbstractLoad._from_dict(data=load_data, include_results=include_results)
         loads[load.id] = load
         has_results = has_results and not load._no_results
     sources: dict[Id, VoltageSource] = {}
     for source_data in data["sources"]:
         source_data["bus"] = buses[source_data["bus"]]
-        source = VoltageSource.from_dict(data=source_data, include_results=include_results)
+        source = VoltageSource._from_dict(data=source_data, include_results=include_results)
         sources[source.id] = source
         has_results = has_results and not source._no_results
 
@@ -122,7 +123,7 @@ def network_from_dict(
         line_data["bus1"] = buses[line_data["bus1"]]
         line_data["bus2"] = buses[line_data["bus2"]]
         line_data["parameters"] = lines_params[line_data.pop("params_id")]
-        line = Line.from_dict(data=line_data, include_results=include_results)
+        line = Line._from_dict(data=line_data, include_results=include_results)
         lines[line.id] = line
         has_results = has_results and not line._no_results
 
@@ -132,7 +133,7 @@ def network_from_dict(
         transformer_data["bus_hv"] = buses[transformer_data["bus_hv"]]
         transformer_data["bus_lv"] = buses[transformer_data["bus_lv"]]
         transformer_data["parameters"] = transformers_params[transformer_data.pop("params_id")]
-        transformer = Transformer.from_dict(data=transformer_data, include_results=include_results)
+        transformer = Transformer._from_dict(data=transformer_data, include_results=include_results)
         transformers[transformer.id] = transformer
         has_results = has_results and not transformer._no_results
 
@@ -141,7 +142,7 @@ def network_from_dict(
     for switch_data in data["switches"]:
         switch_data["bus1"] = buses[switch_data["bus1"]]
         switch_data["bus2"] = buses[switch_data["bus2"]]
-        switch = Switch.from_dict(data=switch_data, include_results=include_results)
+        switch = Switch._from_dict(data=switch_data, include_results=include_results)
         switches[switch.id] = switch
         has_results = has_results and not switch._no_results
 
@@ -156,6 +157,7 @@ def network_from_dict(
 
     return (
         {
+            "name": name,
             "buses": buses,
             "lines": lines,
             "transformers": transformers,
@@ -240,6 +242,7 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
 
     res = {
         "version": NETWORK_JSON_VERSION,
+        "name": en.name,
         "is_multiphase": False,
         "crs": crs,
         "buses": buses,

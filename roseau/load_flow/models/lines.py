@@ -1,5 +1,5 @@
 import logging
-from typing import Final, Self
+from typing import Final, Self, final
 
 import numpy as np
 from shapely.geometry.base import BaseGeometry
@@ -17,7 +17,9 @@ from roseau.load_flow_engine.cy_engine import CyShuntLine, CySimplifiedLine
 logger = logging.getLogger(__name__)
 
 
-class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
+# The Cy* types are stringified so that autoapi/astroid can resolve inheritance for the documentation.
+@final
+class Line(AbstractBranch["LineSide", "CyShuntLine | CySimplifiedLine"]):
     """An electrical line PI model with series impedance and optional shunt admittance."""
 
     element_type: Final = "line"
@@ -153,10 +155,9 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
                 self._cy_element.update_line_parameters(z_line=self._z_line.ravel())
 
     @property
-    @ureg_wraps("km", (None,))
     def length(self) -> Q_[float]:
         """The length of the line (in km)."""
-        return self._length
+        return Q_(self._length, "km")
 
     @length.setter
     @ureg_wraps(None, (None, "km"))
@@ -210,22 +211,19 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
             self._update_internal_parameters()
 
     @property
-    @ureg_wraps("ohm", (None,))
     def z_line(self) -> Q_[ComplexMatrix]:
         """Impedance of the line (in Ohm)."""
-        return self._parameters._z_line * self._length
+        return Q_(self._parameters._z_line * self._length, "ohm")
 
     @property
-    @ureg_wraps("S", (None,))
     def y_shunt(self) -> Q_[ComplexMatrix]:
         """Shunt admittance of the line (in Siemens)."""
-        return self._parameters._y_shunt * self._length
+        return Q_(self._parameters._y_shunt * self._length, "S")
 
     @property
-    @ureg_wraps("", (None,))
     def max_loading(self) -> Q_[float]:
         """The maximum loading of the line (unitless)"""
-        return self._max_loading
+        return Q_(self._max_loading, "")
 
     @max_loading.setter
     @ureg_wraps(None, (None, ""))
@@ -317,46 +315,41 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
             return "normal"
 
     @property
-    @ureg_wraps("V", (None,))
     def res_ground_potential(self) -> Q_[complex]:
         """Get the potential of the ground port of the shunt line (in V)."""
-        return self._res_ground_potential_getter(warning=True)
+        return Q_(self._res_ground_potential_getter(warning=True), "V")
 
     @property
-    @ureg_wraps("A", (None,))
     def res_series_currents(self) -> Q_[ComplexArray]:
         """Get the current in the series elements of the line (in A)."""
-        return self._res_series_currents_getter(warning=True)
+        return Q_(self._res_series_currents_getter(warning=True), "A")
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_series_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the series elements of the line (in VA)."""
-        return self._res_series_power_losses_getter(warning=True)
+        return Q_(self._res_series_power_losses_getter(warning=True), "VA")
 
     @property
-    @ureg_wraps(("A", "A"), (None,))
     def res_shunt_currents(self) -> tuple[Q_[ComplexArray], Q_[ComplexArray]]:
         """Get the currents in the shunt elements of the line (in A)."""
         return (
-            self._side1._res_shunt_currents_getter(warning=True),
-            self._side2._res_shunt_currents_getter(warning=False),  # warn only once
-        )  # type: ignore
+            Q_(self._side1._res_shunt_currents_getter(warning=True), "A"),
+            Q_(self._side2._res_shunt_currents_getter(warning=False), "A"),  # warn only once
+        )
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_shunt_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the shunt elements of the line (in VA)."""
-        return (
+        return Q_(
             self._side1._res_shunt_losses_getter(warning=True)
-            + self._side2._res_shunt_losses_getter(warning=False)  # warn only once
-        )  # type: ignore
+            + self._side2._res_shunt_losses_getter(warning=False),  # warn only once
+            "VA",
+        )
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_power_losses(self) -> Q_[ComplexArray]:
         """Get the power losses in the line (in VA)."""
-        return self._res_power_losses_getter(warning=True)
+        return Q_(self._res_power_losses_getter(warning=True), "VA")
 
     @property
     def res_loading(self) -> Q_[FloatArray] | None:
@@ -377,9 +370,9 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         results = data.get("results", None)
-        self = super().from_dict(data, include_results=include_results)
+        self = super()._from_dict(data, include_results=include_results)
         if include_results and results and self.with_shunt:
             self._res_ground_potential = complex(*results["ground_potential"])
         return self
@@ -426,6 +419,7 @@ class Line(AbstractBranch["LineSide", CyShuntLine | CySimplifiedLine]):
         return results
 
 
+@final
 class LineSide(AbstractBranchSide):
     element_type = "line"
     allowed_phases = Line.allowed_phases  # type: ignore
@@ -451,13 +445,11 @@ class LineSide(AbstractBranchSide):
         return potentials * currents.conjugate()
 
     @property
-    @ureg_wraps("A", (None,))
     def res_shunt_currents(self) -> Q_[ComplexArray]:
         """Get the currents in the shunt elements of the line side (in A)."""
-        return self._res_shunt_currents_getter(warning=True)  # type: ignore
+        return Q_(self._res_shunt_currents_getter(warning=True), "A")
 
     @property
-    @ureg_wraps("VA", (None,))
     def res_shunt_losses(self) -> Q_[ComplexArray]:
         """Get the losses in the shunt elements of the line side (in VA)."""
-        return self._res_shunt_losses_getter(warning=True)  # type: ignore
+        return Q_(self._res_shunt_losses_getter(warning=True), "VA")

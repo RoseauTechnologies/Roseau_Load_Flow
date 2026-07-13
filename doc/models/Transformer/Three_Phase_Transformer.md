@@ -62,9 +62,9 @@ connection on the LV side.
 
 ## Winding configurations
 
-_Roseau Load Flow_ supports most of the 2-winding transformer configurations as defined in the IEC 60076-1 standard.
+_Roseau Load Flow_ supports 2-winding transformer configurations as defined in the IEC 60076-1 standard.
 
-The following common connections are supported:
+The following "Common Connections" are supported:
 
 ```{image} /_static/Transformer/Common_Connections.svg
 ---
@@ -74,7 +74,7 @@ align: center
 ---
 ```
 
-The following additional connections are also supported:
+The following "Additional Connections" are also supported:
 
 ```{image} /_static/Transformer/Additional_Connections.svg
 ---
@@ -84,8 +84,34 @@ align: center
 ---
 ```
 
-Note that the neutral connection is omitted in the diagrams above for simplicity. All _Wye_ and _Zigzag_ connections,
-whether on the HV side or on the LV side, may have a neutral connection brought out.
+In addition to the IEC 60076-1 standard connections above, _Roseau Load Flow_ also supports the following "untrue" _Yy_
+connections that are not defined in IEC 60076-1. They are obtained from their corresponding "true" _Yy_ group by
+cyclically transposing the phases on the LV side:
+
+```{list-table}
+---
+header-rows: 1
+align: center
+---
+* - Untrue group
+  - Derived from
+  - LV phase transposition
+* - _Yy2_
+  - _Yy6_
+  - __abc__ with __bca__
+* - _Yy8_
+  - _Yy0_
+  - __abc__ with __bca__
+* - _Yy4_
+  - _Yy0_
+  - __abc__ with __cab__
+* - _Yy10_
+  - _Yy6_
+  - __abc__ with __cab__
+```
+
+Note that the neutral connection is omitted in the diagrams and table above for simplicity. All _Wye_ and _Zigzag_
+connections, whether on the HV side or on the LV side, may have a neutral connection brought out.
 
 ## Equations
 
@@ -109,10 +135,15 @@ The following equations are used to model 3-phase transformers:
 \right.
 ```
 
-Where $\underline{Z_2}$ is the series impedance and $\underline{Y_{\mathrm{m}}}$ is the magnetizing admittance of the
-transformer. $o_r$ is the orientation variable, equals to $1$ for direct windings, i.e. windings with the hour index in
-the top half of the clock, and $-1$ for inverse windings, i.e. windings with the hour index in the bottom half of the
-clock. The other quantities are the matrices defined below.
+Where:
+
+- $\underline{Z_2}$ and $\underline{Y_{\mathrm{m}}}$ are the series impedance and magnetizing admittance
+- $o_r$ is the "orientation" variable, equals to $1$ for direct windings, i.e. windings with the "true" hour index in
+  the top half of the clock, and $-1$ for inverse windings, i.e. windings with the "true" hour index in the bottom half
+  of the clock.
+- $\underline{V}$, $\underline{U}$, and $\underline{I}$ are the voltage and current vectors as shown in the diagrams
+  above
+- $M$ and $K$ are the transformation and winding matrices defined below
 
 ## Matrices
 
@@ -248,11 +279,27 @@ align: center
   - $0_3$
 
 * - _y_
-  - _all_
+  - 0,6,1,5,7,11
   - $I_3$
   - $I_3$
   - $I_3$
   - $I_3$
+  - $1_3$
+
+* - _y_
+  - 2,8 _(untrue)_
+  - $S_3$
+  - $I_3$
+  - $I_3$
+  - $S_3^T$
+  - $1_3$
+
+* - _y_
+  - 4,10 _(untrue)_
+  - $S_3^T$
+  - $I_3$
+  - $I_3$
+  - $S_3$
   - $1_3$
 
 * - _z_

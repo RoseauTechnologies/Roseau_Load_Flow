@@ -1,4 +1,6 @@
+import cmath
 import logging
+import math
 import re
 from functools import lru_cache
 from importlib import resources
@@ -8,11 +10,12 @@ from typing import Final, Literal, NoReturn, Self
 import numpy as np
 import pandas as pd
 
+from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.types import TransformerCooling, TransformerInsulation
-from roseau.load_flow.typing import FloatArrayLike1D, Id, JsonDict
+from roseau.load_flow.typing import Complex, Float, Id, JsonDict, QtyOrMag
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin
+from roseau.load_flow.utils import CatalogueMixin, Identifiable, JsonMixin, pretty_unit, warn_external
 from roseau.load_flow_engine.cy_engine import (
     CyCenterTransformer,
     CySingleTransformer,
@@ -44,6 +47,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         "Dy7", "Dyn7", "Yz7", "YNz7", "Yzn7", "YNzn7", "Yd7", "YNd7",
         "Dd8", "Dz8", "Dzn8",
         "Dd10", "Dz10", "Dzn10",
+        # Untrue connections (Yy with clock numbers 2, 4, 8, 10)
+        "Yy2", "YNy2", "Yyn2", "YNyn2",
+        "Yy4", "YNy4", "Yyn4", "YNyn4",
+        "Yy8", "YNy8", "Yyn8", "YNyn8",
+        "Yy10", "YNy10", "Yyn10", "YNyn10",
         # Single-phase transformers
         "Ii0", "Iii0",
         "Ii6", "Iii6",
@@ -57,12 +65,12 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         id: Id,
         *,
         vg: str,
-        uhv: float | Q_[float],
-        ulv: float | Q_[float],
-        sn: float | Q_[float],
-        z2: complex | Q_[complex],
-        ym: complex | Q_[complex],
-        fn: float | Q_[float] | None = None,
+        uhv: QtyOrMag[Float],
+        ulv: QtyOrMag[Float],
+        sn: QtyOrMag[Float],
+        z2: QtyOrMag[Complex],
+        ym: QtyOrMag[Complex],
+        fn: QtyOrMag[Float] | None = None,
         manufacturer: str | None = None,
         range: str | None = None,
         efficiency: str | None = None,
@@ -134,16 +142,23 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 Informative only, it has no impact on the load flow.
         """
         super().__init__(id)
+        sn = float(sn)
+        uhv = float(uhv)
+        ulv = float(ulv)
+        if fn is not None:
+            fn = float(fn)
+        z2 = complex(z2)
+        ym = complex(ym)
 
         # Check
         if uhv < ulv:
             msg = (
                 f"Transformer parameters {id!r} has the low voltage higher than the high voltage: "
-                f"uhv={uhv!s} V and ulv={ulv!s} V."
+                f"uhv={uhv} V and ulv={ulv} V."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_VOLTAGES)
-        if np.isclose(z2, 0.0):
+        if cmath.isclose(z2, 0, abs_tol=1e-8):
             msg = (
                 f"Transformer parameters {id!r} has a null series impedance z2. Ideal transformers "
                 f"are not supported yet."
@@ -169,11 +184,11 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         # Change the voltages if the reference voltages is phase-to-neutral
         if whv[0] == "Y":
-            uhv /= np.sqrt(3.0)
+            uhv /= SQRT3
         elif whv[0] == "Z":
             uhv /= 3.0
         if wlv[0] == "y":
-            ulv /= np.sqrt(3.0)
+            ulv /= SQRT3
         elif wlv[0] == "z":
             ulv /= 3.0
 
@@ -199,20 +214,22 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     def __repr__(self) -> str:
         s = f"<{type(self).__name__}: id={self.id!r}, vg={self._vg!r}, sn={self._sn}, uhv={self._uhv}, ulv={self._ulv}"
-        for attr, val, tp in (
-            ("fn", self._fn, float),
-            ("p0", self._p0, float),
-            ("i0", self._i0, float),
-            ("psc", self._psc, float),
-            ("vsc", self._vsc, float),
-            ("manufacturer", self._manufacturer, str),
-            ("range", self._range, str),
-            ("efficiency", self._efficiency, str),
-            ("cooling", self._cooling, str),
-            ("insulation", self._insulation, str),
+        for attr, val in (
+            ("fn", self._fn),
+            ("p0", self._p0),
+            ("i0", self._i0),
+            ("psc", self._psc),
+            ("vsc", self._vsc),
+            ("manufacturer", self._manufacturer),
+            ("range", self._range),
+            ("efficiency", self._efficiency),
+            ("cooling", self._cooling),
+            ("insulation", self._insulation),
         ):
             if val is not None:
-                s += f", {attr}={tp(val)!r}"
+                if isinstance(val, str):
+                    val = str(val)  # normalize enumerations
+                s += f", {attr}={val!r}"
         s += ">"
         return s
 
@@ -280,45 +297,39 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     phase_displacement = clock
 
     @property
-    @ureg_wraps("V", (None,))
     def uhv(self) -> Q_[float]:
         """Rated phase-to-phase voltage of the HV side (V)."""
-        return self._uhv
+        return Q_(self._uhv, "V")
 
     @property
-    @ureg_wraps("V", (None,))
     def ulv(self) -> Q_[float]:
         """Rated no-load phase-to-phase voltage of the LV side (V)."""
-        return self._ulv
+        return Q_(self._ulv, "V")
 
     @property
-    @ureg_wraps("VA", (None,))
     def sn(self) -> Q_[float]:
         """The nominal power of the transformer (VA)."""
-        return self._sn
+        return Q_(self._sn, "VA")
 
     @property
-    def fn(self) -> Q_[float]:
+    def fn(self) -> Q_[float] | None:
         """The nominal frequency of the transformer (Hz)."""
         return Q_(self._fn, "Hz") if self._fn is not None else None
 
     @property
-    @ureg_wraps("ohm", (None,))
     def z2(self) -> Q_[complex]:
         """The series impedance of the transformer (Ohm)."""
-        return self._z2
+        return Q_(self._z2, "ohm")
 
     @property
-    @ureg_wraps("S", (None,))
     def ym(self) -> Q_[complex]:
         """The magnetizing admittance of the transformer (S)."""
-        return self._ym
+        return Q_(self._ym, "S")
 
     @property
-    @ureg_wraps("", (None,))
     def k(self) -> Q_[float]:
         """The transformation ratio of the transformer."""
-        return self._k
+        return Q_(self._k, "")
 
     @property
     def orientation(self) -> float:
@@ -395,10 +406,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         """The insulation technology of the transformer (dry-type, liquid-immersed, gas-filled)."""
         return self._insulation
 
+    def _rating_pretty(self) -> str:
+        """Return a pretty string representation of the transformer rating."""
+        return f"{pretty_unit(self._sn, 'VA')} - {pretty_unit(self._uhv, 'V')} / {pretty_unit(self._ulv, 'V')}"
+
     @classmethod
     def _compute_zy(
-        cls, vg: str, uhv: float, ulv: float, sn: float, p0: float, i0: float, psc: float, vsc: float
-    ) -> tuple[complex, complex]:
+        cls, vg: str, uhv: Float, ulv: Float, sn: Float, p0: Float, i0: Float, psc: Float, vsc: Float
+    ) -> tuple[Complex, Complex]:
         whv, wlv, _ = cls.extract_windings(vg=vg)
 
         # Open-circuit (no-load) test
@@ -465,16 +480,16 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         id: Id,
         *,
         tech: Literal[2, "single-phase", 3, "three-phase"],
-        sn: float | Q_[float],
-        uhv: float | Q_[float],
-        ulv: float | Q_[float],
+        sn: QtyOrMag[Float],
+        uhv: QtyOrMag[Float],
+        ulv: QtyOrMag[Float],
         vg_hv: str,
         vg_lv: str,
         phase_shift: int,
-        uk: float | Q_[float],
-        pc: float | Q_[float],
-        curmg: float | Q_[float],
-        pfe: float | Q_[float],
+        uk: QtyOrMag[Float],
+        pc: QtyOrMag[Float],
+        curmg: QtyOrMag[Float],
+        pfe: QtyOrMag[Float],
         # Roseau parameters
         manufacturer: str | None = None,
         range: str | None = None,
@@ -571,36 +586,22 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_TYPE)
 
-        uhv *= 1e3
-        ulv *= 1e3
-        sn *= 1e6
-        p0 = pfe * 1e3
-        psc = pc * 1e3
-        i0 = curmg / 100
-        vsc = uk / 100
-
-        z2, ym = cls._compute_zy(vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
-
-        instance = cls(
+        return cls.from_open_and_short_circuit_tests(
             id=id,
             vg=vg,
-            uhv=uhv,
-            ulv=ulv,
-            sn=sn,
-            z2=z2,
-            ym=ym,
+            uhv=uhv * 1e3,
+            ulv=ulv * 1e3,
+            sn=sn * 1e6,
+            p0=pfe * 1e3,
+            i0=curmg / 100,
+            psc=pc * 1e3,
+            vsc=uk / 100,
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
             cooling=cooling,
             insulation=insulation,
         )
-        instance._p0 = p0
-        instance._i0 = i0
-        instance._psc = psc
-        instance._vsc = vsc
-        instance._has_test_results = True
-        return instance
 
     @classmethod
     @ureg_wraps(
@@ -622,21 +623,25 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             None,
             None,
             None,
+            None,
+            None,
         ),
     )
-    def from_open_dss(
+    def from_open_dss(  # noqa: C901
         cls,
         id: Id,
         *,
-        conns: tuple[str, str],
-        kvs: tuple[float, float] | FloatArrayLike1D,
-        kvas: float | Q_[float] | tuple[float, float] | FloatArrayLike1D,
-        leadlag: str,
-        xhl: float,
-        loadloss: float | Q_[float] | None = None,
-        noloadloss: float | Q_[float] = 0,
-        imag: float | Q_[float] = 0,
-        rs: float | Q_[float] | tuple[float, float] | FloatArrayLike1D | None = None,
+        conns: tuple[str, ...],
+        kvs: QtyOrMag[tuple[Float, ...]],
+        kvas: QtyOrMag[Float | tuple[Float, ...]],
+        xhl: QtyOrMag[Float],
+        leadlag: str = "ansi",
+        loadloss: QtyOrMag[Float] | None = None,
+        noloadloss: QtyOrMag[Float] = 0,
+        imag: QtyOrMag[Float] = 0,
+        rs: QtyOrMag[Float | tuple[Float, ...]] | None = None,
+        phases: int = 3,
+        windings: int = 2,
         # Roseau parameters
         manufacturer: str | None = None,
         range: str | None = None,
@@ -657,8 +662,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 connected banks or {delta | ll} for delta (line-line) connected banks.
 
             kvs:
-                OpenDSS parameter: `KVs`. Rated phase-to-phase voltage of the windings, kV. This is
-                a sequence of two values equivalent to (Up, Us).
+                OpenDSS parameter: `KVs`. Rated voltage of the windings kV. For 3-phase transformers,
+                enter phase-to-phase kV. For single-phase transformers, enter actual winding kV
+                rating.
 
             kvas:
                 OpenDSS parameter: `KVAs`. Base kVA rating (OA rating) of the windings. Note that
@@ -692,6 +698,13 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 with `loadloss`, they have to have equivalent values. For a two-winding transformer,
                 `%rs=[0.1, 0.1]` is equivalent to `%loadloss=0.2`.
 
+            phases:
+                OpenDSS parameter: `Phases`. Number of phases. Default is 3.
+
+            windings:
+                OpenDSS parameter: `Windings`. Number of windings. Default is 2. Only two-winding
+                transformers are currently supported.
+
             manufacturer:
                 The name of the manufacturer for the transformer. Informative only, it has no impact
                 on the load flow.
@@ -718,7 +731,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         Example usage::
 
-            # DSS command: `New transformer.LVTR Buses=[sourcebus, A.1.2.3] Conns=[delta wye] KVs=[11, 0.4] KVAs=[250 250] %Rs=0.00 xhl=2.5 %loadloss=0`
+            # DSS command:
+            # New transformer.LVTR Buses=[sourcebus, A.1.2.3] Conns=[delta wye] KVs=[11, 0.4]
+            # ~ KVAs=[250 250] %Rs=0.00 xhl=2.5 %loadloss=0
             tp = rlf.TransformerParameters.from_open_dss(
                 id="dss-tp",
                 conns=("delta", "wye"),
@@ -732,7 +747,23 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 rs=0,  # redundant with `loadloss=0`
             )
         """
+        # Phases
+        if phases not in (1, 3):
+            msg = f"Only single-phase or three-phase transformers are currently supported, got {phases} phases."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_PHASES)
+
         # Windings
+        if windings != 2:
+            # TODO convert 3-winding single-phase transformers to center tapped
+            # See https://opendss.epri.com/ModelingSingle-PhaseTransformers.html
+            msg = f"Only 2-winding transformers are currently supported, got windings={windings}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS)
+        if len(conns) != windings:
+            msg = f"Expected {windings} connections, got {len(conns)}: {conns!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS)
         whv, wlv = (c.lower() for c in conns)
         wye_names = ("wye", "ln")
         delta_names = ("delta", "ll")
@@ -743,7 +774,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         else:
             msg = f"Got unknown winding (1) connection {conns[0]!r}, expected one of ('wye', 'ln', 'delta', 'll')."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS)
         if wlv in wye_names:
             wlv = "yn"
         elif wlv in delta_names:
@@ -751,7 +782,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         else:
             msg = f"Got unknown winding (2) connection {conns[1]!r}, expected one of ('wye', 'ln', 'delta', 'll')."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS)
 
         # Lead lag
         leadlag_l = leadlag.lower()
@@ -763,7 +794,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             else:
                 msg = f"Got unknown leadlag value {leadlag!r}, expected one of ('lead', 'lag', 'ansi', 'euro')"
                 logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_WINDINGS)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS)
         else:
             clock = 0  # TODO is leadlag used with Dd or Yy transformers?
 
@@ -771,63 +802,77 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         vg = f"{whv}{wlv}{clock}"
 
         # High and low rated voltages
-        uhv, ulv = (u * 1000 for u in kvs)  # in Volts
+        if len(kvs) != windings:
+            msg = f"Expected {windings} kV ratings, got {len(kvs)}: {kvs!r}"
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS)
+        uhv, ulv = kvs
+        if phases == 1:
+            vg = "Ii0"
+            # According to the OpenDSS documentation, for 2- or 3-phase transformers, the kV ratings
+            # are line-to-line, but for 1-phase transformers, the kV ratings are actual winding ratings.
+            if whv[0] == "Y":
+                uhv *= SQRT3
+            if wlv[0] == "y":
+                ulv *= SQRT3
 
         # Nominal power
-        sn: float  # in Watts
-        if np.isscalar(kvas):
-            sn = kvas * 1000
-        else:
-            kvs_uniq = np.unique(kvas)
-            if len(kvs_uniq) > 1:
-                logger.warning(
-                    f"Only one base kVA rating is expected, got {kvs_uniq!r}. Only the first one will be used"
-                )
-            sn = kvs_uniq[0] * 1000
+        if not np.isscalar(kvas):
+            if len(kvas) != windings:
+                msg = f"Expected {windings} kVA ratings, got {len(kvas)}: {kvas!r}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS)
+            if (n_kvas := len(np.unique(kvas))) > 1:
+                warn_external(f"Only one base kVA rating is expected, got {n_kvas}. Only the first one will be used")
+            kvas = kvas[0]
+        sn = kvas * 1e3
 
-        # Z2 and Ym
-        rs_array = [rs, rs] if np.isscalar(rs) else rs
-        if loadloss is None:
-            if rs is None:
-                raise TypeError("from_open_dss() missing 1 required keyword argument: 'loadloss' or 'rs'")
-            else:
-                r1, r2 = rs_array
-                loadloss = r1 + r2
-        elif not np.isscalar(loadloss):
+        # Load losses
+        if loadloss is not None and not np.isscalar(loadloss):
             msg = f"%Loadloss must be a scalar, got {loadloss!r}"
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_LOSS)
-        elif rs is not None and not np.isclose(sum(rs_array), loadloss):
-            msg = f"The values of rs={rs!r} are not equivalent to the value of loadloss={loadloss!r}"
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_LOSS)
+        if rs is None:
+            if loadloss is None:
+                raise TypeError("from_open_dss() missing 1 required keyword argument: 'loadloss' or 'rs'")
+        elif np.isscalar(rs):
+            rs = float(rs)
+            if loadloss is None:
+                loadloss = rs * windings
+            elif not math.isclose(rs * windings, loadloss, abs_tol=1e-8):
+                warn_external(
+                    f"rs={rs} is not consistent with loadloss={loadloss} for {windings} windings. "
+                    f"Only the value of loadloss will be used and rs will be ignored."
+                )
+        else:
+            if len(rs) != windings:
+                msg = f"Expected {windings} %Rs values, got {len(rs)}: {rs!r}"
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DSS_BAD_WINDINGS)
+            if loadloss is None:
+                loadloss = float(sum(rs))
+            elif not math.isclose(sum(rs), loadloss, abs_tol=1e-8):
+                warn_external(
+                    f"The sum of rs={rs!r} is not equal to the value of loadloss={loadloss!r}. "
+                    f"Only the value of loadloss will be used and rs will be ignored."
+                )
 
-        p0 = (noloadloss / 100) * sn
-        i0 = imag / 100
-        psc = (loadloss / 100) * sn
-        vsc = xhl / 100
-        z2, ym = cls._compute_zy(vg=vg, uhv=uhv, ulv=ulv, sn=sn, p0=p0, i0=i0, psc=psc, vsc=vsc)
-
-        instance = cls(
+        return cls.from_open_and_short_circuit_tests(
             id=id,
             vg=vg,
-            uhv=uhv,
-            ulv=ulv,
+            uhv=uhv * 1e3,
+            ulv=ulv * 1e3,
             sn=sn,
-            z2=z2,
-            ym=ym,
+            p0=(noloadloss / 100) * sn,
+            i0=imag / 100,
+            psc=(loadloss / 100) * sn,
+            vsc=math.sqrt(xhl**2 + loadloss**2) / 100,
             manufacturer=manufacturer,
             range=range,
             efficiency=efficiency,
             cooling=cooling,
             insulation=insulation,
         )
-        instance._p0 = p0
-        instance._i0 = i0
-        instance._psc = psc
-        instance._vsc = vsc
-        instance._has_test_results = True
-        return instance
 
     #
     # Open and short circuit tests
@@ -839,14 +884,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         id: Id,
         *,
         vg: str,
-        uhv: float | Q_[float],
-        ulv: float | Q_[float],
-        sn: float | Q_[float],
-        p0: float | Q_[float],
-        i0: float | Q_[float],
-        psc: float | Q_[float],
-        vsc: float | Q_[float],
-        fn: float | Q_[float] | None = None,
+        uhv: QtyOrMag[Float],
+        ulv: QtyOrMag[Float],
+        sn: QtyOrMag[Float],
+        p0: QtyOrMag[Float],
+        i0: QtyOrMag[Float],
+        psc: QtyOrMag[Float],
+        vsc: QtyOrMag[Float],
+        fn: QtyOrMag[Float] | None = None,
         manufacturer: str | None = None,
         range: str | None = None,
         efficiency: str | None = None,
@@ -968,10 +1013,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
             cooling=cooling,
             insulation=insulation,
         )
-        instance._p0 = p0
-        instance._i0 = i0
-        instance._psc = psc
-        instance._vsc = vsc
+        instance._p0 = float(p0)
+        instance._i0 = float(i0)
+        instance._psc = float(psc)
+        instance._vsc = float(vsc)
         instance._has_test_results = True
         return instance
 
@@ -1018,7 +1063,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     # Json Mixin interface
     #
     @classmethod
-    def from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
         if "p0" in data:
             # TODO should we validate z2 and ym if they exist?
             return cls.from_open_and_short_circuit_tests(
@@ -1059,9 +1104,9 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         # Make sure z2 and ym are not numpy types (for JSON serialization)
-        z2 = complex(self._z2)
-        ym = complex(self._ym)
-        data = {
+        z2 = self._z2
+        ym = self._ym
+        data: JsonDict = {
             "id": self.id,
             "vg": self._vg,
             "sn": self._sn,
@@ -1185,10 +1230,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         cooling: str | None,
         insulation: str | None,
         vg: str | re.Pattern[str] | None,
-        sn: float | None,
-        uhv: float | None,
-        ulv: float | None,
-        fn: float | None,
+        sn: Float | None,
+        uhv: Float | None,
+        ulv: Float | None,
+        fn: Float | None,
         raise_if_not_found: bool,
     ) -> tuple[pd.DataFrame, str]:
         # Get the catalogue data
@@ -1286,10 +1331,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         cooling: str | TransformerCooling | None = None,
         insulation: str | TransformerInsulation | None = None,
         vg: str | re.Pattern[str] | None = None,
-        sn: float | Q_[float] | None = None,
-        uhv: float | Q_[float] | None = None,
-        ulv: float | Q_[float] | None = None,
-        fn: float | Q_[float] | None = None,
+        sn: QtyOrMag[Float] | None = None,
+        uhv: QtyOrMag[Float] | None = None,
+        ulv: QtyOrMag[Float] | None = None,
+        fn: QtyOrMag[Float] | None = None,
         id: Id | None = None,
     ) -> Self:
         """Build a transformer parameters from one in the catalogue.
@@ -1373,14 +1418,14 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         return cls.from_open_and_short_circuit_tests(
             id=id,
             vg=catalogue_data.at[idx, "vg"],
-            uhv=catalogue_data.at[idx, "uhv"].item(),
-            ulv=catalogue_data.at[idx, "ulv"].item(),
-            sn=catalogue_data.at[idx, "sn"].item(),
-            p0=catalogue_data.at[idx, "p0"].item(),
-            i0=catalogue_data.at[idx, "i0"].item(),
-            psc=catalogue_data.at[idx, "psc"].item(),
-            vsc=catalogue_data.at[idx, "vsc"].item(),
-            fn=catalogue_data.at[idx, "fn"].item(),
+            uhv=catalogue_data.at[idx, "uhv"],
+            ulv=catalogue_data.at[idx, "ulv"],
+            sn=catalogue_data.at[idx, "sn"],
+            p0=catalogue_data.at[idx, "p0"],
+            i0=catalogue_data.at[idx, "i0"],
+            psc=catalogue_data.at[idx, "psc"],
+            vsc=catalogue_data.at[idx, "vsc"],
+            fn=catalogue_data.at[idx, "fn"],
             manufacturer=catalogue_data.at[idx, "manufacturer"],
             range=catalogue_data.at[idx, "range"],
             efficiency=catalogue_data.at[idx, "efficiency"],
@@ -1400,10 +1445,10 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
         cooling: str | TransformerCooling | None = None,
         insulation: str | TransformerInsulation | None = None,
         vg: str | re.Pattern[str] | None = None,
-        sn: float | Q_[float] | None = None,
-        uhv: float | Q_[float] | None = None,
-        ulv: float | Q_[float] | None = None,
-        fn: float | Q_[float] | None = None,
+        sn: QtyOrMag[Float] | None = None,
+        uhv: QtyOrMag[Float] | None = None,
+        ulv: QtyOrMag[Float] | None = None,
+        fn: QtyOrMag[Float] | None = None,
     ) -> pd.DataFrame:
         """Get the catalogue of available transformers.
 
