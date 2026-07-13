@@ -19,7 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.14.2
 
 ```{important}
 The public license key can now be used with networks containing up to 50 buses. It was previously limited to 10 buses.
