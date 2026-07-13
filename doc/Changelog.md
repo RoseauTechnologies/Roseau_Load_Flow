@@ -43,7 +43,8 @@ The public license key can now be used with networks containing up to 50 buses. 
 - {gh-pr}`466` Avoid unnecessary copies of already array inputs.
 - {gh-pr}`465` Make results access on elements between 2x and 3x faster by making the `Q_` class lazy.
 - {gh-pr}`464` Support compact JSON output with `indent=False` and improve performance by using `orjson` if installed.
-- {gh-pr}`462` Add `name` attribute to `ElectricalNetwork` to store the name of the network.
+- {gh-pr}`462` Add `name` attribute to `ElectricalNetwork` to store the name of the network. The `crs` parameter of
+  `ElectricalNetwork.from_element` is now keyword-only.
 - {gh-pr}`460` Modify the load flow convergence check to use residuals and tolerance comparison. This fixes the case of
   convergence at exactly the number of iterations specified by the `max_iterations` parameter.
 - {gh-pr}`459` Add support for three-phase transformers with "untrue" vector groups

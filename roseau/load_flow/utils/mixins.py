@@ -657,7 +657,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             self._add_parameters("transformer", transformer.parameters)  # type: ignore
 
     @classmethod
-    def from_element(cls, initial_bus: AbstractElement, name: str = "Network", crs: CRSLike | None = None) -> Self:
+    def from_element(cls, initial_bus: AbstractElement, *, name: str = "Network", crs: CRSLike | None = None) -> Self:
         """Construct the network from only one element (bus) and add the others automatically.
 
         Args:
