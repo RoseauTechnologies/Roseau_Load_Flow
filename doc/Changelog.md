@@ -21,6 +21,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+```{important}
+The public license key can now be used with networks containing up to 50 buses. It was previously limited to 10 buses.
+```
+
 - {gh-pr}`475` {gh-issue}`446` Show more information when hovering over elements in the voltage profile and interactive
   map plots. The hover box of buses now shows the net (load - source) active and reactive powers consumed by the bus.
   Hovering over elements in the voltage profile plots now shows more relevant information about the element.
