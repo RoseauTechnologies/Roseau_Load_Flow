@@ -1149,7 +1149,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
     def _get_starting_bus_id(self) -> Id:
         raise NotImplementedError
 
-    def _shortest_paths(  # noqa: C901
+    def _shortest_paths(
         self,
         source: Id,
         *,
@@ -1187,8 +1187,6 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         for n in self._elements_by_type["bus"]:
             adj.setdefault(n, {})
         for et in ("line", "transformer", "switch", "regulator"):
-            if et not in self._elements_by_type:
-                continue
             for e in self._elements_by_type[et].values():
                 u, v = e.bus1.id, e.bus2.id  # type: ignore
                 edge_data = (et, e.id)
