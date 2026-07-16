@@ -178,7 +178,7 @@ class RegulatorParameters(Identifiable, JsonMixin):
         cy_element = self._create_cy_element(u_ref=float(u_ref))
         return self._compute_voltage(u_in=u_in, i_out=i_out, cy_element=cy_element)
 
-    def plot_tap(self, u_ref: Float, voltages: np.ndarray, *, ax: Axes | None = None) -> tuple[Axes, FloatArray]:
+    def plot_tap(self, u_ref: Float, voltages: np.ndarray, *, ax: "Axes | None" = None) -> tuple["Axes", FloatArray]:
         """Plot the tap position (%) as a function of load-side voltage.
 
         Args:
@@ -239,8 +239,8 @@ class RegulatorParameters(Identifiable, JsonMixin):
         return ax, taps
 
     def plot_voltage(
-        self, u_ref: Float, voltages: np.ndarray, i_out: complex = 0j, *, ax: Axes | None = None
-    ) -> tuple[Axes, FloatArray]:
+        self, u_ref: Float, voltages: np.ndarray, i_out: complex = 0j, *, ax: "Axes | None" = None
+    ) -> tuple["Axes", FloatArray]:
         """Plot the load-side voltage as a function of source-side voltage.
 
         Args:
