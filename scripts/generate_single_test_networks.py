@@ -51,6 +51,7 @@ def generate_all_elements_network() -> None:
     bus2 = rlfs.Bus(id="bus2")
     bus3 = rlfs.Bus(id="bus3")
     bus4 = rlfs.Bus(id="bus4")
+    bus5 = rlfs.Bus(id="bus5", nominal_voltage=20e3, min_voltage_level=0.95, max_voltage_level=1.05)
 
     # Voltage source
     voltage_source0 = rlfs.VoltageSource(id="voltage_source0", bus=bus0, voltage=20e3)
@@ -130,11 +131,15 @@ def generate_all_elements_network() -> None:
     load7 = rlfs.PowerLoad(id="load7", bus=bus4, power=rlfs.Q_(-100, "W"), flexible_param=fp4)
     load8 = rlfs.PowerLoad(id="load8", bus=bus4, power=rlfs.Q_(-100, "W"), flexible_param=fp5)
 
+    rp0 = rlfs.RegulatorParameters(id="rp0", sn=1e6, un=20e3, z2=0.01, ym=1e-5j, u_range=0.12, alpha=150)
+    reg0 = rlfs.VoltageRegulator(id="reg0", bus1=bus0, bus2=bus5, parameters=rp0, u_ref=1.025, max_loading=1.5)
+
     en = rlfs.ElectricalNetwork(
-        buses=[bus0, bus1, bus2, bus3, bus4],
+        buses=[bus0, bus1, bus2, bus3, bus4, bus5],
         lines=[line0, line1],
         transformers=[transformer0],
         switches=[switch0],
+        regulators=[reg0],
         loads=[load0, load1, load2, load3, load4, load5, load6, load7, load8],
         sources=[voltage_source0],
     )

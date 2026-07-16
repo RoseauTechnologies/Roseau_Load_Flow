@@ -22,9 +22,11 @@ from roseau.load_flow_single.models import (
     Line,
     LineParameters,
     Load,
+    RegulatorParameters,
     Switch,
     Transformer,
     TransformerParameters,
+    VoltageRegulator,
     VoltageSource,
 )
 
@@ -89,13 +91,17 @@ def network_from_dict(
     # Track if ALL results are included in the network
     has_results = include_results
 
-    # Lines and transformers parameters
+    # Lines, transformers, and regulators parameters
     lines_params = {
         lp["id"]: LineParameters._from_dict(data=lp, include_results=include_results) for lp in data["lines_params"]
     }
     transformers_params = {
         tp["id"]: TransformerParameters._from_dict(data=tp, include_results=include_results)
         for tp in data["transformers_params"]
+    }
+    regulators_params = {
+        rp["id"]: RegulatorParameters._from_dict(data=rp, include_results=include_results)
+        for rp in data.get("regulators_params", [])  # TODO: Make regulators mandatory in the network dict in v6
     }
 
     # Buses, loads and sources
@@ -137,6 +143,16 @@ def network_from_dict(
         transformers[transformer.id] = transformer
         has_results = has_results and not transformer._no_results
 
+    # Regulators
+    regulators: dict[Id, VoltageRegulator] = {}
+    for regulator_data in data.get("regulators", []):  # TODO: Make regulators mandatory in the network dict in v6
+        regulator_data["bus1"] = buses[regulator_data["bus1"]]
+        regulator_data["bus2"] = buses[regulator_data["bus2"]]
+        regulator_data["parameters"] = regulators_params[regulator_data.pop("params_id")]
+        regulator = VoltageRegulator._from_dict(data=regulator_data, include_results=include_results)
+        regulators[regulator.id] = regulator
+        has_results = has_results and not regulator._no_results
+
     # Switches
     switches: dict[Id, Switch] = {}
     for switch_data in data["switches"]:
@@ -161,6 +177,7 @@ def network_from_dict(
             "buses": buses,
             "lines": lines,
             "transformers": transformers,
+            "regulators": regulators,
             "switches": switches,
             "loads": loads,
             "sources": sources,
@@ -224,16 +241,28 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
         if transformer.parameters.id not in transformers_params_dict:
             transformers_params_dict[transformer.parameters.id] = transformer.parameters
 
+    # Export the regulators with their parameters
+    regulators: list[JsonDict] = []
+    regulators_params_dict: dict[Id, RegulatorParameters] = {}
+    for regulator in en.regulators.values():
+        regulators.append(regulator.to_dict(include_results=include_results))
+        if regulator.parameters.id not in regulators_params_dict:
+            regulators_params_dict[regulator.parameters.id] = regulator.parameters
+
     # Export the switches
     switches = [switch.to_dict(include_results=include_results) for switch in en.switches.values()]
 
-    # Line and transformer parameters (sorted)
+    # Line, transformer and regulator parameters (sorted)
     line_params = sorted(
         (lp.to_dict(include_results=include_results) for lp in lines_params_dict.values()),
         key=id_sort_key,
     )
     transformer_params = sorted(
         (tp.to_dict(include_results=include_results) for tp in transformers_params_dict.values()),
+        key=id_sort_key,
+    )
+    regulator_params = sorted(
+        (rp.to_dict(include_results=include_results) for rp in regulators_params_dict.values()),
         key=id_sort_key,
     )
 
@@ -248,11 +277,13 @@ def network_to_dict(en: "ElectricalNetwork", *, include_results: bool) -> JsonDi
         "buses": buses,
         "lines": lines,
         "transformers": transformers,
+        "regulators": regulators,
         "switches": switches,
         "loads": loads,
         "sources": sources,
         "lines_params": line_params,
         "transformers_params": transformer_params,
+        "regulators_params": regulator_params,
     }
     if short_circuits:
         res["short_circuits"] = short_circuits
@@ -362,3 +393,13 @@ def v4_to_v5_converter(data: JsonDict) -> JsonDict:
         results["short_circuits"] = data["short_circuits"]  # Unchanged
 
     return results
+
+
+# def v5_to_v6_converter(data: JsonDict) -> JsonDict:
+#     assert data["version"] == 5, data["version"]
+#     data["version"] = 6
+
+#     # TODO: Make voltage regulators mandatory in the network dict in v6
+#     data["regulators"] = []
+#     data["regulators_params"] = []
+#     return data

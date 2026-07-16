@@ -157,7 +157,10 @@ def test_all_converters():
     with warnings.catch_warnings(action="ignore"):
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
-    expected_dict["name"] = "Network"  # default name added in current format
+    # Changes made in version 5 after the first release (TODO: remove after version 6)
+    expected_dict["name"] = "Network"
+    expected_dict["regulators"] = []
+    expected_dict["regulators_params"] = []
     assert_json_close(net_dict, expected_dict)
 
 
@@ -171,7 +174,10 @@ def test_from_dict_v3():
     with warnings.catch_warnings(action="ignore"):
         expected_dict = v3_to_v4_converter(expected_dict)
         expected_dict = v4_to_v5_converter(expected_dict)
-    expected_dict["name"] = "Network"  # default name added in current format
+    # Changes made in version 5 after the first release (TODO: remove after version 6)
+    expected_dict["name"] = "Network"
+    expected_dict["regulators"] = []
+    expected_dict["regulators_params"] = []
     assert_json_close(net_dict, expected_dict)
 
 

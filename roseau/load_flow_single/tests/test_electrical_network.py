@@ -29,9 +29,11 @@ from roseau.load_flow_single.models import (
     Line,
     LineParameters,
     PowerLoad,
+    RegulatorParameters,
     Switch,
     Transformer,
     TransformerParameters,
+    VoltageRegulator,
     VoltageSource,
 )
 from roseau.load_flow_single.network import ElectricalNetwork
@@ -914,6 +916,7 @@ def test_propagate_nominal_voltages(all_elements_network):
         "bus3": 400,
         "bus0": 20000.0,
         "bus4": 400,
+        "bus5": 20000.0,
     }
 
     # No nominal voltages in the network
@@ -928,6 +931,7 @@ def test_propagate_nominal_voltages(all_elements_network):
         "bus3": 400,
         "bus0": 20000.0,
         "bus4": 400,
+        "bus5": 20000.0,
     }
 
     # No transformer
@@ -956,6 +960,19 @@ def test_propagate_nominal_voltages(all_elements_network):
         "bus1": 20.5e3,  # the expected vn from the source bus (not the transformer or the source)
         "bus2": 20.5e3,
         "bus3": 410.0,
+    }
+
+    # With a regulator and no transformer
+    bus1 = Bus(id="bus1")
+    bus2 = Bus(id="bus2")
+    VoltageSource(id="vs", bus=bus1, voltage=21e3)
+    rp = RegulatorParameters(id="r1", un=20.5e3, sn=100e3, z2=1e-2, ym=1e-3j)
+    VoltageRegulator(id="r1", bus1=bus1, bus2=bus2, parameters=rp)
+    en = ElectricalNetwork.from_element(bus1)
+    nominal_voltages = en._get_nominal_voltages()
+    assert nominal_voltages == {
+        "bus1": 20.5e3,  # the expected vn from the source bus (not the regulator or the source)
+        "bus2": 20.5e3,
     }
 
 
@@ -1228,6 +1245,7 @@ def test_results_to_dict(all_elements_network_with_results):
         "lines",
         "transformers",
         "switches",
+        "regulators",
         "loads",
         "sources",
     }
@@ -1271,6 +1289,19 @@ def test_results_to_dict(all_elements_network_with_results):
         voltage2 = complex(*res_switch.pop("voltage2"))
         np.testing.assert_allclose(voltage2, switch.side2.res_voltage.m)
         assert not res_switch, res_switch
+    for res_regulator in res_network["regulators"]:
+        regulator = en.regulators[res_regulator.pop("id")]
+        current1 = complex(*res_regulator.pop("current1"))
+        np.testing.assert_allclose(current1, regulator.side1.res_current.m)
+        current2 = complex(*res_regulator.pop("current2"))
+        np.testing.assert_allclose(current2, regulator.side2.res_current.m)
+        voltage1 = complex(*res_regulator.pop("voltage1"))
+        np.testing.assert_allclose(voltage1, regulator.side1.res_voltage.m)
+        voltage2 = complex(*res_regulator.pop("voltage2"))
+        np.testing.assert_allclose(voltage2, regulator.side2.res_voltage.m)
+        tap = res_regulator.pop("tap")
+        np.testing.assert_allclose(tap, regulator.res_tap)
+        assert not res_regulator, res_regulator
     for res_load in res_network["loads"]:
         load = en.loads[res_load.pop("id")]
         assert res_load.pop("type") == load.type
@@ -1294,7 +1325,7 @@ def test_results_to_dict_full(all_elements_network_with_results):
 
     # Here, `full` is True
     res_network = en.results_to_dict(full=True)
-    assert set(res_network) == {"buses", "lines", "transformers", "switches", "loads", "sources"}
+    assert set(res_network) == {"buses", "lines", "transformers", "switches", "regulators", "loads", "sources"}
     for v in res_network.values():
         assert isinstance(v, list)
     for res_bus in res_network["buses"]:
@@ -1390,6 +1421,33 @@ def test_results_to_dict_full(all_elements_network_with_results):
         voltage2 = complex(*res_switch.pop("voltage2"))
         np.testing.assert_allclose(voltage2, switch.side2.res_voltage.m)
         assert not res_switch, res_switch
+    for res_regulator in res_network["regulators"]:
+        regulator = en.regulators[res_regulator.pop("id")]
+        # Currents
+        current1 = complex(*res_regulator.pop("current1"))
+        np.testing.assert_allclose(current1, regulator.side1.res_current.m)
+        current2 = complex(*res_regulator.pop("current2"))
+        np.testing.assert_allclose(current2, regulator.side2.res_current.m)
+        # Powers
+        power1 = complex(*res_regulator.pop("power1"))
+        np.testing.assert_allclose(power1, regulator.side1.res_power.m)
+        power2 = complex(*res_regulator.pop("power2"))
+        np.testing.assert_allclose(power2, regulator.side2.res_power.m)
+        # Voltages
+        voltage1 = complex(*res_regulator.pop("voltage1"))
+        np.testing.assert_allclose(voltage1, regulator.side1.res_voltage.m)
+        voltage2 = complex(*res_regulator.pop("voltage2"))
+        np.testing.assert_allclose(voltage2, regulator.side2.res_voltage.m)
+        # Power losses
+        losses = complex(*res_regulator.pop("power_losses"))
+        np.testing.assert_allclose(losses, regulator.res_losses.m)
+        # Loading
+        loading = res_regulator.pop("loading")
+        np.testing.assert_allclose(loading, regulator.res_loading.m)
+        # Tap
+        tap = res_regulator.pop("tap")
+        np.testing.assert_allclose(tap, regulator.res_tap)
+        assert not res_regulator, res_regulator
     for res_load in res_network["loads"]:
         load = en.loads[res_load.pop("id")]
         assert res_load.pop("type") == load.type
@@ -1573,6 +1631,69 @@ def test_duplicate_transformer_parameters_id():
     assert en._parameters["transformer"] == {tp2.id: tp2}
 
 
+def test_duplicate_regulator_parameters_id():
+    # Creating a network with duplicate regulator parameters ID raises an exception
+    bus1 = Bus("Bus 1")
+    bus2 = Bus("Bus 2")
+    VoltageSource("Source", bus=bus1, voltage=20e3)
+    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j)
+    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j)
+    reg1 = VoltageRegulator("Reg 1", bus1=bus1, bus2=bus2, parameters=rp1)
+    reg2 = VoltageRegulator("Reg 2", bus1=bus1, bus2=bus2, parameters=rp2)
+    assert rp1._elements == {reg1}
+    assert rp2._elements == {reg2}
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_element(bus1)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+
+    # Adding the duplicate element to an existing network also raises an exception
+    bus1 = Bus("Bus 1")
+    bus2 = Bus("Bus 2")
+    VoltageSource("Source", bus=bus1, voltage=20e3)
+    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j)
+    reg1 = VoltageRegulator("Reg 1", bus1=bus1, bus2=bus2, parameters=rp1)
+    en = ElectricalNetwork.from_element(bus1)
+    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        VoltageRegulator("Reg 2", bus1=bus1, bus2=bus2, parameters=rp2)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+    assert "ID 'RP' is used by several regulator parameters objects." in e.value.msg
+    assert en._parameters["regulator"] == {rp1.id: rp1}
+
+    # Setting the parameters later also raises an exception
+    bus1 = Bus("Bus 1")
+    bus2 = Bus("Bus 2")
+    VoltageSource("Source", bus=bus1, voltage=20e3)
+    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j)
+    reg1 = VoltageRegulator("Reg 1", bus1=bus1, bus2=bus2, parameters=rp1)
+    reg2 = VoltageRegulator("Reg 2", bus1=bus1, bus2=bus2, parameters=rp1)
+    assert rp1._elements == {reg1, reg2}
+    en = ElectricalNetwork.from_element(bus1)
+    assert en._parameters["regulator"] == {rp1.id: rp1}
+    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        reg2.parameters = rp2
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+    assert "ID 'RP' is used by several regulator parameters objects." in e.value.msg
+    assert en._parameters["regulator"] == {rp1.id: rp1}
+    assert reg2.parameters == rp1
+
+    # But if only one regulator is using the parameters, it is replaced
+    bus1 = Bus("Bus 1")
+    bus2 = Bus("Bus 2")
+    VoltageSource("Source", bus=bus1, voltage=20e3)
+    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j)
+    reg1 = VoltageRegulator("Reg 1", bus1=bus1, bus2=bus2, parameters=rp1)
+    assert rp1._elements == {reg1}
+    en = ElectricalNetwork.from_element(bus1)
+    assert en._parameters["regulator"] == {rp1.id: rp1}
+    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j)
+    reg1.parameters = rp2
+    assert rp1._elements == set()
+    assert rp2._elements == {reg1}
+    assert en._parameters["regulator"] == {rp2.id: rp2}
+
+
 def test_propagate_voltages_step_up_transformers():
     # Source is located at the LV side of the transformer
     bus1 = Bus(id="Bus1")
@@ -1587,3 +1708,14 @@ def test_propagate_voltages_step_up_transformers():
     expected_hv_ini = cmath.rect(20e3, -np.pi / 6)  # Dyn11 shifts by -30°
     npt.assert_allclose(bus1.initial_voltage.m, expected_lv_ini)
     npt.assert_allclose(bus2.initial_voltage.m, expected_hv_ini)
+
+
+def test_propagate_voltages_voltage_regulators():
+    bus1 = Bus(id="Bus1")
+    bus2 = Bus(id="Bus2")
+    VoltageSource(id="Source", bus=bus1, voltage=20e3)
+    rp = RegulatorParameters(id="RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j)
+    VoltageRegulator(id="Reg", bus1=bus1, bus2=bus2, parameters=rp, u_ref=1.05)
+    ElectricalNetwork.from_element(bus1)
+    npt.assert_allclose(bus1.initial_voltage.m, 20e3)
+    npt.assert_allclose(bus2.initial_voltage.m, 21e3)  # <- regulation voltage

@@ -1,5 +1,6 @@
 {
   "version": 5,
+  "name": "Network",
   "is_multiphase": false,
   "crs": {
     "data": null,
@@ -114,6 +115,7 @@
       }
     }
   ],
+  "regulators": [],
   "switches": [
     {
       "id": "Switch",
@@ -169,9 +171,10 @@
       "vg": "Dyn11",
       "sn": 160000.0,
       "uhv": 20000.0,
-      "ulv": 400,
+      "ulv": 400.0,
       "z2": [0.02, 0.0],
       "ym": [0.0, 1e-5]
     }
-  ]
+  ],
+  "regulators_params": []
 }

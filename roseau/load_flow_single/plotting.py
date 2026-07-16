@@ -144,6 +144,40 @@ def _get_switches_data_for_map_plot(network: ElectricalNetwork, with_results: bo
     return gpd.GeoDataFrame(switches_data, crs=network.crs)
 
 
+def _get_regulators_data_for_map_plot(
+    network: ElectricalNetwork, with_results: bool, buses_frame: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    regs_data: dict[str, list[Any]] = {
+        field: [] for field in (_MAP_RESULTS_FIELDS if with_results else _MAP_FIELDS)["regulator"]
+    }
+    regs_data["geometry"] = []
+    buses_frame = buses_frame.set_index("id")
+    for reg in network.regulators.values():
+        rp = reg._parameters
+        regs_data["id"].append(reg.id)
+        regs_data["bus1_id"].append(reg.bus1.id)
+        regs_data["bus2_id"].append(reg.bus2.id)
+        regs_data["rating"].append(rp._rating_pretty())
+        regs_data["parameters_id"].append(rp.id)
+        regs_data["max_loading"].append(reg._max_loading * 100)  # Convert to percentage
+        regs_data["u_ref"].append(reg._u_ref * 100)  # Convert to percentage
+        regs_data["u_range"].append(f"±{_pp_num(rp._u_range * 100)}")  # Convert to percentage
+        regs_data["geometry"].append(reg.bus1.geometry)
+        regs_data["nominal_voltage"].append(buses_frame.at[reg.bus1.id, "nominal_voltage"])
+        regs_data["min_voltage_level"].append(buses_frame.at[reg.bus1.id, "min_voltage_level"])
+        regs_data["max_voltage_level"].append(buses_frame.at[reg.bus1.id, "max_voltage_level"])
+        if not with_results:
+            continue
+        regs_data["res_separator"].append("")
+        regs_data["res_tap"].append(reg._res_tap_getter(warning=False) * 100)  # Convert to percentage
+        regs_data["res_loading"].append(reg._res_loading_getter(warning=False) * 100)  # Convert to percentage
+        regs_data["res_voltage1"].append(buses_frame.at[reg.bus1.id, "res_voltage"])
+        regs_data["res_voltage2"].append(buses_frame.at[reg.bus2.id, "res_voltage"])
+        regs_data["res_voltage_level1"].append(buses_frame.at[reg.bus1.id, "res_voltage_level"])
+        regs_data["res_voltage_level2"].append(buses_frame.at[reg.bus2.id, "res_voltage_level"])
+    return gpd.GeoDataFrame(regs_data, crs=network.crs)
+
+
 def plot_interactive_map(
     network: ElectricalNetwork,
     *,
@@ -230,9 +264,16 @@ def plot_interactive_map(
     lines_gdf = _get_lines_data_for_map_plot(network, with_results=False)
     transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
     switches_gdf = _get_switches_data_for_map_plot(network, with_results=False)
+    regulators_gdf = _get_regulators_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
     m = _plot_interactive_map_internal(
         network=network,
-        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
+        dataframes={
+            "bus": buses_gdf,
+            "line": lines_gdf,
+            "transformer": transformers_gdf,
+            "switch": switches_gdf,
+            "regulator": regulators_gdf,
+        },
         fields=_MAP_FIELDS,
         style_color_callback=_make_style_color_callback(style_color, lambda et, eid: _DEFAULT_MAP_STYLE_COLORS[et]),
         highlight_color=highlight_color,
@@ -351,9 +392,16 @@ def plot_results_interactive_map(
     lines_gdf = _get_lines_data_for_map_plot(network, with_results=True)
     transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
     switches_gdf = _get_switches_data_for_map_plot(network, with_results=True)
+    regulators_gdf = _get_regulators_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
     m = _plot_interactive_map_internal(
         network=network,
-        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
+        dataframes={
+            "bus": buses_gdf,
+            "line": lines_gdf,
+            "transformer": transformers_gdf,
+            "switch": switches_gdf,
+            "regulator": regulators_gdf,
+        },
         fields=_MAP_RESULTS_FIELDS,
         style_color_callback=_make_style_color_callback(
             style_color, partial(_default_map_results_style_color, network=network)

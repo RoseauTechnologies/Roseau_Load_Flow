@@ -3,7 +3,6 @@ from pathlib import Path
 import pytest
 
 import roseau.load_flow_single as rlfs
-from roseau.load_flow.conftest import patch_engine_impl
 
 HERE = Path(__file__).parent.expanduser().absolute()
 TEST_ALL_NETWORKS_DATA_FOLDER = HERE / "tests" / "data" / "networks"
@@ -52,24 +51,6 @@ def test_networks_path() -> Path:
 @pytest.fixture(params=THREE_PHASES_TRANSFORMER_TYPES, ids=THREE_PHASES_TRANSFORMER_TYPES)
 def three_phases_transformer_type(request) -> str:
     return request.param
-
-
-@pytest.fixture(autouse=True)
-def patch_engine(request):
-    assert rlfs.__file__ is not None
-    yield from patch_engine_impl(request, extra_dir=Path(rlfs.__file__).parent)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def patch_warn_external():
-    # Exclude test files from skipped files in warn_external
-    from roseau.load_flow.utils import helpers
-
-    assert rlfs.__file__ is not None
-    paths = tuple(
-        str(p) for p in Path(rlfs.__file__).resolve().parent.parent.rglob("**/*.py") if "tests" not in p.parts
-    )
-    helpers._get_skip_file_prefixes = lambda: paths
 
 
 # The following networks are generated using the scripts/generate_test_networks.py script
