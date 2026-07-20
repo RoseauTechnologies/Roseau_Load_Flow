@@ -63,7 +63,7 @@ class Line(AbstractBranch["LineSide", "CyShuntLine | CySimplifiedLine"]):
         """
         self._initialized = False
         self._with_shunt = parameters.with_shunt
-        super().__init__(id=id, bus1=bus1, bus2=bus2, n1=1, n2=1, geometry=geometry)
+        super().__init__(id=id, bus1=bus1, bus2=bus2, n=1, geometry=geometry)
         self._side1 = LineSide(branch=self, side=1, bus=bus1)
         self._side2 = LineSide(branch=self, side=2, bus=bus2)
         self.length = length

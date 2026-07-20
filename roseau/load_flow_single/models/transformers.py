@@ -67,7 +67,7 @@ class Transformer(AbstractBranch["TransformerSide", "CySingleTransformer"]):
                 The geometry of the transformer.
         """
         self._initialized = False
-        super().__init__(id=id, bus1=bus_hv, bus2=bus_lv, n1=2, n2=2, geometry=geometry)
+        super().__init__(id=id, bus1=bus_hv, bus2=bus_lv, n=2, geometry=geometry)
         self._side1 = TransformerSide(branch=self, side="HV", bus=bus_hv)
         self._side2 = TransformerSide(branch=self, side="LV", bus=bus_lv)
         self.tap = tap

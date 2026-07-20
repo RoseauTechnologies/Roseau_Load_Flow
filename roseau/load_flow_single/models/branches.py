@@ -9,7 +9,7 @@ from typing_extensions import TypeVar
 from roseau.load_flow import SQRT3
 from roseau.load_flow.typing import Id, JsonDict, Side
 from roseau.load_flow.units import Q_
-from roseau.load_flow.utils import SIDE_INDEX, warn_external
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_engine.cy_engine import CyBranch
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.connectables import AbstractConnectable
@@ -43,8 +43,7 @@ class AbstractBranchSide(AbstractConnectable[_CyB_co]):
                 The bus to connect the side to.
         """
         self._branch = branch
-        n = branch._n1 if SIDE_INDEX[side] == 0 else branch._n2
-        super().__init__(id=branch.id, n=n, bus=bus, side=side)
+        super().__init__(id=branch.id, n=branch._n, bus=bus, side=side)
         if branch._cy_initialized:
             self._cy_element = branch._cy_element
 
@@ -70,7 +69,7 @@ class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
     """
 
     @abstractmethod
-    def __init__(self, id: Id, bus1: Bus, bus2: Bus, n1: int, n2: int, *, geometry: BaseGeometry | None = None) -> None:
+    def __init__(self, id: Id, bus1: Bus, bus2: Bus, n: int, *, geometry: BaseGeometry | None = None) -> None:
         """AbstractBranch constructor.
 
         Args:
@@ -87,8 +86,7 @@ class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
                 The geometry of the branch.
         """
         super().__init__(id)
-        self._n1 = n1
-        self._n2 = n2
+        self._n = n
         self.geometry = self._check_geometry(geometry)
         self._side1: _Side_co
         self._side2: _Side_co
@@ -158,8 +156,8 @@ class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
         if self._fetch_results:
             self._side1._res_current = self._cy_element.get_port_current(0)
             self._side1._res_voltage = self._cy_element.get_port_potential(0) * SQRT3
-            self._side2._res_current = self._cy_element.get_port_current(self._n1)
-            self._side2._res_voltage = self._cy_element.get_port_potential(self._n1) * SQRT3
+            self._side2._res_current = self._cy_element.get_port_current(self._n)
+            self._side2._res_voltage = self._cy_element.get_port_potential(self._n) * SQRT3
 
     @property
     def res_currents(self) -> tuple[Q_[complex], Q_[complex]]:

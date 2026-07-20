@@ -1255,6 +1255,8 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 else 0.0
                 if et == "regulator"
                 else (switch_length if network.switches[eid].closed else None)
+                if et == "switch"
+                else assert_never(et)
             ),
         )
 
