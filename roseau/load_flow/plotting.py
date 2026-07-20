@@ -6,7 +6,7 @@ import math
 import textwrap
 from collections.abc import Callable, Container, Iterable, Mapping
 from functools import partial
-from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict, assert_never
 
 import geopandas as gpd
 import numpy as np
@@ -17,7 +17,7 @@ from roseau.load_flow.models import AbstractTerminal, Bus, Line, Switch, Transfo
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import NegativeSequence, PositiveSequence, ZeroSequence, phasor_to_sym
 from roseau.load_flow.types import LineType
-from roseau.load_flow.typing import ComplexArray, Id, ResultState
+from roseau.load_flow.typing import BranchType, ComplexArray, Id, ResultState
 from roseau.load_flow.units import Q_
 
 if TYPE_CHECKING:
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     type FeatureMap = dict[str, Any]
     type StyleDict = dict[str, Any]
-    type MapElementType = Literal["bus", "line", "transformer", "switch"]
+    type MapElementType = Literal["bus", BranchType]
     type StyleColorCallback = Callable[[MapElementType, Id], str | None]
 
     class VoltageProfileNode(TypedDict):
@@ -40,6 +40,7 @@ if TYPE_CHECKING:
         max_voltage: float | None
         state: ResultState
         is_tr_bus: bool
+        is_reg_bus: bool
 
     class VoltageProfileEdge(TypedDict):
         from_bus: Id
@@ -78,6 +79,7 @@ _DEFAULT_MAP_STYLE_COLORS: dict["MapElementType", str] = {
     "line": "#234e83",
     "transformer": "#000000",
     "switch": "#888888",
+    "regulator": "#888888",  # TODO: choose a color for regulators
 }
 
 
@@ -383,6 +385,20 @@ _MAP_FIELDS: dict["MapElementType", dict[str, str]] = {
         "bus2_id": "Bus2:",
         "status": "Status:",
     },
+    "regulator": {
+        "id": "Regulator ID:",
+        "phases": "Phases [S,L]:",
+        "bus1_id": "S-Side Bus:",
+        "bus2_id": "L-Side Bus:",
+        "rating": "Rating:",
+        "parameters_id": "Parameters ID:",
+        "u_ref": "Uref (%):",
+        "u_range": "Urange (%):",
+        "max_loading": "Max loading (%):",
+        "nominal_voltage": "Un (V):",
+        "min_voltage_level": "Umin (%):",
+        "max_voltage_level": "Umax (%):",
+    },
 }
 _MAP_RESULTS_FIELDS: dict["MapElementType", dict[str, str]] = {
     "bus": {
@@ -409,6 +425,16 @@ _MAP_RESULTS_FIELDS: dict["MapElementType", dict[str, str]] = {
     },
     "switch": {
         **_MAP_FIELDS["switch"],
+    },
+    "regulator": {
+        **_MAP_FIELDS["regulator"],
+        "res_separator": "--",
+        "res_tap": "Tap Position (%):",
+        "res_loading": "Loading (%):",
+        "res_voltage1": "U1 (V):",
+        "res_voltage2": "U2 (V):",
+        "res_voltage_level1": "U1 (%):",
+        "res_voltage_level2": "U2 (%):",
     },
 }
 
@@ -522,6 +548,50 @@ def _map_get_transformer_style_dict(
     return {"html": markup}
 
 
+def _map_get_regulator_style_dict(
+    reg_id: Id,
+    *,
+    bus1_id: Id,
+    bus2_id: Id,
+    nominal_voltages: Mapping[Id, float],
+    source_buses: Container[Id],
+    color_callback: Callable[["MapElementType", Id], str],
+) -> dict[str, str]:
+    vn = nominal_voltages[bus1_id]
+    if bus1_id in source_buses or bus2_id in source_buses:
+        radius = 12
+    else:
+        if vn < _LV:
+            radius = 4  # LV
+        elif vn < _MV:
+            radius = 7  # MV
+        else:
+            radius = 10  # HV
+    tr_color = color_callback("regulator", reg_id)
+    hv_color = color_callback("bus", bus1_id)
+    lv_color = color_callback("bus", bus2_id)
+    markup = f"""\
+    <div style="position: absolute;
+                left: 0;
+                top: 0;
+                transform: translate(-50%, -50%);
+                width: {radius}px;
+                height: {radius}px;
+                border-top: 2px solid {tr_color};
+                border-bottom: 2px solid {tr_color};
+                background: linear-gradient(to right,
+                                            {hv_color} 0%,
+                                            {hv_color} 40%,
+                                            {tr_color} 41%,
+                                            {tr_color} 59%,
+                                            {lv_color} 60%,
+                                            {lv_color} 100%);
+                ">
+    </div>
+    """
+    return {"html": markup}
+
+
 def _plot_interactive_map_elements(  # noqa: C901
     network: "ElectricalNetwork | rlfs.ElectricalNetwork",
     dataframes: dict["MapElementType", gpd.GeoDataFrame],
@@ -573,6 +643,15 @@ def _plot_interactive_map_elements(  # noqa: C901
                 source_buses=source_buses,
                 color_callback=style_color_callback,
             )
+        elif e_type == "regulator":
+            return _map_get_regulator_style_dict(
+                reg_id=e_id,
+                bus1_id=feature["properties"]["bus1_id"],
+                bus2_id=feature["properties"]["bus2_id"],
+                nominal_voltages=nominal_voltages,
+                source_buses=source_buses,
+                color_callback=style_color_callback,
+            )
         else:
             raise NotImplementedError(f"Unknown element type: {e_type!r}.")
 
@@ -600,17 +679,28 @@ def _plot_interactive_map_elements(  # noqa: C901
                 source_buses=source_buses,
                 color_callback=lambda e_type, e_id: highlight_color,
             )
+        elif e_type == "regulator":
+            return _map_get_regulator_style_dict(
+                reg_id=e_id,
+                bus1_id=feature["properties"]["bus1_id"],
+                bus2_id=feature["properties"]["bus2_id"],
+                nominal_voltages=nominal_voltages,
+                source_buses=source_buses,
+                color_callback=lambda e_type, e_id: highlight_color,
+            )
         elif e_type == "switch":
             return {"color": highlight_color}
         else:
             raise NotImplementedError(f"Unknown element type: {e_type!r}.")
 
     source_buses = {src.bus.id for src in network.sources.values()}
-    transformer_buses = {side.bus.id for tr in network.transformers.values() for side in (tr.side_hv, tr.side_lv)}
     nominal_voltages = network._get_nominal_voltages()
 
-    # Filter out transformer buses, these are represented by the transformers themselves
-    dataframes["bus"] = dataframes["bus"].loc[~dataframes["bus"]["id"].isin(transformer_buses)]
+    # Filter out buses that are represented by the transformers/regulators on the map
+    buses_to_skip = {bus.id for tr in network.transformers.values() for bus in (tr.bus_hv, tr.bus_lv)} | {
+        bus.id for reg in network.regulators.values() for bus in (reg.bus1, reg.bus2)
+    }
+    dataframes["bus"] = dataframes["bus"].loc[~dataframes["bus"]["id"].isin(buses_to_skip)]
 
     tooltips: dict[MapElementType, folium.GeoJsonTooltip | None] = {}
     if add_tooltips:
@@ -636,7 +726,13 @@ def _plot_interactive_map_elements(  # noqa: C901
             )
     else:
         popups = dict.fromkeys(fields.keys(), None)
-    names = {"bus": "Buses", "line": "Lines", "transformer": "Transformers", "switch": "Switches"}
+    names = {
+        "bus": "Buses",
+        "line": "Lines",
+        "transformer": "Transformers",
+        "switch": "Switches",
+        "regulator": "Regulators",
+    }
     layers = {}
     for e_type, frame in dataframes.items():
         if frame.empty:
@@ -971,10 +1067,12 @@ def _default_map_results_style_color(
         return _RESULT_COLORS[network.lines[eid]._res_state_getter()]
     elif et == "transformer":
         return _RESULT_COLORS[network.transformers[eid]._res_state_getter()]
+    elif et == "regulator":
+        return _RESULT_COLORS[network.regulators[eid]._res_state_getter()]
     elif et == "switch":
         return "#888888"
     else:
-        raise NotImplementedError(f"Unknown element type: {et!r}")
+        assert_never(et)
 
 
 def plot_results_interactive_map(
@@ -1115,6 +1213,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
     buses: dict[Id, "VoltageProfileNode"] = dataclasses.field(repr=False)
     lines: dict[Id, "VoltageProfileEdge"] = dataclasses.field(repr=False)
     transformers: dict[Id, "VoltageProfileEdge"] = dataclasses.field(repr=False)
+    regulators: dict[Id, "VoltageProfileEdge"] = dataclasses.field(repr=False)
     switches: dict[Id, "VoltageProfileEdge"] = dataclasses.field(repr=False)
 
     @classmethod
@@ -1153,13 +1252,18 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 if et == "line"
                 else (0.0 if traverse_transformers else None)
                 if et == "transformer"
+                else 0.0
+                if et == "regulator"
                 else (switch_length if network.switches[eid].closed else None)
+                if et == "switch"
+                else assert_never(et)
             ),
         )
 
         buses: dict[Id, VoltageProfileNode] = {}
         lines: dict[Id, VoltageProfileEdge] = {}
         transformers: dict[Id, VoltageProfileEdge] = {}
+        regulators: dict[Id, VoltageProfileEdge] = {}
         switches: dict[Id, VoltageProfileEdge] = {}
         for bus_id, distance in distances.items():
             buses[bus_id] = cls._handle_bus(network.buses[bus_id], distance=distance * distance_factor, mode=mode)
@@ -1176,6 +1280,10 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             if not switch.closed or (not traverse_transformers and switch.bus1.id not in distances):
                 continue
             switches[switch.id] = cls._handle_switch(switch)
+        for reg in network.regulators.values():
+            regulators[reg.id] = cls._handle_regulator(reg)
+            buses[reg.bus1.id]["is_reg_bus"] = True
+            buses[reg.bus2.id]["is_reg_bus"] = True
 
         return cls(
             network=network,
@@ -1187,6 +1295,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             buses=buses,
             lines=lines,
             transformers=transformers,
+            regulators=regulators,
             switches=switches,
             colors=_RESULT_COLORS,
         )
@@ -1215,7 +1324,9 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             "min_voltage": _multiply(bus._min_voltage_level, 100),
             "max_voltage": _multiply(bus._max_voltage_level, 100),
             "state": bus._res_state_getter(),
-            "is_tr_bus": False,  # Will be updated later if needed
+            # Properties below will be updated later in the `_from_network` method
+            "is_tr_bus": False,
+            "is_reg_bus": False,
         }
 
     @classmethod
@@ -1258,6 +1369,17 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             "loadings": None,
             "max_loading": 100.0,
             "state": "unknown",
+        }
+
+    @classmethod
+    def _handle_regulator(cls, reg: "rlfs.VoltageRegulator") -> "VoltageProfileEdge":
+        return {
+            "from_bus": reg.bus1.id,
+            "to_bus": reg.bus2.id,
+            "loading": reg._res_loading_getter(warning=False) * 100,
+            "loadings": None,
+            "max_loading": reg._max_loading * 100,
+            "state": reg._res_state_getter(),
         }
 
     def _get_bus_extra_info(self, bus_id: Id) -> dict[str, Any]:
@@ -1338,6 +1460,17 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 "phases": None,
             }
 
+    def _get_extra_regulator_info(self, reg_id: Id) -> dict[str, Any]:
+        """Get extra information for a regulator to display in the tooltip."""
+        reg = self.network.regulators[reg_id]
+        return {
+            "parameters_id": reg._parameters.id,
+            "sn": reg._parameters._sn / 1e3,  # Convert to kVA
+            "un": reg._parameters._un,
+            "u_ref": reg._u_ref * 100,  # Convert to percentage
+            "tap": reg._res_tap_getter(warning=False) * 100,
+        }
+
     @property
     def _title(self) -> str:
         title = f"Voltage Profile Starting at Bus {self.starting_bus_id!r}"
@@ -1415,6 +1548,16 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 )
             )
 
+        if self.regulators:
+            ax.add_collection(
+                LineCollection(
+                    segments=[self._edge_segs(reg) for reg in self.regulators.values()],
+                    colors=[self.colors[reg["state"]] for reg in self.regulators.values()],
+                    linewidths=4,
+                    zorder=3,
+                )
+            )
+
         if self.switches:
             ax.add_collection(
                 LineCollection(
@@ -1433,11 +1576,13 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             s=10,
             zorder=4,
         )
-        if self.traverse_transformers:
+        if self.traverse_transformers or self.regulators:
             # ax.scatter does not support per-point marker styles, so we set them manually
             bus_pc.set_paths(
                 [
-                    (m := MarkerStyle("s" if bus["is_tr_bus"] else "o")).get_path().transformed(m.get_transform())
+                    (m := MarkerStyle("s" if (bus["is_tr_bus"] or bus["is_reg_bus"]) else "o"))
+                    .get_path()
+                    .transformed(m.get_transform())
                     for bus in self.buses.values()
                 ]
             )
@@ -1474,8 +1619,8 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             marker={
                 "color": [self.colors[bus["state"]] for bus in self.buses.values()],
                 "symbol": (
-                    ["square" if bus["is_tr_bus"] else "circle" for bus in self.buses.values()]
-                    if self.traverse_transformers
+                    ["square" if (bus["is_tr_bus"] or bus["is_reg_bus"]) else "circle" for bus in self.buses.values()]
+                    if (self.traverse_transformers or self.regulators)
                     else "circle"
                 ),
                 "size": 6,
@@ -1568,6 +1713,61 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                         + "<b>Ur [ʜv,ʟv] (V):   </b> %{customdata[6]}<br>"
                         + "<b>Tap Position (%): </b> %{customdata[7]:.5g}<br>"
                         + "<b>Phases [ʜv,ʟv]:   </b> %{customdata[8]}<br>" * is_multi_phase
+                        + "</span><extra></extra>"
+                    ),
+                )
+            )
+
+        # Regulators
+        if self.regulators:
+            assert not self.network.is_multi_phase, "Regulators are only supported in single-phase networks."
+            # Traces for regulators (grouped by color for better performance)
+            reg_traces: dict[ResultState, dict[str, list[float | None]]] = {
+                state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
+            }
+            for reg in self.regulators.values():
+                reg_traces[reg["state"]]["x"].extend((*self._edge_xs(reg), None))
+                reg_traces[reg["state"]]["y"].extend((*self._edge_ys(reg), None))
+            traces.extend(
+                go.Scatter(
+                    x=t["x"],
+                    y=t["y"],
+                    mode="lines",
+                    line={"color": self.colors[s], "width": 4},
+                    zorder=2,
+                    hoverinfo="skip",
+                )
+                for s, t in reg_traces.items()
+                if t["x"]  # skip empty colors
+            )
+            # Cannot hover on line traces, add invisible midpoint markers to show hover info
+            # https://github.com/plotly/plotly.js/issues/1960
+            traces.append(
+                go.Scatter(
+                    x=[sum(self._edge_xs(reg)) / 2 for reg in self.regulators.values()],
+                    y=[sum(self._edge_ys(reg)) / 2 for reg in self.regulators.values()],
+                    mode="markers",
+                    marker={"opacity": 0, "color": [self.colors[reg["state"]] for reg in self.regulators.values()]},
+                    customdata=[
+                        # indent has the size of the longest legend item: "Tap ratio (%): "
+                        (
+                            _pp_eid(reg_id, indent="               "),
+                            reg["loading"],
+                            *self._get_extra_regulator_info(reg_id).values(),
+                        )
+                        for reg_id, reg in self.regulators.items()
+                    ],
+                    hovertemplate=(
+                        # For parallel regulators, only the last one might be shown in hover
+                        # https://github.com/plotly/plotly.py/issues/2476
+                        '<span style="font-family: monospace">'
+                        + "<b>Regulator:    </b> %{customdata[0]}<br>"
+                        + "<b>Loading (%):  </b> %{customdata[1]:.5g}<br>"
+                        + "<b>Parameters:   </b> %{customdata[2]}<br>"
+                        + "<b>Sn (kVA):     </b> %{customdata[3]:.5g}<br>"
+                        + "<b>Un (V):       </b> %{customdata[4]:.5g}<br>"
+                        + "<b>Uref (%):     </b> %{customdata[5]:.5g}<br>"
+                        + "<b>Tap ratio (%):</b> %{customdata[6]:.5g}<br>"
                         + "</span><extra></extra>"
                     ),
                 )

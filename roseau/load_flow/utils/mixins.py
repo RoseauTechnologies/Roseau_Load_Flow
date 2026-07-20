@@ -26,7 +26,7 @@ from typing_extensions import TypeVar
 
 from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
+from roseau.load_flow.typing import BranchType, CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils.helpers import abstractattrs, warn_external
 from roseau.load_flow.utils.tool_data import ToolData
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork, CyElement
@@ -650,11 +650,13 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         self._tool_data = ToolData()
 
         # Track parameters to check for duplicates
-        self._parameters: dict[str, dict[Id, Identifiable]] = {"line": {}, "transformer": {}}
+        self._parameters: dict[str, dict[Id, Identifiable]] = {"line": {}, "transformer": {}, "regulator": {}}
         for line in self._elements_by_type["line"].values():
             self._add_parameters("line", line.parameters)  # type: ignore
         for transformer in self._elements_by_type["transformer"].values():
             self._add_parameters("transformer", transformer.parameters)  # type: ignore
+        for regulator in self._elements_by_type["regulator"].values():
+            self._add_parameters("regulator", regulator.parameters)  # type: ignore
 
     @classmethod
     def from_element(cls, initial_bus: AbstractElement, *, name: str = "Network", crs: CRSLike | None = None) -> Self:
@@ -697,6 +699,8 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             elements_kwargs["potential_refs"] = elements_by_type["potential ref"]
             elements_kwargs["grounds"] = elements_by_type["ground"]
             elements_kwargs["ground_connections"] = elements_by_type["ground connection"]
+        else:
+            elements_kwargs["regulators"] = elements_by_type["regulator"]
         return cls(**elements_kwargs, name=name, crs=crs)
 
     def solve_load_flow(
@@ -847,7 +851,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         disconnectable = et in ("load", "source")
         self._add_element_to_dict(element, self._elements_by_type[et], disconnectable=disconnectable)
-        if et in ("line", "transformer"):
+        if et in self._parameters:
             self._add_parameters(et, element.parameters)  # type: ignore
         self._add_ground_connections(element)
         self._valid = False
@@ -869,7 +873,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         if et in ("load", "source", "ground connection"):
             self._elements_by_type[et].pop(element.id)
         else:
-            if et in ("bus", "transformer", "line", "switch"):
+            if et in ("bus", "transformer", "line", "switch", "regulator"):
                 msg = f"{element!r} is a {et} and cannot be disconnected from a network."
             else:
                 msg = f"{element!r} is not a valid load or source."
@@ -1090,6 +1094,11 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             starting_transformer = max(self.transformers.values(), key=lambda t: t.parameters._uhv)
             reference_bus = starting_transformer.bus_hv
             reference_nominal_voltage = starting_transformer.parameters._uhv
+        elif self.regulators:
+            # Use the highest voltage regulator as reference
+            starting_regulator = max(self.regulators.values(), key=lambda r: r.parameters._un)
+            reference_bus = starting_regulator.bus1
+            reference_nominal_voltage = starting_regulator.parameters._un
         else:
             # Use the first source bus as reference
             if isinstance(self, rlf.ElectricalNetwork):
@@ -1128,7 +1137,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
                             else current_vn * e.parameters._uhv / e.parameters._ulv
                         )
                     buses.append((other_bus, other_vn))
-                elif isinstance(e, (rlf.Line, rlf.Switch, rlfs.Line, rlfs.Switch)):
+                elif isinstance(e, (rlf.Line, rlf.Switch, rlfs.Line, rlfs.Switch, rlfs.VoltageRegulator)):
                     other_bus = e.bus2 if e.bus1.id == current_bus.id else e.bus1
                     other_vn = nominal_voltages.get(other_bus.id, current_vn)
                     buses.append((other_bus, other_vn))
@@ -1144,15 +1153,13 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         self,
         source: Id,
         *,
-        weight: Callable[[str, Id], float | None],
+        weight: Callable[[BranchType, Id], float | None],
         pred: dict[Id, list[Id]] | None = None,
-        adj: dict[Id, dict[Id, list[tuple[str, Id]]]] | None = None,
+        adj: dict[Id, dict[Id, list[tuple[BranchType, Id]]]] | None = None,
     ) -> dict[Id, float]:
         """Compute the shortest paths from a source bus to all buses in the network.
 
-        The network is represented as an undirected multigraph where edges correspond to lines,
-        transformers, and closed switches. The length of lines is used as the weight for the edges,
-        while transformers and closed switches have a length of 0. Open switches are ignored.
+        The network is represented as an undirected multigraph where edges correspond to branches.
 
         The algorithm used is Dijkstra's algorithm.
 
@@ -1161,8 +1168,8 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
                 The ID of the source bus. All distances are computed from this bus.
 
             weight:
-                A callable that takes the element type and element ID and returns the weight for the edge.
-                If the callable returns None, the edge is ignored.
+                A callable that takes the element type and element ID and returns the weight for the
+                edge. If the callable returns None, the edge is ignored.
 
             pred:
                 An optional dictionary to store the predecessors of each bus in the shortest paths.
@@ -1179,7 +1186,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             adj = {}
         for n in self._elements_by_type["bus"]:
             adj.setdefault(n, {})
-        for et in ("line", "transformer", "switch"):
+        for et in ("line", "transformer", "switch", "regulator"):
             for e in self._elements_by_type[et].values():
                 u, v = e.bus1.id, e.bus2.id  # type: ignore
                 edge_data = (et, e.id)

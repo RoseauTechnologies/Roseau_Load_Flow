@@ -6,7 +6,7 @@ import logging
 import re
 from collections.abc import Generator, Iterable, Mapping
 from math import nan
-from typing import TYPE_CHECKING, Any, Final, Literal, Self, final
+from typing import TYPE_CHECKING, Any, Final, Literal, Never, Self, final
 
 import geopandas as gpd
 import numpy as np
@@ -195,7 +195,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             transformers, RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_ID
         )
         self.switches: dict[Id, Switch] = self._elements_as_dict(switches, RoseauLoadFlowExceptionCode.BAD_SWITCH_ID)
-        # Use a union of all loads types to help autocompletion when typing `load.powers` for example
+        self.regulators: dict[Id, Never] = {}  # TODO: not supported yet
         self.loads: dict[Id, Load] = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
         self.sources: dict[Id, VoltageSource] = self._elements_as_dict(
             sources, RoseauLoadFlowExceptionCode.BAD_SOURCE_ID
@@ -213,6 +213,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             "line": self.lines,
             "transformer": self.transformers,
             "switch": self.switches,
+            "regulator": self.regulators,
             "load": self.loads,
             "source": self.sources,
             "ground": self.grounds,

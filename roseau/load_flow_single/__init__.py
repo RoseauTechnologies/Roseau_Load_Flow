@@ -48,9 +48,11 @@ from roseau.load_flow_single.models import (
     LineParameters,
     PowerLoad,
     Projection,
+    RegulatorParameters,
     Switch,
     Transformer,
     TransformerParameters,
+    VoltageRegulator,
     VoltageSource,
 )
 from roseau.load_flow_single.network import ElectricalNetwork
@@ -80,6 +82,8 @@ __all__ = [
     "Switch",
     "Transformer",
     "TransformerParameters",
+    "VoltageRegulator",
+    "RegulatorParameters",
     "FlexibleParameter",
     "Projection",
     "Control",

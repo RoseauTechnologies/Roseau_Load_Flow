@@ -15,11 +15,12 @@ from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.connectables import AbstractConnectable
 from roseau.load_flow_single.models.core import Element
 from roseau.load_flow_single.models.line_parameters import LineParameters
+from roseau.load_flow_single.models.regulator_parameters import RegulatorParameters
 from roseau.load_flow_single.models.transformer_parameters import TransformerParameters
 
 logger = logging.getLogger(__name__)
 
-_Parameters = LineParameters | TransformerParameters
+_Parameters = LineParameters | TransformerParameters | RegulatorParameters
 _CyB_co = TypeVar("_CyB_co", bound=CyBranch, default=CyBranch, covariant=True)
 _Side_co = TypeVar("_Side_co", bound="AbstractBranchSide", default="AbstractBranchSide", covariant=True)
 

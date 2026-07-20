@@ -28,6 +28,7 @@ def test_voltage_profile(all_elements_network_with_results):
                 "max_voltage": None,
                 "state": "unknown",  # no voltage limits
                 "is_tr_bus": False,
+                "is_reg_bus": True,
             },
             "bus1": {
                 "distance": 1.5,
@@ -37,6 +38,17 @@ def test_voltage_profile(all_elements_network_with_results):
                 "max_voltage": 110,
                 "state": "normal",
                 "is_tr_bus": False,  # because traverse_transformers=False by default
+                "is_reg_bus": False,
+            },
+            "bus5": {
+                "distance": 0.0,
+                "voltage": profile.network.buses["bus5"].res_voltage_level.m * 100,  # type: ignore
+                "voltages": None,
+                "min_voltage": 95,
+                "max_voltage": 105,
+                "state": "normal",
+                "is_tr_bus": False,
+                "is_reg_bus": True,
             },
         },
     )
@@ -54,6 +66,20 @@ def test_voltage_profile(all_elements_network_with_results):
         },
     )
     assert not profile.transformers  # because traverse_transformers=False by default
+    assert not profile.switches  # need to traverse transformers to include the switch on the other end
+    assert_json_close(
+        profile.regulators,
+        {
+            "reg0": {
+                "from_bus": "bus0",
+                "to_bus": "bus5",
+                "loading": profile.network.regulators["reg0"].res_loading.m * 100,
+                "loadings": None,
+                "max_loading": profile.network.regulators["reg0"].max_loading.m * 100,
+                "state": "normal",
+            },
+        },
+    )
 
 
 def test_voltage_profile_traverse_transformers(all_elements_network_with_results):
@@ -79,6 +105,19 @@ def test_voltage_profile_traverse_transformers(all_elements_network_with_results
                 "loadings": None,
                 "max_loading": tr.max_loading.m * 100,
                 "state": "normal",
+            },
+        },
+    )
+    assert_json_close(
+        profile.switches,
+        {
+            "switch0": {
+                "from_bus": "bus2",
+                "to_bus": "bus3",
+                "loading": None,
+                "loadings": None,
+                "max_loading": 100,
+                "state": "unknown",
             },
         },
     )
