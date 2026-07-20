@@ -1,7 +1,6 @@
 import logging
 from typing import Final, final
 
-import numpy as np
 from shapely.geometry.base import BaseGeometry
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
@@ -76,11 +75,6 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulator
         self._cy_element = parameters._create_cy_element(u_ref=self._u_ref)
         self._cy_connect()
         self._connect(bus1, bus2)
-
-    def _cy_connect(self) -> None:
-        super()._cy_connect()
-        # The regulator is an autotransformer, merge the neutral ports of the two sides
-        self._cy_element.connect_ports(np.array([1, 3], dtype=np.int32))
 
     def _update_parameters(self) -> None:
         """Update the C++ model parameters after a change in u_ref, z2, or ym."""
