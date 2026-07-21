@@ -41,7 +41,7 @@ def generate_small_network() -> None:
         sources=[src],
     )
     en.solve_load_flow()
-    en.to_json(TEST_NETWORKS_PATH / "small_network.json")
+    en.to_json(TEST_NETWORKS_PATH / "small_network.json", sort_keys=True)
 
 
 def generate_all_elements_network() -> None:
@@ -144,7 +144,7 @@ def generate_all_elements_network() -> None:
         sources=[voltage_source0],
     )
     en.solve_load_flow()
-    en.to_json(TEST_NETWORKS_PATH / "all_elements_network.json")
+    en.to_json(TEST_NETWORKS_PATH / "all_elements_network.json", sort_keys=True)
 
 
 if __name__ == "__main__":

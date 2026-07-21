@@ -187,7 +187,6 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
         if include_results:
             inner_currents = self._res_inner_currents_getter(warning=False)
             data["results"]["inner_currents"] = [[i.real, i.imag] for i in inner_currents.tolist()]
-            data["results"] = data.pop("results")  # move results to the end
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:

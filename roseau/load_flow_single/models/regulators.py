@@ -233,7 +233,6 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulator
         data["u_ref"] = self._u_ref
         if include_results:
             data["results"]["tap"] = self._res_tap_getter(warning=False)  # warn only once
-            data["results"] = data.pop("results")  # move results to the end
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:

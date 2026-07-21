@@ -44,7 +44,7 @@ if __name__ == "__main__":
         assert tp.ym is not None, id
         assert tp.k is not None, id
         assert tp.orientation is not None, id
-        tp.to_json(destination_path / f"{sn_kva}.json")
+        tp.to_json(destination_path / f"{sn_kva}.json", sort_keys=True)
 
     # Sort the catalogue and write it
     df.sort_values(by=["manufacturer", "range", "efficiency", "sn"]).to_csv(catalogue_data_path, index=False)

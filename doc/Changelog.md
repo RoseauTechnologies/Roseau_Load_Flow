@@ -19,6 +19,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`481` Add `sort_keys` parameter to the `to_json` method to control the sorting of keys in the JSON output. The
+  default value is `False`.
+
 ## Version 0.15.0
 
 ```{important}
