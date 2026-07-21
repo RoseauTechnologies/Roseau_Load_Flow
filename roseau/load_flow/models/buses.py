@@ -543,8 +543,6 @@ class Bus(AbstractTerminal["CyBus"]):
             data["min_voltage_level"] = self._min_voltage_level
         if self._max_voltage_level is not None:
             data["max_voltage_level"] = self._max_voltage_level
-        if include_results:
-            data["results"] = data.pop("results")  # move results to the end
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:

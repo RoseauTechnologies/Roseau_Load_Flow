@@ -217,7 +217,7 @@ if __name__ == "__main__":
                 new_potential_refs["MV_pref"] = new_potential_ref
 
             new_en = rlf.ElectricalNetwork.from_element(new_buses[source_bus_id])
-            new_en.to_json(path=catalogue_path / f"{name}_{lp}.json", include_results=False)
+            new_en.to_json(path=catalogue_path / f"{name}_{lp}.json", include_results=False, sort_keys=True)
 
             # Test the new network
             new_en.solve_load_flow()

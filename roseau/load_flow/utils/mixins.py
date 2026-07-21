@@ -26,7 +26,7 @@ from typing_extensions import TypeVar
 
 from roseau.load_flow._solvers import AbstractSolver
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
+from roseau.load_flow.typing import BranchType, CRSLike, Id, JsonDict, MapOrSeq, Solver, StrPath
 from roseau.load_flow.utils.helpers import abstractattrs, warn_external
 from roseau.load_flow.utils.tool_data import ToolData
 from roseau.load_flow_engine.cy_engine import CyElectricalNetwork, CyElement
@@ -52,17 +52,26 @@ def _json_encoder_default(obj: object) -> object:
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
-def _json_dump(obj: object, /, path: StrPath, indent: bool) -> Path:
+def _json_dump(obj: object, /, path: StrPath, indent: bool, sort_keys: bool) -> Path:
     """Dump an object to a JSON file."""
     path = Path(path).expanduser().resolve()
     if orjson is not None:
         option = orjson.OPT_SERIALIZE_NUMPY
         if indent:
             option |= orjson.OPT_INDENT_2 | orjson.OPT_APPEND_NEWLINE
+        if sort_keys:
+            option |= orjson.OPT_SORT_KEYS
         path.write_bytes(orjson.dumps(obj, option=option))
     else:
         with path.open("w", encoding="utf-8") as fp:
-            json.dump(obj, fp, ensure_ascii=False, indent=2 if indent else None, default=_json_encoder_default)
+            json.dump(
+                obj,
+                fp,
+                ensure_ascii=False,
+                indent=2 if indent else None,
+                sort_keys=sort_keys,
+                default=_json_encoder_default,
+            )
     return path
 
 
@@ -122,7 +131,9 @@ class ToJsonMixin(metaclass=ABCMeta):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
         return self._to_dict(include_results=include_results)
 
-    def to_json(self, path: StrPath, *, include_results: bool = True, indent: bool = True) -> Path:
+    def to_json(
+        self, path: StrPath, *, include_results: bool = True, indent: bool = True, sort_keys: bool = False
+    ) -> Path:
         """Save this element to a JSON file.
 
         .. note::
@@ -145,11 +156,14 @@ class ToJsonMixin(metaclass=ABCMeta):
                 If True (default), the JSON output is pretty-printed with 2-space indentation.
                 Set to False for compact output.
 
+            sort_keys:
+                If True, the keys of the JSON output are sorted alphabetically. `False` by default.
+
         Returns:
             The expanded and resolved path of the written file.
         """
         res = self.to_dict(include_results=include_results)
-        return _json_dump(res, path=path, indent=indent)
+        return _json_dump(res, path=path, indent=indent, sort_keys=sort_keys)
 
     @abstractmethod
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
@@ -223,7 +237,7 @@ class ToJsonMixin(metaclass=ABCMeta):
             The expanded and resolved path of the written file.
         """
         dict_results = self._results_to_dict(warning=True, full=full)
-        return _json_dump(dict_results, path=path, indent=indent)
+        return _json_dump(dict_results, path=path, indent=indent, sort_keys=False)
 
 
 class JsonMixin(ToJsonMixin):
@@ -650,11 +664,13 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         self._tool_data = ToolData()
 
         # Track parameters to check for duplicates
-        self._parameters: dict[str, dict[Id, Identifiable]] = {"line": {}, "transformer": {}}
+        self._parameters: dict[str, dict[Id, Identifiable]] = {"line": {}, "transformer": {}, "regulator": {}}
         for line in self._elements_by_type["line"].values():
             self._add_parameters("line", line.parameters)  # type: ignore
         for transformer in self._elements_by_type["transformer"].values():
             self._add_parameters("transformer", transformer.parameters)  # type: ignore
+        for regulator in self._elements_by_type["regulator"].values():
+            self._add_parameters("regulator", regulator.parameters)  # type: ignore
 
     @classmethod
     def from_element(cls, initial_bus: AbstractElement, *, name: str = "Network", crs: CRSLike | None = None) -> Self:
@@ -697,6 +713,8 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             elements_kwargs["potential_refs"] = elements_by_type["potential ref"]
             elements_kwargs["grounds"] = elements_by_type["ground"]
             elements_kwargs["ground_connections"] = elements_by_type["ground connection"]
+        else:
+            elements_kwargs["regulators"] = elements_by_type["regulator"]
         return cls(**elements_kwargs, name=name, crs=crs)
 
     def solve_load_flow(
@@ -847,7 +865,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
         disconnectable = et in ("load", "source")
         self._add_element_to_dict(element, self._elements_by_type[et], disconnectable=disconnectable)
-        if et in ("line", "transformer"):
+        if et in self._parameters:
             self._add_parameters(et, element.parameters)  # type: ignore
         self._add_ground_connections(element)
         self._valid = False
@@ -869,7 +887,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         if et in ("load", "source", "ground connection"):
             self._elements_by_type[et].pop(element.id)
         else:
-            if et in ("bus", "transformer", "line", "switch"):
+            if et in ("bus", "transformer", "line", "switch", "regulator"):
                 msg = f"{element!r} is a {et} and cannot be disconnected from a network."
             else:
                 msg = f"{element!r} is not a valid load or source."
@@ -1090,6 +1108,11 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             starting_transformer = max(self.transformers.values(), key=lambda t: t.parameters._uhv)
             reference_bus = starting_transformer.bus_hv
             reference_nominal_voltage = starting_transformer.parameters._uhv
+        elif self.regulators:
+            # Use the highest voltage regulator as reference
+            starting_regulator = max(self.regulators.values(), key=lambda r: r.parameters._un)
+            reference_bus = starting_regulator.bus1
+            reference_nominal_voltage = starting_regulator.parameters._un
         else:
             # Use the first source bus as reference
             if isinstance(self, rlf.ElectricalNetwork):
@@ -1128,7 +1151,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
                             else current_vn * e.parameters._uhv / e.parameters._ulv
                         )
                     buses.append((other_bus, other_vn))
-                elif isinstance(e, (rlf.Line, rlf.Switch, rlfs.Line, rlfs.Switch)):
+                elif isinstance(e, (rlf.Line, rlf.Switch, rlfs.Line, rlfs.Switch, rlfs.VoltageRegulator)):
                     other_bus = e.bus2 if e.bus1.id == current_bus.id else e.bus1
                     other_vn = nominal_voltages.get(other_bus.id, current_vn)
                     buses.append((other_bus, other_vn))
@@ -1144,15 +1167,13 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         self,
         source: Id,
         *,
-        weight: Callable[[str, Id], float | None],
+        weight: Callable[[BranchType, Id], float | None],
         pred: dict[Id, list[Id]] | None = None,
-        adj: dict[Id, dict[Id, list[tuple[str, Id]]]] | None = None,
+        adj: dict[Id, dict[Id, list[tuple[BranchType, Id]]]] | None = None,
     ) -> dict[Id, float]:
         """Compute the shortest paths from a source bus to all buses in the network.
 
-        The network is represented as an undirected multigraph where edges correspond to lines,
-        transformers, and closed switches. The length of lines is used as the weight for the edges,
-        while transformers and closed switches have a length of 0. Open switches are ignored.
+        The network is represented as an undirected multigraph where edges correspond to branches.
 
         The algorithm used is Dijkstra's algorithm.
 
@@ -1161,8 +1182,8 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
                 The ID of the source bus. All distances are computed from this bus.
 
             weight:
-                A callable that takes the element type and element ID and returns the weight for the edge.
-                If the callable returns None, the edge is ignored.
+                A callable that takes the element type and element ID and returns the weight for the
+                edge. If the callable returns None, the edge is ignored.
 
             pred:
                 An optional dictionary to store the predecessors of each bus in the shortest paths.
@@ -1179,7 +1200,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             adj = {}
         for n in self._elements_by_type["bus"]:
             adj.setdefault(n, {})
-        for et in ("line", "transformer", "switch"):
+        for et in ("line", "transformer", "switch", "regulator"):
             for e in self._elements_by_type[et].values():
                 u, v = e.bus1.id, e.bus2.id  # type: ignore
                 edge_data = (et, e.id)

@@ -33,8 +33,12 @@ def test_import():
         "Any",
         "importlib",
     }
-    # conftest is not included in wheels
-    assert rlfs_dir - rlf_dir <= {"conftest"}
+
+    assert rlfs_dir - rlf_dir <= {
+        # Single-phase elements
+        "VoltageRegulator",
+        "RegulatorParameters",
+    }
 
 
 def test_incompatible_phase_tech():
@@ -47,6 +51,7 @@ def test_incompatible_phase_tech():
     lp_s = rlfs.LineParameters(id="LP S", z_line=0.1)
     tp_m = rlf.TransformerParameters(id="TP M", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
     tp_s = rlfs.TransformerParameters(id="TP S", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
+    rp_s = rlfs.RegulatorParameters(id="RP S", sn=100e3, un=20e3, z2=0.1, ym=0.1j)
 
     # single-phase sources and loads
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -143,6 +148,16 @@ def test_incompatible_phase_tech():
         rlf.Switch(id="Sw M", bus1=bus1_m, bus2=bus2_s)  # type: ignore
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
     assert e.value.msg == "Cannot connect multi-phase switch 'Sw M' to single-phase bus 'Bus2 S'."
+
+    # single-phase voltage regulators
+    with pytest.raises(RoseauLoadFlowException) as e:
+        rlfs.VoltageRegulator(id="VR S", bus1=bus1_m, bus2=bus2_s, parameters=rp_s)  # type: ignore
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+    assert e.value.msg == "Cannot connect single-phase regulator 'VR S' to multi-phase bus 'Bus1 M'."
+    with pytest.raises(RoseauLoadFlowException) as e:
+        rlfs.VoltageRegulator(id="VR S", bus1=bus1_s, bus2=bus2_m, parameters=rp_s)  # type: ignore
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+    assert e.value.msg == "Cannot connect single-phase regulator 'VR S' to multi-phase bus 'Bus2 M'."
 
     # ground connections and potential references
     with pytest.raises(RoseauLoadFlowException) as e:

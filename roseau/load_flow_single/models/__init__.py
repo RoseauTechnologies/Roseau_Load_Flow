@@ -7,6 +7,8 @@ from roseau.load_flow_single.models.flexible_parameters import Control, Flexible
 from roseau.load_flow_single.models.line_parameters import LineParameters
 from roseau.load_flow_single.models.lines import Line
 from roseau.load_flow_single.models.loads import AbstractLoad, CurrentLoad, ImpedanceLoad, Load, PowerLoad
+from roseau.load_flow_single.models.regulator_parameters import RegulatorParameters
+from roseau.load_flow_single.models.regulators import VoltageRegulator
 from roseau.load_flow_single.models.sources import VoltageSource
 from roseau.load_flow_single.models.switches import Switch
 from roseau.load_flow_single.models.terminals import AbstractTerminal
@@ -39,6 +41,9 @@ __all__ = [
     # Transformers
     "Transformer",
     "TransformerParameters",
+    # Regulators
+    "VoltageRegulator",
+    "RegulatorParameters",
     # Sources
     "VoltageSource",
 ]

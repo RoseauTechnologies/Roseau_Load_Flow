@@ -142,6 +142,7 @@ type ProjectionType = Literal["euclidean", "keep_p", "keep_q"]
 type Solver = Literal["newton", "newton_goldstein", "backward_forward"]
 type Side = Literal[1, 2, "HV", "LV"]
 type ResultState = Literal["very-low", "low", "normal", "high", "very-high", "unknown"]
+type BranchType = Literal["line", "transformer", "switch", "regulator"]
 
 # Input Types (Wide)
 type Int = int | np.integer

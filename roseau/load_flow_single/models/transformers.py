@@ -210,8 +210,6 @@ class Transformer(AbstractBranch["TransformerSide", "CySingleTransformer"]):
         data["max_loading"] = self._max_loading
         data["params_id"] = self.parameters.id
         data["tap"] = self.tap
-        if include_results:
-            data["results"] = data.pop("results")  # move results to the end
         return data
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
