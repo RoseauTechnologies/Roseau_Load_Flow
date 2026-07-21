@@ -1,10 +1,43 @@
 {
-  "version": 5,
-  "is_multiphase": true,
+  "buses": [
+    {
+      "id": "bus1",
+      "initial_potentials": [[20000.0, 0.0], [0.0, 0.0]],
+      "phases": "an",
+      "results": {
+        "potentials": [[20000.0, 0.0], [0.0, 0.0]]
+      }
+    },
+    {
+      "id": "bus2",
+      "initial_potentials": [[20000.0, 0.0], [0.0, 0.0]],
+      "phases": "an",
+      "results": {
+        "potentials": [[19974.685919734027, -50.00000000000026], [25.31408026597291, 50.00000000000026]]
+      }
+    }
+  ],
   "crs": {
     "data": null,
     "normalize": false
   },
+  "ground_connections": [
+    {
+      "element": {
+        "id": "bus1",
+        "type": "bus"
+      },
+      "ground": "gnd",
+      "id": "1",
+      "impedance": [0.0, 0.0],
+      "on_connected": "raise",
+      "phase": "n",
+      "results": {
+        "current": [0.0, 0.0]
+      },
+      "side": null
+    }
+  ],
   "grounds": [
     {
       "id": "gnd",
@@ -13,78 +46,21 @@
       }
     }
   ],
-  "potential_refs": [
-    {
-      "id": "pref",
-      "ground": "gnd",
-      "results": {
-        "current": [0.0, 3.552713678800501e-15]
-      }
-    }
-  ],
-  "buses": [
-    {
-      "id": "bus1",
-      "phases": "an",
-      "initial_potentials": [[20000.0, 0.0], [0.0, 0.0]],
-      "results": {
-        "potentials": [[20000.0, 0.0], [0.0, 0.0]]
-      }
-    },
-    {
-      "id": "bus2",
-      "phases": "an",
-      "initial_potentials": [[20000.0, 0.0], [0.0, 0.0]],
-      "results": {
-        "potentials": [[19974.685919734027, -50.00000000000026], [25.31408026597291, 50.00000000000026]]
-      }
-    }
-  ],
+  "is_multiphase": true,
   "lines": [
     {
-      "id": "line",
       "bus1": "bus1",
       "bus2": "bus2",
-      "phases": "an",
+      "id": "line",
+      "length": 10.0,
       "max_loading": 1.0,
       "params_id": "lp",
-      "length": 10.0,
+      "phases": "an",
       "results": {
         "currents1": [[75.31408026597299, 24.68591973402753], [-75.31408026597317, -24.685919734027355]],
         "currents2": [[-75.31408026597299, -24.68591973402753], [75.31408026597317, 24.685919734027355]],
         "potentials1": [[20000.0, 0.0], [0.0, 0.0]],
         "potentials2": [[19974.685919734027, -50.00000000000026], [25.31408026597291, 50.00000000000026]]
-      }
-    }
-  ],
-  "transformers": [],
-  "switches": [],
-  "loads": [
-    {
-      "id": "load",
-      "bus": "bus2",
-      "phases": "an",
-      "connect_neutral": null,
-      "type": "power",
-      "powers": [[1500000.0, -500000.0]],
-      "results": {
-        "currents": [[75.31408026597121, 24.685919734028797], [-75.31408026597121, -24.685919734028797]],
-        "potentials": [[19974.685919734027, -50.00000000000026], [25.31408026597291, 50.00000000000026]],
-        "inner_currents": [[75.31408026597121, 24.685919734028797]]
-      }
-    }
-  ],
-  "sources": [
-    {
-      "id": "vs",
-      "bus": "bus1",
-      "phases": "an",
-      "connect_neutral": null,
-      "type": "voltage",
-      "voltages": [[20000.0, 0.0]],
-      "results": {
-        "currents": [[-75.31408026597317, -24.685919734027358], [75.31408026597317, 24.685919734027358]],
-        "potentials": [[20000.0, 0.0], [0.0, 0.0]]
       }
     }
   ],
@@ -94,22 +70,47 @@
       "z_line": [[[0.05, 0.0], [0.0, 0.05]], [[0.05, 0.0], [0.0, 0.05]]]
     }
   ],
-  "transformers_params": [],
-  "ground_connections": [
+  "loads": [
     {
-      "id": "1",
-      "ground": "gnd",
-      "element": {
-        "id": "bus1",
-        "type": "bus"
-      },
-      "phase": "n",
-      "impedance": [0.0, 0.0],
-      "side": null,
-      "on_connected": "raise",
+      "bus": "bus2",
+      "connect_neutral": null,
+      "id": "load",
+      "phases": "an",
+      "powers": [[1500000.0, -500000.0]],
       "results": {
-        "current": [0.0, 0.0]
+        "currents": [[75.31408026597121, 24.685919734028797], [-75.31408026597121, -24.685919734028797]],
+        "inner_currents": [[75.31408026597121, 24.685919734028797]],
+        "potentials": [[19974.685919734027, -50.00000000000026], [25.31408026597291, 50.00000000000026]]
+      },
+      "type": "power"
+    }
+  ],
+  "name": "Network",
+  "potential_refs": [
+    {
+      "ground": "gnd",
+      "id": "pref",
+      "results": {
+        "current": [0.0, 3.552713678800501e-15]
       }
     }
-  ]
+  ],
+  "sources": [
+    {
+      "bus": "bus1",
+      "connect_neutral": null,
+      "id": "vs",
+      "phases": "an",
+      "results": {
+        "currents": [[-75.31408026597317, -24.685919734027358], [75.31408026597317, 24.685919734027358]],
+        "potentials": [[20000.0, 0.0], [0.0, 0.0]]
+      },
+      "type": "voltage",
+      "voltages": [[20000.0, 0.0]]
+    }
+  ],
+  "switches": [],
+  "transformers": [],
+  "transformers_params": [],
+  "version": 5
 }
