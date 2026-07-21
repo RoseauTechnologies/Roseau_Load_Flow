@@ -31,7 +31,7 @@ dependencies = [
   "pint>=0.21.0",
   "platformdirs>=4.0.0",
   "pyproj>=3.3.0",
-  "roseau-load-flow-engine==0.19.1",
+  "roseau-load-flow-engine>=0.19.1",
   "shapely>=2.0.0",
   "typing-extensions>=4.6.2",
 ]
