@@ -78,8 +78,6 @@ class AbstractLoad(AbstractDisconnectable[_CyL_co], ABC):
             **super()._to_dict(include_results=include_results),
             f"{self.type}": [value.real, value.imag],
         }
-        if include_results:
-            load_dict["results"] = load_dict.pop("results")  # move results to the end
         return load_dict
 
 
@@ -188,8 +186,6 @@ class PowerLoad(AbstractLoad["CyPowerLoad | CyFlexibleLoad"]):
         data = super()._to_dict(include_results=include_results)
         if self.flexible_param is not None:
             data["flexible_param"] = self.flexible_param.to_dict(include_results=include_results)
-        if include_results:
-            data["results"] = data.pop("results")  # move results to the end
         return data
 
 

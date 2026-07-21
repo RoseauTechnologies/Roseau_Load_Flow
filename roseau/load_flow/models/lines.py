@@ -384,11 +384,9 @@ class Line(AbstractBranch["LineSide", "CyShuntLine | CySimplifiedLine"]):
         line_dict["length"] = self._length
         if self.ground is not None:
             line_dict["ground"] = self.ground.id
-        if include_results:
-            if self.with_shunt:
-                vg = self._res_ground_potential_getter(warning=False)
-                line_dict["results"]["ground_potential"] = [vg.real, vg.imag]
-            line_dict["results"] = line_dict.pop("results")  # move results to the end
+        if include_results and self.with_shunt:
+            vg = self._res_ground_potential_getter(warning=False)
+            line_dict["results"]["ground_potential"] = [vg.real, vg.imag]
         return line_dict
 
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:

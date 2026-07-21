@@ -29,12 +29,12 @@ def all_single_network_paths() -> Generator[Path, None, None]:
 
 def upgrade_network(path: Path) -> None:
     net = rlf.ElectricalNetwork.from_json(path)
-    net.to_json(path)
+    net.to_json(path, sort_keys=True)
 
 
 def upgrade_single_network(path: Path) -> None:
     net = rlfs.ElectricalNetwork.from_json(path)
-    net.to_json(path)
+    net.to_json(path, sort_keys=True)
 
 
 def update_bad_transformer_id(path: Path) -> None:
@@ -55,7 +55,7 @@ def update_bad_transformer_id(path: Path) -> None:
                 transformer["id"] = "tr" + transformer_id.removeprefix("line")
 
     net = rlf.ElectricalNetwork.from_dict(data)
-    net.to_json(path)
+    net.to_json(path, sort_keys=True)
 
 
 if __name__ == "__main__":

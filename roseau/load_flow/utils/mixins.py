@@ -52,17 +52,26 @@ def _json_encoder_default(obj: object) -> object:
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
-def _json_dump(obj: object, /, path: StrPath, indent: bool) -> Path:
+def _json_dump(obj: object, /, path: StrPath, indent: bool, sort_keys: bool) -> Path:
     """Dump an object to a JSON file."""
     path = Path(path).expanduser().resolve()
     if orjson is not None:
         option = orjson.OPT_SERIALIZE_NUMPY
         if indent:
             option |= orjson.OPT_INDENT_2 | orjson.OPT_APPEND_NEWLINE
+        if sort_keys:
+            option |= orjson.OPT_SORT_KEYS
         path.write_bytes(orjson.dumps(obj, option=option))
     else:
         with path.open("w", encoding="utf-8") as fp:
-            json.dump(obj, fp, ensure_ascii=False, indent=2 if indent else None, default=_json_encoder_default)
+            json.dump(
+                obj,
+                fp,
+                ensure_ascii=False,
+                indent=2 if indent else None,
+                sort_keys=sort_keys,
+                default=_json_encoder_default,
+            )
     return path
 
 
@@ -122,7 +131,9 @@ class ToJsonMixin(metaclass=ABCMeta):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LOAD_FLOW_RESULT)
         return self._to_dict(include_results=include_results)
 
-    def to_json(self, path: StrPath, *, include_results: bool = True, indent: bool = True) -> Path:
+    def to_json(
+        self, path: StrPath, *, include_results: bool = True, indent: bool = True, sort_keys: bool = False
+    ) -> Path:
         """Save this element to a JSON file.
 
         .. note::
@@ -145,11 +156,14 @@ class ToJsonMixin(metaclass=ABCMeta):
                 If True (default), the JSON output is pretty-printed with 2-space indentation.
                 Set to False for compact output.
 
+            sort_keys:
+                If True, the keys of the JSON output are sorted alphabetically. `False` by default.
+
         Returns:
             The expanded and resolved path of the written file.
         """
         res = self.to_dict(include_results=include_results)
-        return _json_dump(res, path=path, indent=indent)
+        return _json_dump(res, path=path, indent=indent, sort_keys=sort_keys)
 
     @abstractmethod
     def _results_to_dict(self, warning: bool, full: bool) -> JsonDict:
@@ -223,7 +237,7 @@ class ToJsonMixin(metaclass=ABCMeta):
             The expanded and resolved path of the written file.
         """
         dict_results = self._results_to_dict(warning=True, full=full)
-        return _json_dump(dict_results, path=path, indent=indent)
+        return _json_dump(dict_results, path=path, indent=indent, sort_keys=False)
 
 
 class JsonMixin(ToJsonMixin):

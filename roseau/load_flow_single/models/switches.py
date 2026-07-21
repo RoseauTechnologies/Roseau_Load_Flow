@@ -154,8 +154,6 @@ class Switch(AbstractBranch["SwitchSide", "CySwitch | CyOpenSwitch"]):
     def _to_dict(self, include_results: bool) -> JsonDict:
         data = super()._to_dict(include_results)
         data["closed"] = self._closed
-        if include_results:
-            data["results"] = data.pop("results")  # move results to the end
         return data
 
 
