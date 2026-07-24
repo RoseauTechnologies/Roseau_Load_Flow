@@ -250,7 +250,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
     def vg(self) -> str:
         """The vector group of the transformer.
 
-        For three-phase transformers, ``Dyn11`` denotes a delta-wye connection with 30° lead phase
+        For three-phase transformers, ``Dyn11`` denotes a delta-wye connection with -30° phase
         displacement. Allowed windings are ``D`` for delta, ``Y`` for wye, ``Z`` for zigzag.
 
         For single-phase transformers, ``Ii0`` denotes a normal in-phase connection and ``Ii6``

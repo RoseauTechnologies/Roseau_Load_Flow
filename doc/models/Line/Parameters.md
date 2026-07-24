@@ -345,7 +345,7 @@ compute the distances based on the position of wires.
 The permittivity of the insulator $\varepsilon$ (in F/m) is defined as $\varepsilon_0\varepsilon_{\mathrm{r}}$ with
 $\varepsilon_0$ the permittivity of the vacuum (in F/m) and $\varepsilon_{\mathrm{r}}$ the relative permittivity of the
 insulator (no unit). These values are defined in the `utils` module {data}`roseau.load_flow.utils.EPSILON_0` and
-{data}`roseau.load_flow.utilsEPSILON_R`.
+{data}`roseau.load_flow.utils.EPSILON_R`.
 
 The capacitance matrix $C$ is then defined by:
 

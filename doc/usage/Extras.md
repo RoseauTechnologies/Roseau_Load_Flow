@@ -70,7 +70,7 @@ As you can see, for this positive-sequence balanced voltage, only the positive-s
 Converting back to phasor, you get the original voltage values back:
 
 ```pycon
->>> sym_to_phasor(v_sym)
+>>> rlf.sym.sym_to_phasor(v_sym)
 array([[ 230.-7.21644966e-16j],
        [-115.-1.99185843e+02j],
        [-115.+1.99185843e+02j]])

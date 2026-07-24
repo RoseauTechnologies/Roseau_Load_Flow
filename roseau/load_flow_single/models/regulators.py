@@ -239,7 +239,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulator
         results = super()._results_to_dict(warning, full)
         results["tap"] = self._res_tap_getter(warning=False)  # warn only once
         if full:
-            # Add transformer specific results
+            # Add regulator specific results
             power1 = self._side1._res_power_getter(warning=False)
             power2 = self._side2._res_power_getter(warning=False)
             losses = power1 + power2

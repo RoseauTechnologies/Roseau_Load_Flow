@@ -61,6 +61,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
                 switches. This is ``None`` for other elements.
         """
         self._check_compatible_phase_tech(bus, id=id)
+        self._check_short_circuit(bus, id=id)
         if phases is None:
             phases = bus.phases
         else:
@@ -126,6 +127,9 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         return connect_neutral
+
+    def _check_short_circuit(self, bus: Bus, id: Id) -> None:
+        pass
 
     def _cy_connect(self) -> None:
         bus_phases = self.bus.phases.removesuffix("n") if self.has_floating_neutral else self.bus.phases
@@ -229,17 +233,24 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         return results
 
 
-@abstractattrs("type")
+@abstractattrs("type", "_short_circuit_compatible")
 class AbstractDisconnectable(AbstractConnectable[_CyE_co], ABC):
     """A base class for disconnectable elements in the network (loads, sources, etc.)."""
 
     type: ClassVar[str]
+    _short_circuit_compatible: ClassVar[bool]
 
     def __repr__(self) -> str:
         s = super().__repr__()
         if self._is_disconnected:
             return f"{s} (disconnected)"
         return s
+
+    def _check_short_circuit(self, bus: Bus, id: Id) -> None:
+        if not self._short_circuit_compatible and bus.short_circuits:
+            msg = f"Cannot create {self.type} {self.element_type} {id!r} on short-circuited bus {bus.id!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
 
     @property
     def is_disconnected(self) -> bool:

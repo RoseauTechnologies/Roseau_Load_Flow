@@ -150,8 +150,8 @@ def test_loads():
     bus.add_short_circuit("a", "b")
     with pytest.raises(RoseauLoadFlowException) as e:
         PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
-    assert "that already has a short-circuit. It makes the short-circuit calculation impossible." in e.value.msg
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+    assert e.value.msg == "Cannot create power load 'load' on short-circuited bus 'bus'."
 
 
 def test_flexible_load():

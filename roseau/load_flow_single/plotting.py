@@ -201,16 +201,16 @@ def plot_interactive_map(
 
     Args:
         network:
-            The electrical network to plot. Buses, lines and transformers are plotted. Buses of
-            source elements are represented with bigger square markers.
+            The electrical network to plot. Buses, lines, transformers and regulators are plotted.
+            Buses of source elements are represented with bigger square markers.
 
         style_color:
             A string to use as the default color of all elements, or a callback function in the form
             ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
-            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``. Return ``None`` from
-            the callable to use the default color for that element instead. Defaults to
-            :roseau-primary:`■ #234e83` for buses and lines, :color-gray:`■ #888888` for switches,
-            and :color-black:`■ #000000` for transformers.
+            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``, ``"regulator"``. Return
+            ``None`` from the callable to use the default color for that element instead. Defaults to
+            :roseau-primary:`■ #234e83` for buses and lines, :color-gray:`■ #888888` for switches and
+            regulators, and :color-black:`■ #000000` for transformers.
 
         highlight_color:
             The color of the default style when an element is highlighted. Defaults to
@@ -314,15 +314,15 @@ def plot_results_interactive_map(
 
     Args:
         network:
-            The electrical network to plot. Buses, lines and transformers are plotted. Buses of
-            source elements are represented with bigger square markers.
+            The electrical network to plot. Buses, lines, transformers and regulators are plotted.
+            Buses of source elements are represented with bigger square markers.
 
         style_color:
             A string to use as the default color of all elements, or a callback function in the form
             ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
-            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``. Return ``None`` from
-            the callable to use the default color for that element instead. The default colors depend
-            on the element type and its results:
+            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``, ``"regulator"``. Return
+            ``None`` from the callable to use the default color for that element instead. The default
+            colors depend on the element type and its results:
 
             For buses, the default color is determined by their voltage levels:
 
@@ -332,7 +332,7 @@ def plot_results_interactive_map(
             - orange: `U` close to `Umax`; specifically, `0.75 * Umax + 0.25 < U ≤ Umax`
             - red: `U` above `Umax`
 
-            For lines and transformers, the default color depends on their loadings:
+            For lines, transformers and regulators, the default color depends on their loadings:
             - green: below 75% of the maximum loading
             - orange: between 75% and 100% of the maximum loading
             - red: above 100% of the maximum loading
@@ -429,8 +429,8 @@ def voltage_profile(
     """Create a voltage profile of the network.
 
     A voltage profile shows the voltage (in %) of buses in the network as a function of distance
-    from a starting bus. Lines and transformers are also represented, colored according to their
-    loading levels.
+    from a starting bus. Lines, transformers and regulators are also represented, colored according
+    to their loading levels.
 
     The network does not need to have geometries defined for this function to work, as distances are
     calculated based on line lengths. However, the network must have valid load flow results, and
@@ -446,7 +446,7 @@ def voltage_profile(
 
         traverse_transformers:
             If True, the entire network is traversed including transformers. If False, transformers
-            are not traversed.
+            are not traversed. Regulators are always traversed regardless of this parameter.
 
         switch_length:
             The length in km to assign to switches when calculating distances. If None, it is set to

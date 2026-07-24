@@ -205,7 +205,7 @@ class Control(JsonMixin):
 
     @property
     def u_up(self) -> Q_[float]:
-        """TThe voltage  which starts to trigger the control (upper value)."""
+        """The voltage which starts to trigger the control (upper value)."""
         return Q_(self._u_up, "V")
 
     @property

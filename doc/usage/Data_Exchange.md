@@ -152,7 +152,7 @@ The data on these two screenshots translate to:
 ...     r1=rlf.Q_(0.3225, "ohm/km"),  # Parameters per Length 1,2 Sequence, "Basic data"
 ...     x0=rlf.Q_(0.502654, "ohm/km"),  # Parameters per Length Zero Sequence, "Basic data"
 ...     x1=rlf.Q_(0.125663, "ohm/km"),  # Parameters per Length 1,2 Sequence, "Basic data"
-...     b0=rlf.Q_(75.05265, "uS/km"),  # Parameters per Length Sero Sequence, "Load Flow"
+...     b0=rlf.Q_(75.05265, "uS/km"),  # Parameters per Length Zero Sequence, "Load Flow"
 ...     b1=rlf.Q_(72.25663, "uS/km"),  # Parameters per Length 1,2 Sequence, "Load Flow"
 ...     nphase=3,  # Phases, "Basic Data"
 ...     nneutral=0,  # Number of Neutrals, "Basic Data"

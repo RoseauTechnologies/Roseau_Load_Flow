@@ -309,7 +309,7 @@ class FlexibleParameter(MultiFlexibleParameter):
 
             alpha_control:
                 An approximation factor used by the family function (soft clip). The greater, the
-                closer the function are from the non-differentiable function.
+                closer the function is to the non-differentiable function.
 
             epsilon_control:
                 This value is used to make a smooth inverse function for the control.
@@ -363,7 +363,7 @@ class FlexibleParameter(MultiFlexibleParameter):
 
             alpha_control:
                 An approximation factor used by the family function (soft clip). The greater, the
-                closer the function are from the non-differentiable function.
+                closer the function is to the non-differentiable function.
 
             epsilon_control:
                 This value is used to make a smooth inverse function for the control.
@@ -437,7 +437,7 @@ class FlexibleParameter(MultiFlexibleParameter):
 
             alpha_control:
                 An approximation factor used by the family function (soft clip). The greater, the
-                closer the function are from the non-differentiable function.
+                closer the function is to the non-differentiable function.
 
             type_proj:
                 The type of the projection to use.
@@ -523,7 +523,7 @@ class FlexibleParameter(MultiFlexibleParameter):
 
             alpha_control:
                 An approximation factor used by the family function (soft clip). The greater, the
-                closer the function are from the non-differentiable function.
+                closer the function is to the non-differentiable function.
 
             epsilon_control:
                 This value is used to make a smooth inverse function for the control.
@@ -615,7 +615,7 @@ class FlexibleParameter(MultiFlexibleParameter):
 
             alpha_control:
                 An approximation factor used by the family function (soft clip). The greater, the
-                closer the function are from the non-differentiable function.
+                closer the function is to the non-differentiable function.
 
             epsilon_control:
                 This value is used to make a smooth inverse function for the control.

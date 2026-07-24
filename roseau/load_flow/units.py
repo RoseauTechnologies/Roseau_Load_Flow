@@ -231,7 +231,7 @@ def wraps(ureg: UnitRegistry, ret: OptionalUnits, args: OptionalUnits) -> _Ident
 
     for arg in args:
         if arg is not None and not isinstance(arg, (ureg.Unit, str)):
-            raise TypeError(f"wraps arguments must by of type str or Unit, not {type(arg)} ({arg})")
+            raise TypeError(f"wraps arguments must be of type str or Unit, not {type(arg)} ({arg})")
 
     converter = _parse_wrap_args(args)
 
@@ -239,11 +239,11 @@ def wraps(ureg: UnitRegistry, ret: OptionalUnits, args: OptionalUnits) -> _Ident
     if is_ret_container:
         for arg in ret:
             if arg is not None and not isinstance(arg, (ureg.Unit, str)):
-                raise TypeError(f"wraps 'ret' argument must by of type str or Unit, not {type(arg)} ({arg})")
+                raise TypeError(f"wraps 'ret' argument must be of type str or Unit, not {type(arg)} ({arg})")
         ret = ret.__class__([to_units_container(arg, ureg) for arg in ret])
     else:
         if ret is not None and not isinstance(ret, (ureg.Unit, str)):
-            raise TypeError(f"wraps 'ret' argument must by of type str or Unit, not {type(ret)} ({ret})")
+            raise TypeError(f"wraps 'ret' argument must be of type str or Unit, not {type(ret)} ({ret})")
         ret = to_units_container(ret, ureg)
 
     def decorator(func):
