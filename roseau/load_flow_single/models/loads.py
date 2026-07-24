@@ -87,6 +87,7 @@ class PowerLoad(AbstractLoad["CyPowerLoad | CyFlexibleLoad"]):
     """A constant power load."""
 
     type: Final = "power"
+    _short_circuit_compatible: Final = False
 
     def __init__(
         self, id: Id, bus: Bus, *, power: Complex | Q_[Complex], flexible_param: FlexibleParameter | None = None
@@ -109,15 +110,6 @@ class PowerLoad(AbstractLoad["CyPowerLoad | CyFlexibleLoad"]):
                 (or controllable) and the parameters are used to compute the flexible power of the load.
         """
         super().__init__(id=id, bus=bus)
-
-        if bus.short_circuit:
-            msg = (
-                f"The power load {self.id!r} is connected on bus {bus.id!r} that already has a short-circuit. "
-                f"It makes the short-circuit calculation impossible."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
-
         self._flexible_param = flexible_param
         self.power = power
 
@@ -195,6 +187,7 @@ class CurrentLoad(AbstractLoad["CyCurrentLoad"]):
     """A constant current load."""
 
     type: Final = "current"
+    _short_circuit_compatible: Final = False
 
     def __init__(self, id: Id, bus: Bus, *, current: Complex | Q_[Complex]) -> None:
         """CurrentLoad constructor.
@@ -211,15 +204,6 @@ class CurrentLoad(AbstractLoad["CyCurrentLoad"]):
                 complex value.
         """
         super().__init__(id=id, bus=bus)
-
-        if bus.short_circuit:
-            msg = (
-                f"The current load {self.id!r} is connected on bus {bus.id!r} that already has a short-circuit. "
-                f"It makes the short-circuit calculation impossible."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
-
         self.current = current
         self._cy_element = CyCurrentLoad(n=self._n, currents=np.array([self._current], dtype=np.complex128))
         self._cy_connect()
@@ -247,6 +231,7 @@ class ImpedanceLoad(AbstractLoad["CyAdmittanceLoad"]):
     """A constant impedance load."""
 
     type: Final = "impedance"
+    _short_circuit_compatible: Final = True
 
     def __init__(self, id: Id, bus: Bus, *, impedance: Complex | Q_[Complex]) -> None:
         """ImpedanceLoad constructor.

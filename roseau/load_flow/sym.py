@@ -70,7 +70,7 @@ def series_phasor_to_sym(s_abc: pd.Series) -> pd.Series:
 
         >>> voltage
         bus_id  phase
-        vs      an       200000000000.0+0.00000000j
+        vs      an       20000.000000+0.00000000j
                 bn      -10000.000000-17320.508076j
                 cn      -10000.000000+17320.508076j
         bus     an       19999.00000095+0.00000000j

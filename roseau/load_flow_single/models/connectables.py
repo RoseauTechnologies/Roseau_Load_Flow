@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
-from roseau.load_flow import SQRT3
+from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Id, JsonDict, Side
 from roseau.load_flow.units import Q_
 from roseau.load_flow.utils import abstractattrs
@@ -38,6 +38,7 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         """
         super().__init__(id, n=n, side=side)
         self._check_compatible_phase_tech(bus)
+        self._check_short_circuit(bus, id=id)
         self._connect(bus)
         self._bus = bus
         self._res_current: complex | None = None
@@ -51,6 +52,9 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
     def bus(self) -> Bus:
         """The bus of the element."""
         return self._bus
+
+    def _check_short_circuit(self, bus: Bus, id: Id) -> None:
+        pass
 
     def _cy_connect(self) -> None:
         connections = [(i, i) for i in range(self._n)]
@@ -119,17 +123,24 @@ class AbstractConnectable(AbstractTerminal[_CyE_co], ABC):
         return results
 
 
-@abstractattrs("type")
+@abstractattrs("type", "_short_circuit_compatible")
 class AbstractDisconnectable(AbstractConnectable[_CyE_co], ABC):
     """A base class for disconnectable elements in the network (loads, sources, etc.)."""
 
     type: ClassVar[str]
+    _short_circuit_compatible: ClassVar[bool]
 
     def __repr__(self) -> str:
         s = super().__repr__()
         if self._is_disconnected:
             return f"{s} (disconnected)"
         return s
+
+    def _check_short_circuit(self, bus: Bus, id: Id) -> None:
+        if not self._short_circuit_compatible and bus.short_circuit:
+            msg = f"Cannot create {self.type} {self.element_type} {id!r} on short-circuited bus {bus.id!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
 
     @property
     def is_disconnected(self) -> bool:

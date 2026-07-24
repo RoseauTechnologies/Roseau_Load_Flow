@@ -238,7 +238,7 @@ class Bus(AbstractTerminal["CyBus"]):
             ground:
                 If a ground is given, the phases will also be connected to the ground.
         """
-        from roseau.load_flow import CurrentLoad, PowerLoad
+        from roseau.load_flow import AbstractDisconnectable
 
         for phase in phases:
             if phase not in self.phases:
@@ -260,10 +260,11 @@ class Bus(AbstractTerminal["CyBus"]):
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PHASE)
         for element in self._connected_elements:
-            if isinstance(element, (PowerLoad, CurrentLoad)):
+            if isinstance(element, AbstractDisconnectable) and not element._short_circuit_compatible:
+                et = f"{element.type} {element.element_type}"
                 msg = (
-                    f"A {element.type} load {element.id!r} is already connected on bus {self.id!r}. "
-                    f"It makes the short-circuit calculation impossible."
+                    f"Cannot short-circuit bus {self.id!r} with a {et}. Disconnect the {et} "
+                    f"{element.id!r} before adding the short-circuit."
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
@@ -496,7 +497,7 @@ class Bus(AbstractTerminal["CyBus"]):
     def res_violated(self) -> BoolArray | None:
         """Whether the bus has voltage limits violations.
 
-        Returns ``None`` if the bus has no voltage limits are not set.
+        Returns ``None`` if the bus has no voltage limits set.
         """
         u_min = self._min_voltage_level
         u_max = self._max_voltage_level

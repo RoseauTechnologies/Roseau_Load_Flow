@@ -64,7 +64,7 @@ def get_result_names(en_or_elm_class: type[object], /) -> Generator[str]:
     yield from (attr for attr in dir(en_or_elm_class) if attr.startswith("res_"))
 
 
-def access_elements_results[**P, R](
+def access_elements_results[**P, R](  # noqa: C901
     en: "AbstractNetwork", func: Callable[P, AbstractContextManager[R]], /, *args: P.args, **kwargs: P.kwargs
 ) -> Generator[R]:
     for element_type, elements in en._elements_by_type.items():
@@ -93,3 +93,8 @@ def access_elements_results[**P, R](
                 for result_name in get_result_names(type(element.side1)):
                     if "shunt" in result_name and not element.with_shunt:
                         continue
+                    yield invoke_result_access(element.side1, result_name, func, *args, **kwargs)
+                for result_name in get_result_names(type(element.side2)):
+                    if "shunt" in result_name and not element.with_shunt:
+                        continue
+                    yield invoke_result_access(element.side2, result_name, func, *args, **kwargs)

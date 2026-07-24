@@ -65,13 +65,13 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
             material:
                 The type of the conductor material (Aluminum, Copper, ...). The material is
-                optional, it is informative only and are not used in the load flow. This field gets
+                optional, it is informative only and is not used in the load flow. This field gets
                 automatically filled when the line parameters are created from a geometric model or
                 from the catalogue.
 
             insulator:
                 The type of the cable insulator (PVC, XLPE, ...). The insulator is optional,
-                it is informative only and are not used in the load flow. This field gets
+                it is informative only and is not used in the load flow. This field gets
                 automatically filled when the line parameters are created from a geometric model or
                 from the catalogue.
 

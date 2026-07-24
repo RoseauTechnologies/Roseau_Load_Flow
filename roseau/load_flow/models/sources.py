@@ -28,6 +28,7 @@ class VoltageSource(AbstractDisconnectable["CyVoltageSource | CyDeltaVoltageSour
 
     element_type: Final = "source"
     type: Final = "voltage"
+    _short_circuit_compatible: Final = False
 
     def __init__(
         self,

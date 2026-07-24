@@ -46,7 +46,7 @@ The following is a summary of the available elements:
     once and used to describe multiple lines.
   - [`Switch`](../models/Switch.md): An ideal connection between two buses on the same voltage level. Currently, a
     switch cannot be opened.
-  - [`Transformer`](../models/Transformer/index.md): A transformer connecting a buses on potentially different voltage
+  - [`Transformer`](../models/Transformer/index.md): A transformer connecting two buses on potentially different voltage
     levels called the high-voltage side and the low-voltage side. The impedance of the transformer and its physical
     characteristics including its winding configuration are defined by a `TransformerParameters` object. This object can
     be defined once and used to describe multiple transformers.
@@ -294,7 +294,7 @@ arrays `line.side1.res_currents` and `line.side2.res_currents`:
 
 - `line.side1.res_currents` is the current flowing **into** the first side of the line. It contains 4 values: one per
   phase and the neutral current.
-- `line.side1.res_currents` is the current flowing **into** the second side of the line i.e. in the opposite direction
+- `line.side2.res_currents` is the current flowing **into** the second side of the line i.e. in the opposite direction
   of the first side.
 
 ```pycon

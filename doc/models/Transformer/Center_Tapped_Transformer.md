@@ -15,8 +15,8 @@ myst:
 
 # Center-tapped transformer
 
-Center-tapped transformers allow to split two-phase connection on its HV side into a two-phase connection with a neutral
-point in the middle on its LV side. It is modelled as follows:
+Center-tapped transformers allow splitting a two-phase connection on their HV side into a two-phase connection with a
+neutral point in the middle on their LV side. It is modelled as follows:
 
 ````{tab} European standards
 ```{image}  /_static/Transformer/European_Center_Tapped_Transformer.svg

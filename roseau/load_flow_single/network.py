@@ -146,7 +146,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             sources, RoseauLoadFlowExceptionCode.BAD_SOURCE_ID
         )
         self.regulators: dict[Id, VoltageRegulator] = self._elements_as_dict(
-            regulators, RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
+            regulators, RoseauLoadFlowExceptionCode.BAD_REGULATOR_ID
         )
 
         # Add ground and pref
@@ -434,7 +434,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             - `power2`: The complex power of the line (in VoltAmps) at the second bus.
             - `voltage1`: The complex voltage (in Volts) of the first bus.
             - `voltage2`: The complex voltage (in Volts) of the second bus.
-            - `series_loss`: The complex losses in the series and mutual impedances of the line (in
+            - `series_losses`: The complex losses in the series and mutual impedances of the line (in
               VoltAmps).
             - `series_current`: The complex current in the series impedance of the line (in Amps).
             - `violated`: True, if the line loading exceeds the maximum loading.
@@ -448,7 +448,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         * To get the total power losses, add the columns ``power1 + power2``
         * To get the power losses in the shunt components of the line, subtract the series losses
           from the total power losses computed in the previous step:
-          ``(power1 + power2) - series_loss``
+          ``(power1 + power2) - series_losses``
         * To get the currents in the shunt components of the line:
           - For the first bus, subtract the columns ``current1 - series_current``
           - For the second bus, add the columns ``series_current + current2``
@@ -618,10 +618,10 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             - `power2`: The complex power of the regulator on the secondary side (in VoltAmps).
             - `voltage1`: The complex voltage of the primary bus (in Volts).
             - `voltage2`: The complex voltage of the secondary bus (in Volts).
-            - `violated`: True, if the transformer loading exceeds the maximum loading.
-            - `loading`: The loading of the transformer (in per-unit).
-            - `max_loading`: The maximal loading of the transformer (in per-unit).
-            - `sn`: The nominal power of the transformer (in VoltAmps).
+            - `violated`: True, if the regulator loading exceeds the maximum loading.
+            - `loading`: The loading of the regulator (in per-unit).
+            - `max_loading`: The maximal loading of the regulator (in per-unit).
+            - `sn`: The nominal power of the regulator (in VoltAmps).
         """
         self._check_valid_results()
         index = []

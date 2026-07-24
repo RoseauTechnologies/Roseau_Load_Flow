@@ -209,18 +209,19 @@ class Bus(AbstractTerminal["CyBus"]):
 
     @property
     def short_circuit(self) -> bool:
-        """Whether there is a short circuit on the bus or not"""
+        """Whether there is a short circuit on the bus or not."""
         return self._short_circuit
 
     def add_short_circuit(self) -> None:
         """Add a short-circuit by connecting all the phases together with a ground."""
-        from roseau.load_flow_single import CurrentLoad, PowerLoad
+        from roseau.load_flow_single import CurrentLoad, PowerLoad, VoltageSource
 
         for element in self._connected_elements:
-            if isinstance(element, (PowerLoad, CurrentLoad)):
+            if isinstance(element, (PowerLoad, CurrentLoad, VoltageSource)):
+                et = f"{element.type} {element.element_type}"
                 msg = (
-                    f"A {element.type} load {element.id!r} is already connected on bus {self.id!r}. "
-                    f"It makes the short-circuit calculation impossible."
+                    f"Cannot short-circuit bus {self.id!r} with a {et}. Disconnect the {et} "
+                    f"{element.id!r} before adding the short-circuit."
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT)
