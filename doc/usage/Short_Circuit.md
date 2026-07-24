@@ -49,7 +49,6 @@ a short-circuited bus. This is because having `I = (S/U)*` with `U=0` cannot be 
 ...     # Create the network
 ...     en = rlf.ElectricalNetwork.from_element(bus1)
 ...     return en
-...
 
 >>> # Create the network
 ... en = create_network()
@@ -175,7 +174,6 @@ constant-current load on a short-circuited bus:
 ...     load = rlf.PowerLoad("Load", bus=en.buses["Bus3"], powers=[10, 10, 10])
 ... except RoseauLoadFlowException as e:
 ...     print(e)
-...
 The power load 'Load' is connected on bus 'Bus3' that already has a short-circuit.
 It makes the short-circuit calculation impossible. [bad_short_circuit]
 ```
@@ -187,7 +185,6 @@ At least two phases or a phase and a ground must be given when creating a short-
 ...     en.buses["Bus3"].add_short_circuit("a")
 ... except RoseauLoadFlowException as e:
 ...     print(e)
-...
 For the short-circuit on bus 'Bus3', expected at least two phases or a phase and a ground.
 Only phase 'a' is given. [bad_phase]
 ```

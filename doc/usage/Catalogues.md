@@ -325,6 +325,7 @@ the same table:
 
 ```pycon
 >>> import roseau.load_flow as rlf
+...
 ... rlf.TransformerParameters.get_catalogue(sn=3150e3)  # in VA by default
 
 >>> rlf.TransformerParameters.get_catalogue(sn=rlf.Q_(3150, "kVA"))
