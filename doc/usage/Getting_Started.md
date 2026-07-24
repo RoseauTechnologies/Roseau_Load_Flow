@@ -531,6 +531,7 @@ Or, if you prefer the angles in degrees:
 
 ```pycon
 >>> import functools as ft
+...
 ... en.res_buses_voltages_pp["voltage"].transform([np.abs, ft.partial(np.angle, deg=True)])
 ```
 

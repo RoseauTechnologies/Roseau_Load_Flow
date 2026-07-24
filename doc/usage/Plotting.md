@@ -38,6 +38,7 @@ To visualize the voltage profile of a network, use one of the `plot_<backend>` m
 
 ```pycon
 >>> import roseau.load_flow as rlf
+...
 ... en = rlf.ElectricalNetwork.from_catalogue("LVFeeder36360", "Winter")
 ... en
 <ElectricalNetwork: 9 buses, 7 lines, 1 transformer, 0 switches, 14 loads, 1 source, 1 ground, 2 potential refs, 1 ground connection>
@@ -87,6 +88,7 @@ You can plot both minimum and maximum voltage profiles on the same plot by passi
 ```pycon
 >>> import matplotlib.pyplot as plt
 ... import roseau.load_flow as rlf
+...
 ... en = rlf.ElectricalNetwork.from_catalogue("LVFeeder36360", "Winter")
 ... en.solve_load_flow()
 ... ax = plt.figure(figsize=(8, 4)).gca()
@@ -115,6 +117,7 @@ The simplest way to visualize an electrical network with bus and line geometries
 
 ```pycon
 >>> import roseau.load_flow as rlf
+...
 ... en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
 ... rlf.plotting.plot_interactive_map(en)
 ```
@@ -157,6 +160,7 @@ the map. The network must have valid results before calling this function. Examp
 
 ```pycon
 >>> import roseau.load_flow as rlf
+...
 ... en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
 ... # Let's create some extreme conditions to see  voltage drops/rises and line overloads
 ... en.loads["MVLV14633_consumption"].powers = 3.5e6
@@ -192,6 +196,7 @@ For example, to highlight all buses that have loads with a power >60kW, you can 
 
 ```pycon
 >>> import roseau.load_flow as rlf
+...
 ... en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
 ... buses_with_loads_gt_60kva = {
 ...     load.bus.id
@@ -234,6 +239,7 @@ following example we plot the graph of the network `MVFeeder210` from the previo
 ```pycon
 >>> import networkx as nx
 ... import roseau.load_flow as rlf
+...
 ... en = rlf.ElectricalNetwork.from_catalogue(name="MVFeeder210", load_point_name="Winter")
 ... for bus in en.buses.values():
 ...     bus.geometry = None  # Pretend buses don't have geometries

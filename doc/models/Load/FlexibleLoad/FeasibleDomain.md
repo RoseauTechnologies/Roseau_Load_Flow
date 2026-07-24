@@ -689,7 +689,8 @@ import roseau.load_flow as rlf
 # Flexible parameter
 fp = rlf.FlexibleParameter(
     control_p=rlf.Control.p_max_u_production(
-        u_up=rlf.Q_(245, "V"), u_max=rlf.Q_(250, "V")  # <----
+        u_up=rlf.Q_(245, "V"),  # <----
+        u_max=rlf.Q_(250, "V"),
     ),
     control_q=rlf.Control.q_u(
         u_min=rlf.Q_(210, "V"),
@@ -756,7 +757,8 @@ import roseau.load_flow as rlf
 # Flexible parameter
 fp = rlf.FlexibleParameter(
     control_p=rlf.Control.p_max_u_production(
-        u_up=rlf.Q_(230, "V"), u_max=rlf.Q_(240, "V")  # <----
+        u_up=rlf.Q_(230, "V"),
+        u_max=rlf.Q_(240, "V"),  # <----
     ),
     control_q=rlf.Control.q_u(
         u_min=rlf.Q_(210, "V"),
@@ -821,7 +823,8 @@ import roseau.load_flow as rlf
 # Flexible parameter
 fp = rlf.FlexibleParameter(
     control_p=rlf.Control.p_max_u_production(
-        u_up=rlf.Q_(240, "V"), u_max=rlf.Q_(250, "V")  # <----
+        u_up=rlf.Q_(240, "V"),  # <----
+        u_max=rlf.Q_(250, "V"),  # <----
     ),
     control_q=rlf.Control.q_u(
         u_min=rlf.Q_(210, "V"),
