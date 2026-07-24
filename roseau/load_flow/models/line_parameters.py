@@ -271,7 +271,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 Admittance - zero sequence - :math:`g_0+b_0\\cdot j` (Siemens/km)
 
             y1:
-                Conductance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km)
+                Admittance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km)
 
             zn:
                 Neutral impedance - :math:`r_{\\mathrm{n}}+x_{\\mathrm{n}}\\cdot j` (ohms/km)
@@ -329,7 +329,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 Admittance - zero sequence - :math:`g_0+b_0\\cdot j` (Siemens/km)
 
             y1:
-                Conductance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km)
+                Admittance - direct sequence - :math:`g_1+b_1\\cdot j` (Siemens/km)
 
             zn:
                 Neutral impedance - :math:`r_{\\mathrm{n}}+x_{\\mathrm{n}}\\cdot j` (ohms/km)

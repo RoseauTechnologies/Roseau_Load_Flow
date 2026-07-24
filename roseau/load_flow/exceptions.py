@@ -60,7 +60,10 @@ class RoseauLoadFlowExceptionCode(StrEnum):
     BAD_TRANSFORMER_IMPEDANCE = auto()
     BAD_TRANSFORMER_PARAMETERS = auto()
 
-    # Transformer and line
+    # Regulator
+    BAD_REGULATOR_ID = auto()
+
+    # Transformer, line and regulator
     BAD_MAX_LOADING_VALUE = auto()
     BAD_PARAMETERS_ID = auto()
 

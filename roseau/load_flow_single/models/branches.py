@@ -60,7 +60,7 @@ class AbstractBranchSide(AbstractConnectable[_CyB_co]):
 
 
 class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
-    """Base class of all the branches (lines, switches and transformers) of the network.
+    """Base class of all the branches (lines, switches, transformers and regulators) of the network.
 
     See Also:
         :doc:`Line models documentation </models/Line/index>`,

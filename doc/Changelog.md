@@ -19,6 +19,12 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`484` Disallow buses from having both a short-circuit and a voltage source similar to the restriction for power
+  and current loads. This now fails with a clear error message early instead of a cryptic singular matrix error during
+  load flow calculation.
+
 ## Version 0.16.0-alpha
 
 - {gh-pr}`481` Add `sort_keys` parameter to the `to_json` method to control the sorting of keys in the JSON output. The
@@ -115,7 +121,7 @@ The public license key can now be used with networks containing up to 50 buses. 
   - Underground lines are dashed while other lines are solid including lines with unknown line type
   - Transformers are now represented with a square icon with a divider in the middle and with both HV and LV buses
     information in the tooltip and popup
-  - Sourcers are represented with a bigger square icon
+  - Sources are represented with a bigger square icon
   - If the new parameter `fit_bounds` is set to `True` (default), the bounds of the map will be automatically adjusted
     using `folium.FitOverlays` to fit the network elements.
 

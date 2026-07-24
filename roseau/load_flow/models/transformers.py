@@ -70,7 +70,9 @@ class Transformer(AbstractBranch["TransformerSide", "CyTransformer"]):
                 Bus to connect the LV side of the transformer.
 
             tap:
-                The tap of the transformer, for example 1.02.
+                The tap ratio of the transformer, typically a value between 0.9 and 1.1. For example,
+                `1.0` means the tap is at the neutral position, `1.025` means a `+2.5%` tap, and
+                `0.975` means a `-2.5%` tap.
 
             parameters:
                 Parameters defining the electrical model of the transformer. This is an instance of
@@ -188,7 +190,11 @@ class Transformer(AbstractBranch["TransformerSide", "CyTransformer"]):
 
     @property
     def tap(self) -> float:
-        """The tap of the transformer, for example 1.02."""
+        """The tap ratio of the transformer, typically a value between 0.9 and 1.1.
+
+        For example, `1.0` means the tap is at the neutral position, `1.025` means a `+2.5%` tap,
+        and `0.975` means a `-2.5%` tap.
+        """
         return self._tap
 
     @tap.setter
