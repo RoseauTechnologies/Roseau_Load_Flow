@@ -258,7 +258,7 @@ The following resistivities are used by _Roseau Load Flow_:
 | ACSR -- Fr: Alu-Acier      | $4.0587\times10^{-8}$   |
 | AACSR -- Fr: Almélec-Acier | $3.26\times10^{-8}$     |
 
-These values are defined in the `utils` module: {data}`roseau.load_flow.utils.RHO`.
+These values are defined in the `constants` module: {data}`roseau.load_flow.constants.RHO`.
 
 #### Inductance
 
@@ -290,7 +290,7 @@ where:
 - $D_{ij}$ the distances between the center of the conductor $i$ and the center of the conductor $j$
 - $GMR_i$ the _geometric mean radius_ of the conductor $i$.
 
-The vacuum magnetic permeability is defined in the `utils` module {data}`roseau.load_flow.utils.MU_0`.
+The vacuum magnetic permeability is defined in the `constants` module {data}`roseau.load_flow.constants.MU_0`.
 
 The geometric mean radius is defined for all $i\in \{\mathrm{a}, \mathrm{b}, \mathrm{c}, \mathrm{n}\}$ as
 
@@ -344,8 +344,8 @@ compute the distances based on the position of wires.
 
 The permittivity of the insulator $\varepsilon$ (in F/m) is defined as $\varepsilon_0\varepsilon_{\mathrm{r}}$ with
 $\varepsilon_0$ the permittivity of the vacuum (in F/m) and $\varepsilon_{\mathrm{r}}$ the relative permittivity of the
-insulator (no unit). These values are defined in the `utils` module {data}`roseau.load_flow.utils.EPSILON_0` and
-{data}`roseau.load_flow.utils.EPSILON_R`.
+insulator (no unit). These values are defined in the `constants` module {data}`roseau.load_flow.constants.EPSILON_0` and
+{data}`roseau.load_flow.constants.EPSILON_R`.
 
 The capacitance matrix $C$ is then defined by:
 
@@ -386,7 +386,7 @@ $\tan\delta$ is the loss tangent and is taken from this table:
 | Cross-linked polyethylene (PEX)  | $30\times10^{-4}$         |
 | Ethylene-Propylene Rubber (EPR)  | $125\times10^{-4}$        |
 
-These values are defined in the `utils` module: {data}`roseau.load_flow.utils.TAN_D`.
+These values are defined in the `constants` module: {data}`roseau.load_flow.constants.TAN_D`.
 
 Finally, the impedance matrix and the admittance matrix can be computed.
 
