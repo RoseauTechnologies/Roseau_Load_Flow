@@ -19,13 +19,13 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.16.0a1
 
 - {gh-pr}`484` Disallow buses from having both a short-circuit and a voltage source similar to the restriction for power
   and current loads. This now fails with a clear error message early instead of a cryptic singular matrix error during
   load flow calculation.
 
-## Version 0.16.0-alpha
+## Version 0.16.0a0
 
 - {gh-pr}`481` Add `sort_keys` parameter to the `to_json` method to control the sorting of keys in the JSON output. The
   default value is `False`.
