@@ -104,7 +104,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             The ground connections of the network. Either a list of ground connections or a
             dictionary of ground connections with their IDs as keys. A ground connection connects
             a terminal's phase to a ground element. It is typically used to model the connection of
-            the neutral of buses to the ground. A groud connection can be ideal or have an impedance.
+            the neutral of buses to the ground. A ground connection can be ideal or have an impedance.
 
         crs:
             An optional Coordinate Reference System to use with geo data frames. Can be anything
@@ -518,10 +518,10 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         Additional information can be easily computed from this dataframe. For example:
 
         * To get the active power losses, use the real part of the complex power losses
-        * To get the total power losses, add the columns ``powers1 + powers2``
+        * To get the total power losses, add the columns ``power1 + power2``
         * To get the power losses in the shunt components of the line, subtract the series losses
           from the total power losses computed in the previous step:
-          ``(powers1 + powers2) - series_losses``
+          ``(power1 + power2) - series_losses``
         * To get the currents in the shunt components of the line:
           - For the first bus, subtract the columns ``current1 - series_current``
           - For the second bus, add the columns ``series_current + current2``
@@ -1027,7 +1027,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 ``{'ab', 'bc', 'ca'}`` for delta loads.).
 
         and the following columns:
-            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.s
+            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.
             - `voltage`: The complex voltage of the load (in Volts) for the given *phase*.
         """
         return self._get_res_loads_voltages(voltage_type="auto")
@@ -1043,14 +1043,14 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             - `phase`: The phase of the load (in ``{'ab', 'bc', 'ca'}``).
 
         and the following columns:
-            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.s
+            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.
             - `voltage`: The complex voltage of the load (in Volts) for the given *phase*.
         """
         return self._get_res_loads_voltages(voltage_type="pp")
 
     @property
     def res_loads_voltages_pn(self) -> pd.DataFrame:
-        """The load flow results of the complex phase-to-phase voltages of the loads (V).
+        """The load flow results of the complex phase-to-neutral voltages of the loads (V).
 
         Only loads with a neutral are considered.
 
@@ -1059,7 +1059,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             - `phase`: The phase of the load (in ``{'an', 'bn', 'cn'}``).
 
         and the following columns:
-            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.s
+            - `type`: The type of the load, can be ``{'power', 'current', 'impedance'}``.
             - `voltage`: The complex voltage of the load (in Volts) for the given *phase*.
         """
         return self._get_res_loads_voltages(voltage_type="pn")

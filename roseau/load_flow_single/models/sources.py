@@ -24,6 +24,7 @@ class VoltageSource(AbstractDisconnectable["CyVoltageSource"]):
 
     element_type: Final = "source"
     type: Final = "voltage"
+    _short_circuit_compatible: Final = False
 
     def __init__(self, id: Id, bus: Bus, *, voltage: Complex | Q_[Complex]) -> None:
         """Voltage source constructor.

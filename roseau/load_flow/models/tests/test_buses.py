@@ -56,9 +56,10 @@ def test_short_circuit():
     assert bus._short_circuits[0]["ground"] is None
 
     # Dict methods
-    vn = 400 / np.sqrt(3)
-    _ = VoltageSource("vs", bus=bus, voltages=vn)
-    _ = PotentialRef("pref", element=bus)
+    bus2 = Bus("Bus2", phases="abc")
+    Switch("sw", bus1=bus, bus2=bus2)
+    VoltageSource("vs", bus=bus2, voltages=400)
+    PotentialRef("pref", element=bus)
     en = ElectricalNetwork.from_element(bus)
     en2 = ElectricalNetwork.from_dict(en.to_dict())
     assert en2.buses["bus"]._short_circuits[0]["phases"] == ["c", "a", "b"]
@@ -68,37 +69,65 @@ def test_short_circuit():
     bus.add_short_circuit("a", ground=ground)  # ok
     assert len(bus.short_circuits) == 2
 
-    # Cannot connect a load on a short-circuited bus
+    # Voltages sources, power loads, and current loads cannot be connected on a bus with a short-circuit
     with pytest.raises(RoseauLoadFlowException) as e:
-        PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
-    assert "is connected on bus" in e.value.msg
+        VoltageSource(id="src", bus=bus, voltages=400)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+    assert e.value.msg == "Cannot create voltage source 'src' on short-circuited bus 'bus'."
+    with pytest.raises(RoseauLoadFlowException) as e:
+        PowerLoad(id="load", bus=bus, powers=400)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+    assert e.value.msg == "Cannot create power load 'load' on short-circuited bus 'bus'."
+    with pytest.raises(RoseauLoadFlowException) as e:
+        CurrentLoad(id="load", bus=bus, currents=400)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+    assert e.value.msg == "Cannot create current load 'load' on short-circuited bus 'bus'."
 
-    # Cannot short-circuit a bus with a power load
+    # Cannot short-circuit a bus with a voltage source, power load, or current load
     bus = Bus("bus", phases="abc")
     assert not bus.short_circuits
-    _ = PowerLoad(id="load", bus=bus, powers=[10, 10, 10])
+    vs = VoltageSource(id="src", bus=bus, voltages=400)
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.add_short_circuit("a", "b")
-    assert "is already connected on bus" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
-
-    # Cannot short-circuit a bus with a current load
-    bus = Bus("bus", phases="abc")
+    assert e.value.msg == (
+        "Cannot short-circuit bus 'bus' with a voltage source. Disconnect the voltage source 'src' "
+        "before adding the short-circuit."
+    )
+    vs.disconnect()
     assert not bus.short_circuits
-    _ = CurrentLoad(id="load", bus=bus, currents=[10, 10, 10])
+    pl = PowerLoad(id="load", bus=bus, powers=400)
     with pytest.raises(RoseauLoadFlowException) as e:
         bus.add_short_circuit("a", "b")
-    assert "is already connected on bus" in e.value.msg
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+    assert e.value.msg == (
+        "Cannot short-circuit bus 'bus' with a power load. Disconnect the power load 'load' before "
+        "adding the short-circuit."
+    )
+    pl.disconnect()
+    assert not bus.short_circuits
+    cl = CurrentLoad(id="load", bus=bus, currents=400)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        bus.add_short_circuit("a", "b")
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SHORT_CIRCUIT
+    assert e.value.msg == (
+        "Cannot short-circuit bus 'bus' with a current load. Disconnect the current load 'load' "
+        "before adding the short-circuit."
+    )
+    cl.disconnect()
+    assert not bus.short_circuits
+    bus.add_short_circuit("a", "b")  # Now OK
+    assert bus.short_circuits == [{"phases": ["a", "b"], "ground": None}]
 
     # Create the ground after the network GH359
     bus = Bus(id="bus", phases="abcn")
-    _ = VoltageSource(id="source", bus=bus, voltages=400)
-    _ = PotentialRef(id="pref", element=bus, phases="n")
+    bus2 = Bus(id="bus2", phases="abcn")
+    Switch(id="sw", bus1=bus, bus2=bus2)
+    VoltageSource(id="source", bus=bus, voltages=400)
+    PotentialRef(id="pref", element=bus, phases="n")
     en = ElectricalNetwork.from_element(bus)
     ground = Ground(id="ground")
-    bus.add_short_circuit("abc", ground=ground)
+    bus2.add_short_circuit("abc", ground=ground)
     assert "ground" in en.grounds
 
 

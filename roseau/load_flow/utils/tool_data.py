@@ -13,7 +13,7 @@ class ToolData:
 
     @staticmethod
     def _check_tool(tool: str, /) -> None:
-        """Check if the tool name is a valid."""
+        """Check if the tool name is valid."""
         if not isinstance(tool, str):
             raise TypeError(f"Tool name must be a string, got {type(tool).__name__}.")
 

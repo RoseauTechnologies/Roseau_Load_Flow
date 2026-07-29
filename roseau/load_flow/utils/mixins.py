@@ -456,7 +456,7 @@ class AbstractElement(Identifiable, ToJsonMixin, Generic[_N_co, _CyE_co]):
         return self._network
 
     def _set_self_network(self, value: _N_co | None) -> None:
-        """Set the network without checking for bad assignnmets or recursing to connected elements."""
+        """Set the network without checking for bad assignments or recursing to connected elements."""
         self._network = value
 
     def _set_network(self, value: _N_co | None) -> None:
@@ -851,8 +851,8 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         """Connect an element to the network.
 
         When an element is added to the network, extra processing is done to keep the network valid.
-        This method is used in the by the `network` setter of `Element` instances to add the element
-        to the internal dictionary of `self`.
+        This method is used by the `network` setter of `Element` instances to add the element to the
+        internal dictionary of `self`.
 
         Args:
             element:
@@ -875,8 +875,8 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         """Remove an element of the network.
 
         When an element is removed from the network, extra processing is needed to keep the network
-        valid. This method is used in the by the `network` setter of `Element` instances (when the
-        provided network is `None`) to remove the element to the internal dictionary of `self`.
+        valid. This method is used by the `network` setter of `Element` instances (when the provided
+        network is `None`) to remove the element from the internal dictionary of `self`.
 
         Args:
             element:

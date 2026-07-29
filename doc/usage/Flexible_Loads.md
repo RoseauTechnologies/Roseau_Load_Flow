@@ -172,7 +172,7 @@ only different in case of delta loads. To access the powers that flow in the lin
 Here, one can note that:
 
 - The active power for the phase `'a'` is negative meaning production;
-- The actual value of this active power is lower that the one requested as the control was activated;
+- The actual value of this active power is lower than the one requested as the control was activated;
 - The power for phases `'b'` and `'c'` is 0 VA as expected.
 
 ## $PQ(U)$ control
@@ -191,7 +191,7 @@ requires several arguments:
   - Above `uq_max`, the power plant consumes the maximum possible reactive power.
 
 In the example below, as the new load is a production load, only the `up_up`, `up_max`, `uq_up` and `uq_max` are of
-interests. The $Q(U)$ control starts its action at 235 V and is fully exhausted at 240 V. After that, the $P(U)$ is
+interest. The $Q(U)$ control starts its action at 235 V and is fully exhausted at 240 V. After that, the $P(U)$ is
 activated and is exhausted at 250 V where the production is totally shut down.
 
 ```pycon

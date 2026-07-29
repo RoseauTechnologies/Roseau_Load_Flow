@@ -1922,9 +1922,11 @@ def test_propagate_voltages():
 def test_short_circuits():
     vn = 400 / np.sqrt(3)
     bus = Bus(id="bus", phases="abcn")
+    bus2 = Bus(id="bus2", phases="abcn")
+    Switch(id="switch", bus1=bus, bus2=bus2)
     bus.add_short_circuit("a", "n")
-    _ = VoltageSource(id="vs", bus=bus, voltages=vn)
-    _ = PotentialRef(id="pref", element=bus)
+    VoltageSource(id="vs", bus=bus2, voltages=vn)
+    PotentialRef(id="pref", element=bus)
     en = ElectricalNetwork.from_element(initial_bus=bus)
     df = pd.DataFrame.from_records(
         data=[("bus", "abcn", "an", None)],

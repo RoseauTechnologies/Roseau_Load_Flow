@@ -54,9 +54,9 @@ class Transformer(AbstractBranch["TransformerSide", "CySingleTransformer"]):
                 the :class:`TransformerParameters` class and can be used by multiple transformers.
 
             tap:
-                The tap of the transformer. For example, `1.0` means the tap is at the neutral
-                position, `1.025` means a `+2.5%` tap, and `0.975` means a `-2.5%` tap. The value
-                must be between 0.9 and 1.1.
+                The tap ratio of the transformer, typically a value between 0.9 and 1.1. For example,
+                `1.0` means the tap is at the neutral position, `1.025` means a `+2.5%` tap, and
+                `0.975` means a `-2.5%` tap.
 
             max_loading:
                 The maximum loading of the transformer (unitless). It is used with ``parameters.sn``
@@ -104,7 +104,11 @@ class Transformer(AbstractBranch["TransformerSide", "CySingleTransformer"]):
 
     @property
     def tap(self) -> float:
-        """The tap of the transformer, for example 1.02."""
+        """The tap ratio of the transformer, typically a value between 0.9 and 1.1.
+
+        For example, `1.0` means the tap is at the neutral position, `1.025` means a `+2.5%` tap,
+        and `0.975` means a `-2.5%` tap.
+        """
         return self._tap
 
     @tap.setter
