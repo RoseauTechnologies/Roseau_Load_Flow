@@ -137,6 +137,28 @@ The _Goldstein and Price_ solver accepts the following parameters:
 - `"m1"` the first constant of the _Goldstein and Price_ variant. By default: `0.1`.
 - `"m2"` the second constant of the _Goldstein and Price_ variant. By default: `0.9`. Note that the constraint
   $m_1 < m_2$ must be met.
+- `"weighted_merit"` whether to scale the residuals before applying the search criterion above. By default: `True`. See
+  [below](#weighted-merit-function).
+
+### Weighted merit function
+
+The criterion {eq}`goldstein_and_price` compares residuals against each other, but the entries of $F$ are not all on the
+same scale. How large a residual gets for a given error depends on the equation it comes from: a bus fed through a very
+low impedance produces a current mismatch orders of magnitude above one at the end of a long, weakly connected feeder,
+and a load under a steep voltage-dependent control law produces a larger one still. Measured by the raw norm $||F||_2$,
+the small-scale equations are nearly invisible: the line search can accept a step that quietly wrecks one of them as
+long as the large-scale equations improve.
+
+When `weighted_merit` is enabled (default), each residual is divided by $\max(1, ||J_i||_\infty)$, the infinity norm of
+its own Jacobian row, before the norm is taken:
+
+```{math}
+g(x) := \frac{1}{2} ||W F(x)||_2 \qquad W = \mathrm{diag}\left(\frac{1}{\max(1, ||J_i||_\infty)}\right)
+```
+
+The weights are recomputed from the current Jacobian at every iteration. This changes **only** which candidate $t$ is
+accepted; the convergence check against `tolerance` and the residual returned by `solve_load_flow` both stay on the raw,
+physical residuals.
 
 ## Backward-Forward
 

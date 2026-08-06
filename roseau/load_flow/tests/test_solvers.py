@@ -42,10 +42,17 @@ def test_solver():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS
 
     # Good ones
-    data = {"name": "newton_goldstein", "params": {"m1": 0.1, "m2": 0.9}}
+    data = {"name": "newton_goldstein", "params": {"m1": 0.1, "m2": 0.9, "weighted_merit": True}}
     solver = AbstractSolver.from_dict(data=data, network=en)
     data2 = solver.to_dict()
     assert data == data2
+
+    # A non-default weighted_merit survives the round trip
+    data = {"name": "newton_goldstein", "params": {"m1": 0.1, "m2": 0.9, "weighted_merit": False}}
+    solver = AbstractSolver.from_dict(data=data, network=en)
+    assert isinstance(solver, NewtonGoldstein)
+    assert solver.weighted_merit is False
+    assert solver.to_dict() == data
 
     data = {"name": "newton", "params": {}}
     solver = AbstractSolver.from_dict(data=data, network=en)

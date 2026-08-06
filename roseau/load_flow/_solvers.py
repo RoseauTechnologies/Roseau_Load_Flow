@@ -8,7 +8,7 @@ from typing_extensions import TypeVar
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
-from roseau.load_flow.typing import FloatArray, FloatArrayLike1D, FloatMatrix, JsonDict, Solver
+from roseau.load_flow.typing import FloatArray, FloatArrayLike1D, FloatMatrix, JsonDict
 from roseau.load_flow.utils import warn_external
 from roseau.load_flow_engine.cy_engine import (
     CyAbstractNewton,
@@ -19,13 +19,6 @@ from roseau.load_flow_engine.cy_engine import (
 )
 
 logger = logging.getLogger(__name__)
-
-_SOLVERS_PARAMS: dict[Solver, list[str]] = {
-    "newton": [],
-    "newton_goldstein": ["m1", "m2"],
-    "backward_forward": [],
-}
-SOLVERS = list(_SOLVERS_PARAMS)
 
 if TYPE_CHECKING:
     from roseau.load_flow.utils import AbstractElement, AbstractNetwork
@@ -70,7 +63,8 @@ class AbstractSolver(ABC, Generic[_CyS_co]):
         elif data["name"] == "newton_goldstein":
             m1 = data["params"].get("m1", NewtonGoldstein.DEFAULT_M1)
             m2 = data["params"].get("m2", NewtonGoldstein.DEFAULT_M2)
-            return NewtonGoldstein(network=network, m1=m1, m2=m2)
+            weighted_merit = data["params"].get("weighted_merit", NewtonGoldstein.DEFAULT_WEIGHTED_MERIT)
+            return NewtonGoldstein(network=network, m1=m1, m2=m2, weighted_merit=weighted_merit)
         elif data["name"] == "backward_forward":
             return BackwardForward(network=network)
         else:
@@ -294,6 +288,7 @@ class NewtonGoldstein(AbstractNewton[CyNewtonGoldstein]):
 
     DEFAULT_M1 = 0.1
     DEFAULT_M2 = 0.9
+    DEFAULT_WEIGHTED_MERIT: bool = True
 
     def __init__(
         self,
@@ -301,6 +296,7 @@ class NewtonGoldstein(AbstractNewton[CyNewtonGoldstein]):
         m1: float = DEFAULT_M1,
         m2: float = DEFAULT_M2,
         optimize_tape: bool = AbstractNewton.DEFAULT_TAPE_OPTIMIZATION,
+        weighted_merit: bool = DEFAULT_WEIGHTED_MERIT,
     ) -> None:
         """NewtonGoldstein constructor.
 
@@ -317,33 +313,53 @@ class NewtonGoldstein(AbstractNewton[CyNewtonGoldstein]):
 
             m2:
                 The second constant of the Goldstein and Price linear search.
+
+            weighted_merit:
+                If True, the linear search weights each residual by 1 / max(1, its Jacobian row's
+                infinity norm) before computing the merit function it accepts or rejects a step on.
         """
         super().__init__(network=network, optimize_tape=optimize_tape)
-        if m1 >= m2:
-            msg = "For the 'newton_goldstein' solver, the inequality m1 < m2 should be respected."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS)
+        self._check_m1_m2(m1, m2)
         self.m1 = m1
         self.m2 = m2
+        self.weighted_merit = weighted_merit
         self._cy_solver = CyNewtonGoldstein(
-            network=network._cy_electrical_network, optimize_tape=optimize_tape, m1=m1, m2=m2
+            network=network._cy_electrical_network,
+            optimize_tape=optimize_tape,
+            m1=m1,
+            m2=m2,
+            weighted_merit=weighted_merit,
         )
 
     def update_network(self, network: "ElectricalNetwork") -> None:
         self._cy_solver = CyNewtonGoldstein(
-            network=network._cy_electrical_network, optimize_tape=self.optimize_tape, m1=self.m1, m2=self.m2
+            network=network._cy_electrical_network,
+            optimize_tape=self.optimize_tape,
+            m1=self.m1,
+            m2=self.m2,
+            weighted_merit=self.weighted_merit,
         )
+
+    @staticmethod
+    def _check_m1_m2(m1: float, m2: float) -> None:
+        if m1 >= m2:
+            msg = "For the 'newton_goldstein' solver, the inequality m1 < m2 should be respected."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_SOLVER_PARAMS)
 
     def update_params(self, params: JsonDict) -> None:
         m1 = params.get("m1", NewtonGoldstein.DEFAULT_M1)
         m2 = params.get("m2", NewtonGoldstein.DEFAULT_M2)
-        if m1 != self.m1 or m2 != self.m2:
-            self._cy_solver.update_params(m1=m1, m2=m2)
+        weighted_merit = params.get("weighted_merit", NewtonGoldstein.DEFAULT_WEIGHTED_MERIT)
+        if m1 != self.m1 or m2 != self.m2 or weighted_merit != self.weighted_merit:
+            self._check_m1_m2(m1, m2)
+            self._cy_solver.update_params(m1=m1, m2=m2, weighted_merit=weighted_merit)
             self.m1 = m1
             self.m2 = m2
+            self.weighted_merit = weighted_merit
 
     def params(self) -> JsonDict:
-        return {"m1": self.m1, "m2": self.m2}
+        return {"m1": self.m1, "m2": self.m2, "weighted_merit": self.weighted_merit}
 
 
 class BackwardForward(AbstractSolver[CyBackwardForward]):

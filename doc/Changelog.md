@@ -19,6 +19,13 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`489` Improve the `newton_goldstein` solver's line search using an experimental weighted merit function that
+  normalizes the residuals of the different equations to avoid favoring one equation over the others. There are no known
+  scenarios where it worsens convergence, but as an experimental feature, it may be disabled using
+  `en.solve_load_flow(solver="newton_goldstein", solver_params={"weighted_merit": False})`.
+
 ## Version 0.16.0a1
 
 - {gh-pr}`484` Disallow buses from having both a short-circuit and a voltage source similar to the restriction for power
