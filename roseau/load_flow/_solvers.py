@@ -398,4 +398,21 @@ class BackwardForward(AbstractSolver[CyBackwardForward]):
 
     def _parse_solver_error(self, code: int, msg: str) -> tuple[str, RoseauLoadFlowExceptionCode]:
         assert code == 2, f"Unexpected error code {code} for a Backward-Forward solver."
+        if "NaN value encountered" in msg:
+            # Check that at least one power/flexible load is present in the network, to give a more
+            # precise error message. This is less accurate than the Newton solver that knows exactly
+            # which element is causing the problem, but it is better than nothing.
+            power_load = False
+            flexible_load = False
+            for load in self.network._elements_by_type["load"].values():
+                if load.element_type == "load" and load.type == "power":  # type: ignore
+                    power_load = True
+                    if load.is_flexible:  # type: ignore
+                        flexible_load = True
+                        break
+            if power_load:
+                msg += " This might be caused by a bad potential initialization of a power load"
+            if flexible_load:
+                msg += ", or by flexible loads with very high alpha or incorrect flexible parameters voltages."
+            return msg, RoseauLoadFlowExceptionCode.NAN_VALUE
         return msg, RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
