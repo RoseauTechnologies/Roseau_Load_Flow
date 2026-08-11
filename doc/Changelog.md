@@ -19,6 +19,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`490` Fix the `backward_forward` silently swallowing `nan` values instead of raising an error.
+
 ## Version 0.16.0a1
 
 - {gh-pr}`484` Disallow buses from having both a short-circuit and a voltage source similar to the restriction for power
