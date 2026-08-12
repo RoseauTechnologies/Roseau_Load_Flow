@@ -9,7 +9,7 @@ from typing_extensions import TypeVar
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.license import activate_license, get_license
 from roseau.load_flow.typing import FloatArray, FloatArrayLike1D, FloatMatrix, JsonDict
-from roseau.load_flow.utils import warn_external
+from roseau.load_flow.utils import abstractattrs, warn_external
 from roseau.load_flow_engine.cy_engine import (
     CyAbstractNewton,
     CyAbstractSolver,
@@ -29,10 +29,11 @@ if TYPE_CHECKING:
 _CyS_co = TypeVar("_CyS_co", bound=CyAbstractSolver, default=CyAbstractSolver, covariant=True)
 
 
+@abstractattrs("name")
 class AbstractSolver(ABC, Generic[_CyS_co]):
     """This is an abstract class for all the solvers."""
 
-    name: str | None = None
+    name: str
 
     def __init__(self, network: "ElectricalNetwork") -> None:
         """AbstractSolver constructor.
@@ -42,7 +43,7 @@ class AbstractSolver(ABC, Generic[_CyS_co]):
                 The electrical network for which the load flow needs to be solved.
         """
         self.network = network
-        self._cy_solver: _CyS_co | None = None
+        self._cy_solver: _CyS_co
 
     @classmethod
     def from_dict(cls, data: JsonDict, network: "ElectricalNetwork") -> "AbstractSolver":
