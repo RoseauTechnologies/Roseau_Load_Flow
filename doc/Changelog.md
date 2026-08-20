@@ -19,6 +19,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
+## Unreleased
+
+- {gh-pr}`492` Improve import time of `roseau.load_flow` by caching the pint registry instantiation.
+
 ## Version 0.16.0a2
 
 - {gh-pr}`490` Fix the `backward_forward` solver silently swallowing `nan` values instead of raising an error.

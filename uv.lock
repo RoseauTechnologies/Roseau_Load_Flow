@@ -1621,7 +1621,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "orjson", marker = "extra == 'fast-json'", specifier = ">=3.6.0" },
     { name = "pandas", specifier = ">=2.1.0" },
-    { name = "pint", specifier = ">=0.21.0" },
+    { name = "pint", specifier = ">=0.24.0" },
     { name = "platformdirs", specifier = ">=4.0.0" },
     { name = "pyproj", specifier = ">=3.3.0" },
     { name = "roseau-load-flow-engine", specifier = "==0.19.2a3" },
