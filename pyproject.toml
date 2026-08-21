@@ -28,7 +28,7 @@ dependencies = [
   "geopandas>=1.0.0",
   "numpy>=2.0.0",
   "pandas>=2.1.0",
-  "pint>=0.21.0",
+  "pint>=0.24.0",
   "platformdirs>=4.0.0",
   "pyproj>=3.3.0",
   "roseau-load-flow-engine==0.19.2a3",
