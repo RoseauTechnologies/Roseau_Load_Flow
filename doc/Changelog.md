@@ -21,6 +21,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`493` Set `en.name` to the network (`ElmNet`) name and `en.crs` to `EPSG:4326` when loading a network from a
+  DGS file.
 - {gh-pr}`492` Improve import time of `roseau.load_flow` by caching the pint registry instantiation.
 
 ## Version 0.16.0a2

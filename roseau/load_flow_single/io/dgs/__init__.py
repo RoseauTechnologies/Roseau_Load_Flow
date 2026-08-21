@@ -8,6 +8,8 @@ import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
+import pyproj
+
 from roseau.load_flow.io.dgs.utils import (
     DGSData,
     FIDCounter,
@@ -17,8 +19,10 @@ from roseau.load_flow.io.dgs.utils import (
     has_typ_tr2,
     iter_dgs_values,
     parse_dgs_version,
+    parse_elm_net,
 )
 from roseau.load_flow.typing import Id, JsonDict
+from roseau.load_flow.utils import warn_external
 from roseau.load_flow_single.io.common import NetworkElements
 from roseau.load_flow_single.io.dgs.buses import buses_to_elm_term, elm_term_to_buses
 from roseau.load_flow_single.io.dgs.lines import elm_lne_to_lines, lines_to_elm_lne, lp_to_typ_lne, typ_lne_to_lp
@@ -89,6 +93,8 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     elm_lod = dgs_dict_to_df(data, "ElmLod", index_col) if "ElmLod" in data else None  # General loads
     elm_gen_stat = dgs_dict_to_df(data, "ElmGenStat", index_col) if "ElmGenStat" in data else None  # Generators
     elm_pv_sys = dgs_dict_to_df(data, "ElmPvsys", index_col) if "ElmPvsys" in data else None  # LV generators
+    # Get the name and frequency of the network
+    name, _frnom = parse_elm_net(data)
 
     # Reindex buses and types by their FID because they are needed elsewhere
     if use_name_as_id:
@@ -167,7 +173,9 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
         "switches": switches,
         "loads": loads,
         "sources": sources,
-        "crs": None,  # TODO check if the CRS can be stored in the DGS file
+        "regulators": {},  # TODO implement regulators
+        "name": name,
+        "crs": "EPSG:4326",
     }
 
 
@@ -182,7 +190,7 @@ def network_to_dgs(en: "ElectricalNetwork") -> JsonDict:
     int_case = create_study_case(fid_counter)
     int_grf_net = create_graphic_net(fid_counter)
     grf_net_fid: str = next(iter_dgs_values(int_grf_net, "FID"))
-    elm_net = create_grid(fid_counter, grf_net_fid)
+    elm_net = create_grid(fid_counter, grf_net_fid, en.name)
     net_fid: str = next(iter_dgs_values(elm_net, "FID"))
 
     # Buses
@@ -260,6 +268,13 @@ def network_to_dgs(en: "ElectricalNetwork") -> JsonDict:
     )
     elm_lod = loads_to_elm_lod(en.loads.values(), fid_counter=fid_counter, sta_cubic=lod_sta_cubic)
 
+    if en.crs is not None and not pyproj.CRS(en.crs).equals("EPSG:4326"):
+        warn_external(
+            f"Power factory only supports GPS coordinates that operate on the WGS84 datum "
+            f"(EPSG:4326) while your network {en.name!r} has crs {en.crs!r}. Please convert the "
+            f"geometries to GPS coordinates and set en.crs to 'EPSG:4326' before exporting to DGS."
+        )
+
     return {
         "General": general,
         "IntCase": int_case,
@@ -274,5 +289,4 @@ def network_to_dgs(en: "ElectricalNetwork") -> JsonDict:
         "ElmTr2": elm_tr2,
         "ElmXnet": elm_xnet,
         "ElmLod": elm_lod,
-        # TODO check if the CRS can be stored in the DGS file
     }
