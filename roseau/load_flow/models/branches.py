@@ -20,7 +20,7 @@ from roseau.load_flow_engine.cy_engine import CyBranch
 
 logger = logging.getLogger(__name__)
 
-_Parameters = LineParameters | TransformerParameters
+type _Parameters = LineParameters | TransformerParameters
 _CyB_co = TypeVar("_CyB_co", bound=CyBranch, default=CyBranch, covariant=True)
 _Side_co = TypeVar("_Side_co", bound="AbstractBranchSide", default="AbstractBranchSide", covariant=True)
 

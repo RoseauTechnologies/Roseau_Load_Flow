@@ -20,7 +20,7 @@ from roseau.load_flow_single.models.transformer_parameters import TransformerPar
 
 logger = logging.getLogger(__name__)
 
-_Parameters = LineParameters | TransformerParameters | RegulatorParameters
+type _Parameters = LineParameters | TransformerParameters | RegulatorParameters
 _CyB_co = TypeVar("_CyB_co", bound=CyBranch, default=CyBranch, covariant=True)
 _Side_co = TypeVar("_Side_co", bound="AbstractBranchSide", default="AbstractBranchSide", covariant=True)
 
