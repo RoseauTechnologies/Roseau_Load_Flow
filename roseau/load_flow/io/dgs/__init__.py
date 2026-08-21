@@ -17,7 +17,7 @@ from roseau.load_flow.io.dgs.loads import elm_lod_all_to_loads
 from roseau.load_flow.io.dgs.sources import elm_xnet_to_sources
 from roseau.load_flow.io.dgs.switches import elm_coup_to_switches
 from roseau.load_flow.io.dgs.transformers import elm_tr2_to_transformers, typ_tr2_to_tp
-from roseau.load_flow.io.dgs.utils import dgs_dict_to_df, has_typ_lne, has_typ_tr2, parse_dgs_version
+from roseau.load_flow.io.dgs.utils import dgs_dict_to_df, has_typ_lne, has_typ_tr2, parse_dgs_version, parse_elm_net
 from roseau.load_flow.models import (
     Bus,
     Element,
@@ -72,6 +72,8 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     elm_lod = dgs_dict_to_df(data, "ElmLod", index_col) if "ElmLod" in data else None  # General loads
     elm_gen_stat = dgs_dict_to_df(data, "ElmGenStat", index_col) if "ElmGenStat" in data else None  # Generators
     elm_pv_sys = dgs_dict_to_df(data, "ElmPvsys", index_col) if "ElmPvsys" in data else None  # LV generators
+    # Get the name and frequency of the network
+    name, _frnom = parse_elm_net(data)
 
     # Reindex buses and types by their FID because they are needed elsewhere
     if use_name_as_id:
@@ -177,7 +179,8 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
         "grounds": grounds,
         "potential_refs": potential_refs,
         "ground_connections": ground_connections,
-        "crs": None,  # TODO check if the CRS can be stored in the DGS file
+        "name": name,
+        "crs": "EPSG:4326",
     }
 
 

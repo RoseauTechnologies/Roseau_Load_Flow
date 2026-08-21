@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+import pytest
 import shapely
 
 import roseau.load_flow_single as rlfs
@@ -92,6 +93,21 @@ def test_to_from_dgs_roundtrip():
     rlfs.VoltageSource("MV Grid", bus=bus_mv, voltage=21e3 * np.exp(1j * np.pi / 6))
     rlfs.PowerLoad("LV Load", bus=bus2_lv, power=7e3 + 2e3j)
 
-    en = rlfs.ElectricalNetwork.from_element(bus_mv)
+    en = rlfs.ElectricalNetwork.from_element(bus_mv, name="My Test Net", crs="EPSG:4326")
     en2 = rlfs.ElectricalNetwork.from_dgs_dict(en.to_dgs_dict(), use_name_as_id=True)
     assert_json_close(en2.to_dict(), en.to_dict())
+
+    # Test warning for non-EPSG:4326 CRS
+    en.crs = "EPSG:2154"
+    with pytest.warns(
+        UserWarning,
+        match=(
+            r"Power factory only supports GPS coordinates that operate on the WGS84 datum "
+            r"\(EPSG:4326\) while your network 'My Test Net' has crs 'EPSG:2154'. Please convert "
+            r"the geometries to GPS coordinates and set en.crs to 'EPSG:4326' before exporting to DGS."
+        ),
+    ):
+        en.to_dgs_dict()
+    en.crs = None  # None is OK, considered as EPSG:4326
+    with warnings.catch_warnings(action="error"):
+        en.to_dgs_dict()
