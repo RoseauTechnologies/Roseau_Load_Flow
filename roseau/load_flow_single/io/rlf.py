@@ -319,6 +319,7 @@ def network_from_rlf(  # noqa: C901
             "lines": lines,
             "transformers": transformers,
             "switches": switches,
+            "regulators": {},
             "loads": loads,
             "sources": sources,
             "crs": en_m.crs,
