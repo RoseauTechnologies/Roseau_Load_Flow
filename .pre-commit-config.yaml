@@ -61,11 +61,12 @@ repos:
         args: ["--print-width", "120"]
         require_serial: true
         types_or: [yaml]
-  - repo: https://github.com/cmhughes/latexindent.pl
-    rev: V4.0.2
+  - repo: https://github.com/jolars/badness-pre-commit
+    rev: v0.22.0
     hooks:
-      - id: latexindent
-        args: [-l, -m, -s, -wd]
+      - id: badness-lint
+        args: [--fix]
+      - id: badness-format
   - repo: https://github.com/biomejs/pre-commit
     rev: v2.5.8
     hooks:

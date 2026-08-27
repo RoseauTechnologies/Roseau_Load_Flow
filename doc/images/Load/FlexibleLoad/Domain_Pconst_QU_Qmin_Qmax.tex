@@ -2,10 +2,10 @@
 
 \begin{document}
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   \input{Load/FlexibleLoad/Domain_Common.tex}%
   \pgfmathsetmacro{\qmaxvaleur}{0.75*\r};%
   \pgfmathsetmacro{\qminvaleur}{-0.5*\r};%
@@ -18,8 +18,8 @@
   \draw[dashed] (-\qmaxx,\qmaxvaleur) -- (\qmaxx,\qmaxvaleur);%
   \draw[dashed] (-\qminx,\qminvaleur) -- (\qminx,\qminvaleur);%
 
-  \node[below right] at (0,\qmaxvaleur) {$Q^{\max}$};%
-  \node[below right] at (0,\qminvaleur) {$Q^{\min}$};%
+  \node[below right] at (0,\qmaxvaleur) {$Q^\max$};%
+  \node[below right] at (0,\qminvaleur) {$Q^\min$};%
 
   \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
 \end{tikzpicture}

@@ -2,16 +2,16 @@
 
 \begin{document}
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   \input{Load/FlexibleLoad/Domain_Common.tex}%
 
   % The domain is a segment with two arc circle
-  \draw[domaine] (-\angeuclthvaleur:\r) arc[start angle=-\angeuclthvaleur, end
-      angle=-\angthvaleur, radius=\r] -- (\pthvaleur,\qthmaxvaleur) arc [start angle=\angthvaleur, end
-      angle=\angeuclthvaleur, radius=\r];%
+  \draw[domaine] (-\angeuclthvaleur:\r) arc[start angle=-\angeuclthvaleur, end angle=-\angthvaleur,
+    radius=\r] -- (\pthvaleur,\qthmaxvaleur) arc [start angle=\angthvaleur,
+    end angle=\angeuclthvaleur, radius=\r];%
 
   \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
 

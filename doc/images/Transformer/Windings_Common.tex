@@ -23,9 +23,10 @@
 \ctikzset{european, straight voltages, bipoles/length=1.2cm, cute inductors}%
 
 \tikzset{
-  left d/.pic={
+  left
+  d/.pic={
     \draw[red,text=black] (\xzero, \yzero) to[short, -] (\xsix, \yzero)%
-    to[short, -]  (\xsix, \yone) node[right] {A}%
+    to[short, -] (\xsix, \yone) node[right] {A}%
     to[short, -] (\xfive, \yone)%
     to[L, mirror, name=X] (\xstep, \yone)%
     to[short] (\xsix, \yfour) node[right] {B} %
@@ -39,7 +40,8 @@
     (Y.ul dot) node[circ]{}%
     (Z.ul dot) node[circ]{};%
   },
-  right d/.pic={
+  right
+  d/.pic={
     \draw[red,text=black] (\xzero,0) to[short, -] (\xsix, \yzero)%
     to[short, -] (\xsix, \yseven)%
     to[short, -] (\xfive, \yseven)%
@@ -57,7 +59,8 @@
     (y.ur dot) node[circ]{}%
     (z.ur dot) node[circ]{};%
   },
-  right d6/.pic={
+  right
+  d6/.pic={
     \draw[red, text=black] (\xzero, \yone) node [left] {a}%
     to[short, -] (\xzero, \yzero)%
     to[short, -] (\xfive, \yzero) %
@@ -83,7 +86,8 @@
     (y.ur dot) node[circ]{}%
     (z.ur dot) node[circ]{};%
   },
-  right d11/.pic={
+  right
+  d11/.pic={
     \draw[red, text=black] (\xzero, \yone) node [left] {a}%
     to[L, name=x] (\xfive, \yone)%
     to[short, -] (\xsix, \yone)%
@@ -98,7 +102,8 @@
     (y.ul dot) node[circ]{}%
     (z.ul dot) node[circ]{};%
   },
-  right d5/.pic={
+  right
+  d5/.pic={
     \draw[red, text=black] (\xzero, \yone) node [left] {a}%
     to[short, -] (\xzero, \ytwo)%
     to[short, -] (\xfive, \ytwo)%
@@ -124,31 +129,34 @@
     (y.ur dot) node[circ]{}%
     (z.ur dot) node[circ]{};%
   },
-  left y/.pic={
+  left
+  y/.pic={
     \draw[RoseauBlue, text=black] (\xzero, \yone) to[short, -] (\xstep, \yone)%
     to[L, -, name=X] (\xfive, \yone) node[right] {A}%
     (\xzero,\yfour) to[short, -] (\xstep, \yfour)%
-    to[L, -, name=Y]  (\xfive, \yfour) node[right] {B}%
+    to[L, -, name=Y] (\xfive, \yfour) node[right] {B}%
     (\xzero,\yseven) to[short, -] (\xstep, \yseven)%
-    to[L, -, name=Z]  (\xfive, \yseven) node[right] {C}%
+    to[L, -, name=Z] (\xfive, \yseven) node[right] {C}%
     (\xzero,\yone) to[short, -] (\xzero,\yseven);%
     \path[fill=RoseauBlue,draw=RoseauBlue] (X.ur dot) node[circ]{}%
     (Y.ur dot) node[circ]{}%
     (Z.ur dot) node[circ]{};%
   },
-  right y/.pic={
+  right
+  y/.pic={
     \draw[RoseauBlue,text=black] (\xsix, \yone) to[short, -] (\xfive, \yone)%
     to[L, -, mirror, name=x] (\xzero, \yone) node[left] {a}%
     (\xsix, \yfour) to[short, -] (\xfive, \yfour)%
-    to[L, -, mirror, name=y]  (\xzero,\yfour) node[left] {b}%
+    to[L, -, mirror, name=y] (\xzero,\yfour) node[left] {b}%
     (\xsix, \yseven) to[short, -] (\xfive, \yseven)%
-    to[L, -, mirror, name=z]  (\xzero,\yseven) node[left] {c}
+    to[L, -, mirror, name=z] (\xzero,\yseven) node[left] {c}
     (\xsix,\yone) to[short, -] (\xsix,\yseven);%
     \path[fill=RoseauBlue,draw=RoseauBlue] (x.ur dot) node[circ]{}%
     (y.ur dot) node[circ]{}%
     (z.ur dot) node[circ]{};%
   },
-  right y reverse/.pic={
+  right y
+  reverse/.pic={
     \draw[RoseauBlue, text=black] (\xzero, \yone) node[left] {a} %
     to[short, -] (\xzero, \ytwo)%
     to[short, -] (\xsix, \ytwo)%
@@ -175,7 +183,8 @@
     (y.ur dot) node[circ]{}%
     (z.ur dot) node[circ]{};%
   },
-  right z0/.pic={
+  right
+  z0/.pic={
     \draw[RoseauGreen, text=black] (\xzero, \yone) node[left] {a} %
     to[L, name=x1] (\xtwo, \yone)%
     to[short, -] (\xtwo,0)%
@@ -191,7 +200,8 @@
     to[L, name=z1] (\xtwo, \yseven)%
     to[short, -] (\xfive, \yfour)%
     to[L, mirror, name=y2] (\xfour, \yfour);%
-    \draw[RoseauGreen, text=black] (\xfour, \yseven) to[short, -] (\xfour, \yfour) to[short, -] (\xfour, \yone);
+    \draw[RoseauGreen, text=black] (\xfour, \yseven) to[short, -] (\xfour, \yfour) to[short, -]
+    (\xfour, \yone);
     \path[fill=RoseauGreen,draw=RoseauGreen] (x1.ul dot) node[circ]{}%
     (x2.ur dot) node[circ]{}%
     (y1.ul dot) node[circ]{}%
@@ -199,7 +209,8 @@
     (z1.ul dot) node[circ]{}%
     (z2.ur dot) node[circ]{};%
   },
-  right z6/.pic={
+  right
+  z6/.pic={
     \draw[RoseauGreen, text=black] (\xzero, \yone) node[left] {a} %
     to[short, -] (\xzero,\ytwo)%
     to[short, -] (\xfive, \ytwo)%
@@ -237,7 +248,8 @@
     (z1.ul dot) node[circ]{}%
     (z2.ur dot) node[circ]{};%
   },
-  right z11/.pic={
+  right
+  z11/.pic={
     \draw[RoseauGreen, text=black] (\xzero, \yone) node[left] {a} %
     to[L, name=x1] (\xtwo, \yone)%
     to[short, -] (\xfive, \yfour)%
@@ -260,7 +272,8 @@
     (z1.ul dot) node[circ]{}%
     (z2.ur dot) node[circ]{};%
   },
-  right z5/.pic={
+  right
+  z5/.pic={
     \draw[RoseauGreen, text=black] (\xzero, \yone) node[left] {a} %
     to[short, -] (\xzero, \ytwo)%
     to[short, -] (\xfive, \ytwo)%

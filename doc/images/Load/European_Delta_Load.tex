@@ -3,10 +3,10 @@
 \begin{document}
 \ctikzset{european, straight voltages, cute inductors}%
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   \def\radius{2.3}%
   \def\Radius{3}%
   \ctikzset{bipoles/open/voltage/distance from node/.initial=0.1}%
@@ -15,11 +15,11 @@
   \coordinate (A) at (90:\Radius);%
   \coordinate (B) at (330:\Radius);%
   \coordinate (C) at (210:\Radius);%
-  \coordinate (A2) at ($(-\Radius,\Radius)-(1,0)$);%
+  \coordinate (A2) at ($(-\Radius,\Radius) - (1,0)$);%
   \coordinate (B2) at (A2 |- C);%
   \coordinate (C2) at (A2 |- C);%
-  \coordinate (B2) at ($(C2)-(0,1.25)$);%
-  \coordinate (B3) at ($(B)-(0,1.25)$);%
+  \coordinate (B2) at ($(C2) - (0,1.25)$);%
+  \coordinate (B3) at ($(B) - (0,1.25)$);%
 
   % Nœuds
   \node[above] at (A) {A};%
@@ -27,9 +27,12 @@
   \node[below] at (C) {C};%
 
   % Lignes
-  \draw (A) to[generic, v^<=$\underline{V_{\arm}}-\underline{V_{\brm}}$, i_ =$\underline{I_{\abrm}}$, *-*] (B) %
-  to[generic, v^<=$\underline{V_{\brm}}-\underline{V_{\crm}}$, i_ =$\underline{I_{\bcrm}}$, *-*] (C) %
-  to[generic, v^<=$\underline{V_{\crm}}-\underline{V_{\arm}}$, i_ =$\underline{I_{\carm}}$, *-*] (A);%
+  \draw (A) to[generic, v^<=$\underline{V_{\arm}} - \underline{V_{\brm}}$,
+    i_ =$\underline{I_{\abrm}}$, *-*] (B) %
+    to[generic, v^<=$\underline{V_{\brm}} - \underline{V_{\crm}}$, i_ =$\underline{I_{\bcrm}}$, *-*]
+    (C) %
+    to[generic, v^<=$\underline{V_{\crm}} - \underline{V_{\arm}}$, i_ =$\underline{I_{\carm}}$, *-*]
+    (A);%
   \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
   \draw (B) -- (B3);%
   \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-] (B3);%

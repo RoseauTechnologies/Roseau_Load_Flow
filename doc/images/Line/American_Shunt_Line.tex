@@ -3,10 +3,10 @@
 \begin{document}
 \ctikzset{american}%
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   % Version multifilaire
 
   %
@@ -124,40 +124,40 @@
   \draw (g2) to[short, i=$\underline{I_{\grm}}$, *-] (g);%
   % Neutre
   \draw (vln) to[short,*-,i=$\underline{I_{1,\nrm}}$] (xlin) %
-  to[short, -*] (zln)%
-  to[R,l=$R_{\nrm}$] ($(zln)!0.5!(xrn)$)%
-  to[L,l=$L_{\nrm}$] (xrn)%
-  to[short,-] (xrin)%
-  to[short,-*] (zmn)%
-  to[short,*-] (xmin)%
-  to[short,-*,i<=$\underline{I_{2,\nrm}}$] (vmn);%
+    to[short, -*] (zln)%
+    to[R,l=$R_\nrm$] ($(zln)!0.5!(xrn)$)%
+    to[L,l=$L_\nrm$] (xrn)%
+    to[short,-] (xrin)%
+    to[short,-*] (zmn)%
+    to[short,*-] (xmin)%
+    to[short,-*,i<=$\underline{I_{2,\nrm}}$] (vmn);%
   % C
   \draw (vlc) to[short,*-,i=$\underline{I_{1,\crm}}$] (xlic)%
-  to[short, -*] (zlc)%
-  to[R,l=$R_{\crm}$] ($(zlc)!0.5!(xrc)$)%
-  to[L,l=$L_{\crm}$] (xrc)%
-  to[short,-] (xric)%
-  to[short,-*] (zmc)%
-  to[short,*-] (xmic)%
-  to[short,-*,i<=$\underline{I_{2,\crm}}$] (vmc);%
+    to[short, -*] (zlc)%
+    to[R,l=$R_\crm$] ($(zlc)!0.5!(xrc)$)%
+    to[L,l=$L_\crm$] (xrc)%
+    to[short,-] (xric)%
+    to[short,-*] (zmc)%
+    to[short,*-] (xmic)%
+    to[short,-*,i<=$\underline{I_{2,\crm}}$] (vmc);%
   % B
   \draw (vlb) to[short,*-,i=$\underline{I_{1,\brm}}$] (xlib)%
-  to[short, -*] (zlb)%
-  to[R,l=$R_{\brm}$] ($(zlb)!0.5!(xrb)$) %
-  to[L,l=$L_{\brm}$] (xrb)%
-  to[short,-] (xrib)%
-  to[short,-*] (zmb)%
-  to[short,*-] (xmib)%
-  to[short,-*,i<=$\underline{I_{2,\brm}}$] (vmb);%
+    to[short, -*] (zlb)%
+    to[R,l=$R_\brm$] ($(zlb)!0.5!(xrb)$) %
+    to[L,l=$L_\brm$] (xrb)%
+    to[short,-] (xrib)%
+    to[short,-*] (zmb)%
+    to[short,*-] (xmib)%
+    to[short,-*,i<=$\underline{I_{2,\brm}}$] (vmb);%
   % A
   \draw (vla) to[short,*-,i=$\underline{I_{1,\arm}}$] (xlia)%
-  to[short, -*] (zla)%
-  to[R,l=$R_{\arm}$] ($(zla)!0.5!(xra)$)%
-  to[L,l=$L_{\arm}$] (xra)%
-  to[short,-] (xria)%
-  to[short,-*] (zma)%
-  to[short,*-] (xmia)%
-  to[short,-*,i<=$\underline{I_{2,\arm}}$] (vma);%
+    to[short, -*] (zla)%
+    to[R,l=$R_\arm$] ($(zla)!0.5!(xra)$)%
+    to[L,l=$L_\arm$] (xra)%
+    to[short,-] (xria)%
+    to[short,-*] (zma)%
+    to[short,*-] (xmia)%
+    to[short,-*,i<=$\underline{I_{2,\arm}}$] (vma);%
 
   % Mutuelles des lignes
   \pgfmathsetmacro{\xrm}{\xri+0.0*(\zm-\xri)};%
@@ -165,7 +165,8 @@
   \draw[fleche] (\xrm,\yb) to[bend left] node[midway, right]{$\underline{M_{\bcrm}}$} (\xrm,\yc);%
   \draw[fleche] (\xrm,\yc) to[bend left] node[midway, right]{$\underline{M_{\cnrm}}$} (\xrm,\yn);%
   \pgfmathsetmacro{\xrm}{\xri+0.25*(\zm-\xri)};%
-  \draw[fleche] (\xrm,\ya) to[bend left] node[near start, right]{$\underline{M_{\carm}}$} (\xrm,\yc);%
+  \draw[fleche] (\xrm,\ya) to[bend left] node[near start, right]{$\underline{M_{\carm}}$}
+    (\xrm,\yc);%
   \pgfmathsetmacro{\xrm}{\xri+0.40*(\zm-\xri)};%
   \draw[fleche] (\xrm,\yb) to[bend left] node[near end, right]{$\underline{M_{\bnrm}}$} (\xrm,\yn);%
   \pgfmathsetmacro{\xrm}{\xri+0.75*(\zm-\xri)};%
@@ -177,9 +178,10 @@
   \pgfmathsetmacro{\xliplus}{\xli+0.4};%
   \pgfmathsetmacro{\xlimoins}{\xli-0.4};%
   \draw (xlia) to[short,*-] (\xli,\ylihaut) -| (\xliplus,\ylihaut)%
-  to[R=$\dfrac{G_{\arm}}{2}$] (\xliplus,\ylibas) |- (\xli,\ylibas)%
-  to[short,-*] (\xli,\yt);%
-  \draw (\xli,\ylihaut) -| (\xlimoins,\ylihaut) to[C,l_=$\dfrac{C_{\arm}}{2}$] (\xlimoins,\ylibas) |- (\xli,\ylibas);%
+    to[R=$\dfrac{G_{\arm}}{2}$] (\xliplus,\ylibas) |- (\xli,\ylibas)%
+    to[short,-*] (\xli,\yt);%
+  \draw (\xli,\ylihaut) -| (\xlimoins,\ylihaut) to[C,l_=$\dfrac{C_{\arm}}{2}$] (\xlimoins,\ylibas)
+    |- (\xli,\ylibas);%
 
   \pgfmathsetmacro{\ylihaut}{\yt+0.75*(\yn-\yt)};%
   \pgfmathsetmacro{\ylibas}{\ylihaut-1.2};%
@@ -188,36 +190,34 @@
   \pgfmathsetmacro{\xlimoins}{\xliref-0.4};%
   \coordinate (ref) at (\xliref,0);%
   \draw (xlib -| ref) to[short,*-] (\xliref,\ylihaut) -| (\xliplus,\ylihaut)%
-  to[R=$\dfrac{G_{\brm}}{2}$] (\xliplus,\ylibas) |- (\xliref,\ylibas)%
-  to[short,-*] (\xliref,\yt);%
+    to[R=$\dfrac{G_{\brm}}{2}$] (\xliplus,\ylibas) |- (\xliref,\ylibas)%
+    to[short,-*] (\xliref,\yt);%
   \draw (\xliref,\ylihaut) -| (\xlimoins,\ylihaut)%
-  to[C,l_=$\dfrac{C_{\brm}}{2}$] (\xlimoins,\ylibas) |- (\xliref,\ylibas);%
-  \draw (xlia -| ref) to[C,l_=$\dfrac{C_{\abrm}}{2}$,*-] (xlib -|  ref);%
+    to[C,l_=$\dfrac{C_{\brm}}{2}$] (\xlimoins,\ylibas) |- (\xliref,\ylibas);%
+  \draw (xlia -| ref) to[C,l_=$\dfrac{C_{\abrm}}{2}$,*-] (xlib -| ref);%
 
   \pgfmathsetmacro{\ylihaut}{\yt+0.55*(\yn-\yt)};%
   \pgfmathsetmacro{\ylibas}{\ylihaut-1.2};%
-  \pgfmathsetmacro{\xliref}{\xli+4}
-  \pgfmathsetmacro{\xliplus}{\xliref+0.4};%
+  \pgfmathsetmacro{\xliref}{\xli+4} \pgfmathsetmacro{\xliplus}{\xliref+0.4};%
   \pgfmathsetmacro{\xlimoins}{\xliref-0.4};%
   \coordinate (ref) at (\xliref,0);%
   \draw (xlic -| ref) to[short,*-] (\xliref,\ylihaut) -| (\xliplus,\ylihaut)%
-  to[R=$\dfrac{G_{\crm}}{2}$] (\xliplus,\ylibas) |- (\xliref,\ylibas)%
-  to[short,-*] (\xliref,\yt);%
+    to[R=$\dfrac{G_{\crm}}{2}$] (\xliplus,\ylibas) |- (\xliref,\ylibas)%
+    to[short,-*] (\xliref,\yt);%
   \draw (\xliref,\ylihaut) -| (\xlimoins,\ylihaut) %
-  to[C,l_=$\dfrac{C_{\crm}}{2}$] (\xlimoins,\ylibas) |- (\xliref,\ylibas);%
+    to[C,l_=$\dfrac{C_{\crm}}{2}$] (\xlimoins,\ylibas) |- (\xliref,\ylibas);%
   \draw (xlib -| ref) to[C,l_=$\dfrac{C_{\bcrm}}{2}$,*-*] (xlic -| ref);%
 
   \pgfmathsetmacro{\ylihaut}{\yt+0.35*(\yn-\yt)};%
   \pgfmathsetmacro{\ylibas}{\ylihaut-1.2};%
-  \pgfmathsetmacro{\xliref}{\xli+6}
-  \pgfmathsetmacro{\xliplus}{\xliref+0.4};%
+  \pgfmathsetmacro{\xliref}{\xli+6} \pgfmathsetmacro{\xliplus}{\xliref+0.4};%
   \pgfmathsetmacro{\xlimoins}{\xliref-0.4};%
   \coordinate (ref) at (\xliref,0);%
   \draw (xlin -| ref) to[short,*-] (\xliref,\ylihaut) -| (\xliplus,\ylihaut)%
-  to[R=$\dfrac{G_{\nrm}}{2}$] (\xliplus,\ylibas) |- (\xliref,\ylibas)%
-  to[short,-*] (\xliref,\yt);%
+    to[R=$\dfrac{G_{\nrm}}{2}$] (\xliplus,\ylibas) |- (\xliref,\ylibas)%
+    to[short,-*] (\xliref,\yt);%
   \draw (\xliref,\ylihaut) -| (\xlimoins,\ylihaut)%
-  to[C,l_=$\dfrac{C_{\nrm}}{2}$] (\xlimoins,\ylibas) |- (\xliref,\ylibas);%
+    to[C,l_=$\dfrac{C_{\nrm}}{2}$] (\xlimoins,\ylibas) |- (\xliref,\ylibas);%
   \draw (xlic -| ref) to[C,l_=$\dfrac{C_{\cnrm}}{2}$,*-*] (xlin -| ref);%
   \draw (xlia -| ref) to[C,l_=$\dfrac{C_{\carm}}{2}$,*-] (xlib -| ref) to[short,-*] (xlic -| ref);%
 
@@ -234,9 +234,10 @@
   \pgfmathsetmacro{\xmiplus}{\xmi+0.4};%
   \pgfmathsetmacro{\xmimoins}{\xmi-0.4};%
   \draw (xmia) to[short,*-] (\xmi,\ymihaut) -| (\xmiplus,\ymihaut) %
-  to[R,l=$\dfrac{G_{\arm}}{2}$] (\xmiplus,\ymibas) |- (\xmi,\ymibas) %
-  to[short,-*] (\xmi,\yt);%
-  \draw (\xmi,\ymihaut) -| (\xmimoins,\ymihaut) to[C,l_=$\dfrac{C_{\arm}}{2}$] (\xmimoins,\ymibas) |- (\xmi,\ymibas);%
+    to[R,l=$\dfrac{G_{\arm}}{2}$] (\xmiplus,\ymibas) |- (\xmi,\ymibas) %
+    to[short,-*] (\xmi,\yt);%
+  \draw (\xmi,\ymihaut) -| (\xmimoins,\ymihaut) to[C,l_=$\dfrac{C_{\arm}}{2}$] (\xmimoins,\ymibas)
+    |- (\xmi,\ymibas);%
 
   \pgfmathsetmacro{\ymihaut}{\yt+0.75*(\yn-\yt)};%
   \pgfmathsetmacro{\ymibas}{\ymihaut-1.2};%
@@ -245,36 +246,34 @@
   \pgfmathsetmacro{\xmimoins}{\xmiref-0.4};%
   \coordinate (ref) at (\xmiref,0);%
   \draw (xmib -| ref) to[short,*-] (\xmiref,\ymihaut) -| (\xmiplus,\ymihaut)%
-  to[R,l=$\dfrac{G_{\brm}}{2}$] (\xmiplus,\ymibas) |- (\xmiref,\ymibas)%
-  to[short,-*] (\xmiref,\yt);%
+    to[R,l=$\dfrac{G_{\brm}}{2}$] (\xmiplus,\ymibas) |- (\xmiref,\ymibas)%
+    to[short,-*] (\xmiref,\yt);%
   \draw (\xmiref,\ymihaut) -| (\xmimoins,\ymihaut)%
-  to[C,l_=$\dfrac{C_{\brm}}{2}$] (\xmimoins,\ymibas) |- (\xmiref,\ymibas);%
+    to[C,l_=$\dfrac{C_{\brm}}{2}$] (\xmimoins,\ymibas) |- (\xmiref,\ymibas);%
   \draw (xmia -| ref) to[C,l^=$\dfrac{C_{\abrm}}{2}$,*-] (xmib -| ref);%
 
   \pgfmathsetmacro{\ymihaut}{\yt+0.55*(\yn-\yt)};%
   \pgfmathsetmacro{\ymibas}{\ymihaut-1.2};%
-  \pgfmathsetmacro{\xmiref}{\xmi-4}
-  \pgfmathsetmacro{\xmiplus}{\xmiref+0.4};%
+  \pgfmathsetmacro{\xmiref}{\xmi-4} \pgfmathsetmacro{\xmiplus}{\xmiref+0.4};%
   \pgfmathsetmacro{\xmimoins}{\xmiref-0.4};%
   \coordinate (ref) at (\xmiref,0);%
   \draw (xmic -| ref) to[short,*-] (\xmiref,\ymihaut) -| (\xmiplus,\ymihaut)%
-  to[R,l=$\dfrac{G_{\crm}}{2}$] (\xmiplus,\ymibas) |- (\xmiref,\ymibas)%
-  to[short,-*] (\xmiref,\yt);%
+    to[R,l=$\dfrac{G_{\crm}}{2}$] (\xmiplus,\ymibas) |- (\xmiref,\ymibas)%
+    to[short,-*] (\xmiref,\yt);%
   \draw (\xmiref,\ymihaut) -| (\xmimoins,\ymihaut)%
-  to[C,l_=$\dfrac{C_{\crm}}{2}$] (\xmimoins,\ymibas) |- (\xmiref,\ymibas);%
+    to[C,l_=$\dfrac{C_{\crm}}{2}$] (\xmimoins,\ymibas) |- (\xmiref,\ymibas);%
   \draw (xmib -| ref) to[C,l^=$\dfrac{C_{\bcrm}}{2}$,*-*] (xmic -| ref);%
 
   \pgfmathsetmacro{\ymihaut}{\yt+0.35*(\yn-\yt)};%
   \pgfmathsetmacro{\ymibas}{\ymihaut-1.2};%
-  \pgfmathsetmacro{\xmiref}{\xmi-6}
-  \pgfmathsetmacro{\xmiplus}{\xmiref+0.4};%
+  \pgfmathsetmacro{\xmiref}{\xmi-6} \pgfmathsetmacro{\xmiplus}{\xmiref+0.4};%
   \pgfmathsetmacro{\xmimoins}{\xmiref-0.4};%
   \coordinate (ref) at (\xmiref,0);%
   \draw (xmin -| ref) to[short,*-] (\xmiref,\ymihaut) -| (\xmiplus,\ymihaut)%
-  to[R,l=$\dfrac{G_{\nrm}}{2}$] (\xmiplus,\ymibas) |- (\xmiref,\ymibas)%
-  to[short,-*] (\xmiref,\yt);%
+    to[R,l=$\dfrac{G_{\nrm}}{2}$] (\xmiplus,\ymibas) |- (\xmiref,\ymibas)%
+    to[short,-*] (\xmiref,\yt);%
   \draw (\xmiref,\ymihaut) -| (\xmimoins,\ymihaut)%
-  to[C,l_=$\dfrac{C_{\nrm}}{2}$] (\xmimoins,\ymibas) |- (\xmiref,\ymibas);%
+    to[C,l_=$\dfrac{C_{\nrm}}{2}$] (\xmimoins,\ymibas) |- (\xmiref,\ymibas);%
   \draw (xmic -| ref) to[C,l^=$\dfrac{C_{\cnrm}}{2}$,*-*] (xmin -| ref);%
   \draw (xmia -| ref) to[C,l^=$\dfrac{C_{\carm}}{2}$,*-] (xmib -| ref) to[short,-*] (xmic -| ref);%
 

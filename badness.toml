@@ -1,0 +1,14 @@
+# Only .git/ is excluded by default
+extend-exclude = [
+  ".ruff_cache/",
+  ".pytest_cache/",
+  ".venv/",
+  "__pycache__/",
+  "node_modules/",
+  "build/",
+  "dist/",
+]
+
+[format]
+line-width = 100
+indent-width = 2

@@ -3,10 +3,10 @@
 \begin{document}
 \ctikzset{european, straight voltages, cute inductors}%
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   \def\radius{2.3}%
   \def\Radius{3}%
 
@@ -21,10 +21,10 @@
   \coordinate (B) at (330:\Radius);%
   \coordinate (C) at (210:\Radius);%
   \coordinate (N) at (0,0);%
-  \coordinate (A2) at ($(-\Radius,\Radius)-(1,0)$);%
+  \coordinate (A2) at ($(-\Radius,\Radius) - (1,0)$);%
   \coordinate (C2) at (A2 |- C);%
-  \coordinate (B2) at ($(C2)-(0,1)$);%
-  \coordinate (B3) at ($(B)-(0,1)$);%
+  \coordinate (B2) at ($(C2) - (0,1)$);%
+  \coordinate (B3) at ($(B) - (0,1)$);%
   \coordinate (N2) at (A2 |- N);%
 
   % Nodes
@@ -34,9 +34,9 @@
   \node[above right] at (N) {N};%
 
   % Lines
-  \draw (A) to[short,*-] (A1) to[generic, v<=$\underline{V_{\arm}}-\underline{V_{\nrm}}$, -*] (N);%
-  \draw (B) to[short,*-] (B1) to[generic, v<=$\underline{V_{\brm}}-\underline{V_{\nrm}}$, -*] (N);%
-  \draw (C) to[short,*-] (C1) to[generic, v<=$\underline{V_{\crm}}-\underline{V_{\nrm}}$, -*] (N);%
+  \draw (A) to[short,*-] (A1) to[generic, v<=$\underline{V_{\arm}} - \underline{V_{\nrm}}$, -*] (N);%
+  \draw (B) to[short,*-] (B1) to[generic, v<=$\underline{V_{\brm}} - \underline{V_{\nrm}}$, -*] (N);%
+  \draw (C) to[short,*-] (C1) to[generic, v<=$\underline{V_{\crm}} - \underline{V_{\nrm}}$, -*] (N);%
   \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
   \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-] (B3);%
   \draw (B3) -- (B);%

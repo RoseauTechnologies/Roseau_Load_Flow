@@ -6,11 +6,12 @@
 
 \begin{document}
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white},%
-    % q and q' functions
-    declare function = { q(\x) = (\x - 1) * (\x - 1) + 0.1; qp(\x) = 2 * \x - 2; } ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white},%
+  % q and q' functions
+  declare function = { q(\x) = (\x - 1) * (\x - 1) + 0.1; qp(\x) = 2 * \x - 2; }
+]
   %
   % Common parameters
   %
@@ -34,38 +35,38 @@
   % Style
   %
   \tikzset{lisse/.style={line width=0.3mm, domain=\xminnormvaleur:\xmaxnormvaleur, samples=75,
-      mark=none}}%
+    mark=none}}%
 
   \begin{axis}[%
-      height=7cm,%
-      width=0.9\textwidth,%
-      grid=major,%
-      axis lines=left,
-      xlabel={$t$},%
-      xtick={\a, \b},%
-      xticklabels={$a$, $b$},%
-      xtick style={draw=none},
-      y tick label style={/pgf/number format/.cd,%
-        set thousands separator={},%
-        fixed,%
-        fixed zerofill,%
-        precision=1,%
-        use comma%
-      },%
-      ytick={q(0)},%
-      yticklabels={$q(0)$},%
-      ytick style={draw=none},
-      xmin=\xminnormvaleur,%
-      xmax=\xmaxnormvaleur,%
-      ymin=\yminnormvaleur,%
-      ymax=\ymaxnormvaleur,%
-      legend columns=2,%
-      legend style={%
-        at={(0.5,-0.25)},%
-        anchor=north,%
-      },%
-      grid=none,
-    ]
+    height=7cm,%
+    width=0.9\textwidth,%
+    grid=major,%
+    axis lines=left,
+    xlabel={$t$},%
+    xtick={\a, \b},%
+    xticklabels={$a$, $b$},%
+    xtick style={draw=none},
+    y tick label style={/pgf/number format/.cd,%
+      set thousands separator={},%
+      fixed,%
+      fixed zerofill,%
+      precision=1,%
+      use comma%
+    },%
+    ytick={q(0)},%
+    yticklabels={$q(0)$},%
+    ytick style={draw=none},
+    xmin=\xminnormvaleur,%
+    xmax=\xmaxnormvaleur,%
+    ymin=\yminnormvaleur,%
+    ymax=\ymaxnormvaleur,%
+    legend columns=2,%
+    legend style={%
+      at={(0.5,-0.25)},%
+      anchor=north,%
+    },%
+    grid=none,
+  ]
 
     % q
     \addplot[lisse, red] expression {q(x)};%
@@ -76,11 +77,13 @@
     \addplot[black, thin] expression {q(0) + qp(0) * \mtwo * x};%
 
     % a and b
-    \addplot[dotted, black, mark=none] coordinates {%
+    \addplot[dotted, black, mark=none] coordinates
+      {%
         (\a,0)%
         (\a,\qa)%
       };%
-    \addplot[dotted, black, mark=none] coordinates {%
+    \addplot[dotted, black, mark=none] coordinates
+      {%
         (\b,0)%
         (\b,\qb)%
       };%

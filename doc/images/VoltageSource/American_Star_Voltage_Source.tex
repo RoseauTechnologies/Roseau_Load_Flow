@@ -3,10 +3,10 @@
 \begin{document}
 \ctikzset{american}%
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   \def\Radius{3}%
 
   \ctikzset{bipoles/open/voltage/distance from node/.initial=0.1}
@@ -17,10 +17,10 @@
   \coordinate (B) at (330:\Radius);%
   \coordinate (C) at (210:\Radius);%
   \coordinate (N) at (0,0);%
-  \coordinate (A2) at ($(\Radius,\Radius)+(1,0)$);%
+  \coordinate (A2) at ($(\Radius,\Radius) + (1,0)$);%
   \coordinate (B2) at (A2 |- C);%
-  \coordinate (C2) at ($(B2)-(0,1)$);%
-  \coordinate (C3) at ($(C)-(0,1)$);%
+  \coordinate (C2) at ($(B2) - (0,1)$);%
+  \coordinate (C3) at ($(C) - (0,1)$);%
   \coordinate (N2) at (A2 |- N);%
 
   % Nodes
@@ -36,7 +36,8 @@
   \draw (A2) to[short,i=$\underline{I_{\arm}}$,*-*] (A);%
   \draw (B2) to[short,i=$\underline{I_{\brm}}$,*-*] (B);%
   \draw (C2) to[short,i=$\underline{I_{\crm}}$,*-] (C3);%
-  \draw (C3) -- (C); \draw (N2) to[short, i=$\underline{I_{\nrm}}$, *-] (N);%
+  \draw (C3) -- (C);
+  \draw (N2) to[short, i=$\underline{I_{\nrm}}$, *-] (N);%
 
   % Line-to-line voltage
   % \draw (A) to[open, v=$V_{m,\abrm}$] (B)

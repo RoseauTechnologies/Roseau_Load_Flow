@@ -3,22 +3,18 @@
 \begin{document}
 \ctikzset{american, bipoles/length=1cm}%
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   % Version multifilaire
 
   %
   % Définitions
   %
   % No European transformer in circuitikz [BV, 17/07/2023]
-  \tikzset{
-    transformer/.pic={
-      \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];
-    },
-  }
-  \pgfmathsetmacro{\xl}{0};%
+  \tikzset{ transformer/.pic={ \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4]; },}
+    \pgfmathsetmacro{\xl}{0};%
   \pgfmathsetmacro{\xy}{1.75};%
   \pgfmathsetmacro{\xlt}{2.5};%
   \pgfmathsetmacro{\xrt}{4.5};%
@@ -38,7 +34,7 @@
   %
   % Transformer
   \draw (\xt,\yt) node[transformer] (T) {};
-  \node[above] at ($(T.base)-(0,0.2)$) {$k$};%
+  \node[above] at ($(T.base) - (0,0.2)$) {$k$};%
   \draw (T.inner dot A1) node[circ] {}; %
   \draw (T.inner dot B1) node[circ] {}; %
 
@@ -53,22 +49,21 @@
 
   % Câbles principaux
   % A
-  \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{1,\arm}}$]
-  (\xy,\ya) to[short] (T.A1);%
+  \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{1,\arm}}$] (\xy,\ya) to[short] (T.A1);%
   \draw (T.B1) -- (\xrt,\ya) to[generic, l=$\dfrac{\underline{Z_2}}{2}$, label distance=6pt, -]
-  (\xz,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xm,\ya);%
+    (\xz,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xm,\ya);%
 
   % B
-  \draw (\xl,\yb) to[short,*-*,i=$\underline{I_{1,\brm}}$]
-  (\xy,\yb) to[short] (T.A2);%
+  \draw (\xl,\yb) to[short,*-*,i=$\underline{I_{1,\brm}}$] (\xy,\yb) to[short] (T.A2);%
   \draw (T.B2) -- (\xrt,\yb) to[generic, l_=$\dfrac{\underline{Z_2}}{2}$, -]
-  (\xz,\yb) to[short,-*,i<=$\underline{I_{2,\brm}}$] (\xm,\yb);%
+    (\xz,\yb) to[short,-*,i<=$\underline{I_{2,\brm}}$] (\xm,\yb);%
 
   % Neutre
   \draw (T-L2.midtap) -- (\xz,\yn) to[short,-*,i<=$\underline{I_{2,\nrm}}$] (\xm,\yn);%
 
   % Ym
-  \draw (\xy,\ya) to[generic, l=$\underline{Y_{\mathrm{m}}}$, v>=$\underline{U_{1,\abrm}}$, -] (\xy,\yb);%
+  \draw (\xy,\ya) to[generic, l=$\underline{Y_{\mathrm{m}}}$, v>=$\underline{U_{1,\abrm}}$, -]
+    (\xy,\yb);%
 
   % Tensions
   \draw (\xz,\ya) to[open, v^>=$\underline{U_{2,\arm}}$] (\xz,\yn);%

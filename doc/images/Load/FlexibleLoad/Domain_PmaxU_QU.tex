@@ -2,15 +2,15 @@
 
 \begin{document}
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   \input{Load/FlexibleLoad/Domain_Common.tex}%
 
   % The domain is a prtion of the circle
-  \filldraw[domaine hache] (0,-\r) arc[start angle=-90, end angle=-\angthvaleur, radius=\r] --
-  (\pthvaleur, \qthmaxvaleur) arc[start angle=\angthvaleur, end angle=90, radius=\r] --cycle;%
+  \filldraw[domaine hache] (0,-\r) arc[start angle=-90, end angle=-\angthvaleur, radius=\r]
+    -- (\pthvaleur, \qthmaxvaleur) arc[start angle=\angthvaleur, end angle=90, radius=\r] --cycle;%
 
   \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
 \end{tikzpicture}

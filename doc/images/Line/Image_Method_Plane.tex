@@ -3,10 +3,10 @@
 \begin{document}
 \ctikzset{european, straight voltages, cute inductors}%
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   \tikzset{%
     wire/.pic={%
       \fill[RoseauBlue, draw=black] (0,0) circle[radius=0.3];%
@@ -30,7 +30,7 @@
   \draw[{Latex[]}-{Latex[]}] (w1) -- (w1 |- {(0,0)}) node[midway,left] {$h$};%
   \draw[{Latex[]}-{Latex[]}] (w1) -- (w2) node[midway,above] {$D_{12}$};%
   \draw[{Latex[]}-{Latex[]}] (w1) -- (w2p) node[pos=0.4,right] {$D'_{12}$};%
-  \draw[{Latex[]}-{Latex[]}] (w3) -- (w3p) node[pos=0.4,right] {$D'_{3}$};%
+  \draw[{Latex[]}-{Latex[]}] (w3) -- (w3p) node[pos=0.4,right] {$D'_3$};%
 \end{tikzpicture}
 \end{document}
 % Local Variables:
