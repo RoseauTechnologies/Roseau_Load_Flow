@@ -2,10 +2,10 @@
 
 \begin{document}
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   \tikzset{%
     point/.pic={%
       \fill[black] (0,0) circle[radius=0.05];%
@@ -31,11 +31,12 @@
     \node[shape=circle, draw, fill=white] (n center node) at (n center) {$\nrm$};%
 
     % Phases
-    \foreach \x/\y/\z in {a/-135/$\arm$,b/-45/$\brm$,c/45/$\crm$} {%
-        \path (wire center) ++(\y:1.75) coordinate (\x\space center);%
-        \draw[fill=RoseauGreen] (\x\space center) circle[radius=1.1];%
-        \node[shape=circle, draw, fill=white] at (\x\space center) {\z};%
-      }%
+    \foreach \x/\y/\z in {a/-135/$\arm$,b/-45/$\brm$,c/45/$\crm$}
+    {%
+      \path (wire center) ++(\y:1.75) coordinate (\x\space center);%
+      \draw[fill=RoseauGreen] (\x\space center) circle[radius=1.1];%
+      \node[shape=circle, draw, fill=white] at (\x\space center) {\z};%
+    }%
 
     % Hauteur
     \coordinate (top height) at (5.5, 5);%
@@ -46,8 +47,8 @@
 
   % Légende
   \path let \p1=($(dessin.north)!0.5!(dessin.south)$) in %
-  coordinate (ancre legende) at (7,\y1);%
-  \begin{scope}[shift={(ancre legende)}, local bounding box=legende]
+    coordinate (ancre legende) at (7,\y1);%
+  \begin{scope}[shift={(ancre legende)},local bounding box=legende]
     \path[fill=red] (0, 2) circle[radius=0.25];%
     \node[right] at (0.3, 2) {Neutral conductor};%
     \path[fill=RoseauGreen] (0, 1) circle[radius=0.25];%
@@ -59,7 +60,7 @@
     \node[shape=circle, draw, fill=white] at (0, -2) {$\arm$};%
     \node[right] at (0.3, -2) {Identifier (phase or neutral)};%
   \end{scope}
-  \draw ($(legende.south west)-(0.25,0.25)$) rectangle ($(legende.north east)+(0.25,0.25)$);%
+  \draw ($(legende.south west) - (0.25,0.25)$) rectangle ($(legende.north east) + (0.25,0.25)$);%
 \end{tikzpicture}
 \end{document}
 % Local Variables:
@@ -69,5 +70,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

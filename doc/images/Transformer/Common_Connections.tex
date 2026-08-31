@@ -2,117 +2,117 @@
 
 \begin{document}
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   \input{Transformer/Connection_Defs.tex}%
 
   % Phase displacement = 0
-  \begin{scope}[local bounding box=C0, shift={(0,0)}]
+  \begin{scope}[local bounding box=C0,shift={(0,0)}]
     \pic at (0,0) {clock};%
     \pic at (0,-3.5) {clock};%
   \end{scope}
   \node[left=-2.0 of C0, node font=\Large] (C0 legend) {0};%
-  \begin{scope}[local bounding box=Yy0, shift={(6,0)}]
+  \begin{scope}[local bounding box=Yy0,shift={(6,0)}]
     \pic at (0,0) {Y};%
     \pic at (0,-3.5) {y};%
   \end{scope}
   \node[left=0.1 of Yy0] (Yy0 legend) {\textcolor{RoseauBlue}{Yy}0};%
-  \begin{scope}[local bounding box=Dd0, shift={(14,0)}]
+  \begin{scope}[local bounding box=Dd0,shift={(14,0)}]
     \pic at (0,0) {D direct};%
     \pic at (0,-3.5) {d direct};%
   \end{scope}
   \node[left=0.1 of Dd0] (Dd0 legend) {\textcolor{red}{Dd}0};%
-  \begin{scope}[local bounding box=Dz0, shift={(22,0)}]
+  \begin{scope}[local bounding box=Dz0,shift={(22,0)}]
     \pic at (0,0) {D direct};%
     \pic at (0,-3.5) {z direct};%
   \end{scope}
   \node[left=0.1 of Dz0] (Dz0 legend) {\textcolor{red}{D}\textcolor{RoseauGreen}{z}0};%
 
   % Phase displacement = 1
-  \begin{scope}[local bounding box=C1, shift={(0,-8)}]
+  \begin{scope}[local bounding box=C1,shift={(0,-8)}]
     \pic at (0,0) {clock};%
     \pic at (0,-3.5) {clock};%
   \end{scope}
   \node[left=-2.0 of C1, node font=\Large] (C1 legend) {1};%
-  \begin{scope}[local bounding box=Yd1, shift={(6,-8)}]
+  \begin{scope}[local bounding box=Yd1,shift={(6,-8)}]
     \pic at (0,0) {Y};%
     \pic at (0,-3.5) {d direct};%
   \end{scope}
   \node[left=0.1 of Yd1] (Yd1 legend) {\textcolor{RoseauBlue}{Y}\textcolor{red}{d}1};%
-  \begin{scope}[local bounding box=Dy1, shift={(14,-8)}]
+  \begin{scope}[local bounding box=Dy1,shift={(14,-8)}]
     \pic at (0,0) {D inverse};%
     \pic at (0,-3.5) {y};%
   \end{scope}
   \node[left=0.1 of Dy1] (Dy1 legend) {\textcolor{red}{D}\textcolor{RoseauBlue}{y}1};%
-  \begin{scope}[local bounding box=Yz1, shift={(22,-8)}]
+  \begin{scope}[local bounding box=Yz1,shift={(22,-8)}]
     \pic at (0,0) {Y};%
     \pic at (0,-3.5) {z direct};%
   \end{scope}
   \node[left=0.1 of Yz1] (Yz1 legend) {\textcolor{RoseauBlue}{Y}\textcolor{RoseauGreen}{z}1};%
 
   % Phase displacement = 5
-  \begin{scope}[local bounding box=C5, shift={(0,-16)}]
+  \begin{scope}[local bounding box=C5,shift={(0,-16)}]
     \pic at (0,0) {clock};%
     \pic at (0,-3.5) {clock};%
   \end{scope}
   \node[left=-2.0 of C5, node font=\Large] (C5 legend) {5};%
-  \begin{scope}[local bounding box=Yd5, shift={(6,-16)}]
+  \begin{scope}[local bounding box=Yd5,shift={(6,-16)}]
     \pic at (0,0) {Y};%
     \pic at (0,-3.5) {d inverse reverse};%
   \end{scope}
   \node[left=0.1 of Yd5] (Yd5 legend) {\textcolor{RoseauBlue}{Y}\textcolor{red}{d}5};%
-  \begin{scope}[local bounding box=Dy5, shift={(14,-16)}]
+  \begin{scope}[local bounding box=Dy5,shift={(14,-16)}]
     \pic at (0,0) {D direct};%
     \pic at (0,-3.5) {y reverse};%
   \end{scope}
   \node[left=0.1 of Dy5] (Dy5 legend) {\textcolor{red}{D}\textcolor{RoseauBlue}{y}5};%
-  \begin{scope}[local bounding box=Yz5, shift={(22,-16)}]
+  \begin{scope}[local bounding box=Yz5,shift={(22,-16)}]
     \pic at (0,0) {Y};%
     \pic at (0,-3.5) {z inverse reverse};%
   \end{scope}
   \node[left=0.1 of Yz5] (Yz5 legend) {\textcolor{RoseauBlue}{Y}\textcolor{RoseauGreen}{z}5};%
 
   % Phase displacement = 6
-  \begin{scope}[local bounding box=C6, shift={(0,-24)}]
+  \begin{scope}[local bounding box=C6,shift={(0,-24)}]
     \pic at (0,0) {clock};%
     \pic at (0,-3.5) {clock};%
   \end{scope}
   \node[left=-2.0 of C6, node font=\Large] (C6 legend) {6};%
-  \begin{scope}[local bounding box=Yy6, shift={(6,-24)}]
+  \begin{scope}[local bounding box=Yy6,shift={(6,-24)}]
     \pic at (0,0) {Y};%
     \pic at (0,-3.5) {y reverse};%
   \end{scope}
   \node[left=0.1 of Yy6] (Yy6 legend) {\textcolor{RoseauBlue}{Yy}6};%
-  \begin{scope}[local bounding box=Dd6, shift={(14,-24)}]
+  \begin{scope}[local bounding box=Dd6,shift={(14,-24)}]
     \pic at (0,0) {D direct};%
     \pic at (0,-3.5) {d direct reverse};%
   \end{scope}
   \node[left=0.1 of Dd6] (Dd6 legend) {\textcolor{red}{Dd}6};%
-  \begin{scope}[local bounding box=Dz6, shift={(22,-24)}]
+  \begin{scope}[local bounding box=Dz6,shift={(22,-24)}]
     \pic at (0,0) {D direct};%
     \pic at (0,-3.5) {z direct reverse};%
   \end{scope}
   \node[left=0.1 of Dz6] (Dz6 legend) {\textcolor{red}{D}\textcolor{RoseauGreen}{z}6};%
 
   % Phase displacement = 11
-  \begin{scope}[local bounding box=C11, shift={(0,-32)}]
+  \begin{scope}[local bounding box=C11,shift={(0,-32)}]
     \pic at (0,0) {clock};%
     \pic at (0,-3.5) {clock};%
   \end{scope}
   \node[left=-2.0 of C11, node font=\Large] (C11 legend) {11};%
-  \begin{scope}[local bounding box=Yd11, shift={(6,-32)}]
+  \begin{scope}[local bounding box=Yd11,shift={(6,-32)}]
     \pic at (0,0) {Y};%
     \pic at (0,-3.5) {d inverse};%
   \end{scope}
   \node[left=0.1 of Yd11] (Yd11 legend) {\textcolor{RoseauBlue}{Y}\textcolor{red}{d}11};%
-  \begin{scope}[local bounding box=Dy11, shift={(14,-32)}]
+  \begin{scope}[local bounding box=Dy11,shift={(14,-32)}]
     \pic at (0,0) {D direct};%
     \pic at (0,-3.5) {y};%
   \end{scope}
   \node[left=0.1 of Dy11] (Dy11 legend) {\textcolor{red}{D}\textcolor{RoseauBlue}{y}11};%
-  \begin{scope}[local bounding box=Yz11, shift={(22,-32)}]
+  \begin{scope}[local bounding box=Yz11,shift={(22,-32)}]
     \pic at (0,0) {Y};%
     \pic at (0,-3.5) {z inverse};%
   \end{scope}
@@ -149,5 +149,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

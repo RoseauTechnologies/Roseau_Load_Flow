@@ -3,21 +3,17 @@
 \begin{document}
 \ctikzset{american, bipoles/length=1cm}%
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   % Version multifilaire
 
   %
   % Définitions
   %
   % No European transformer in circuitikz [BV, 17/07/2023]
-  \tikzset{
-    transformer/.pic={
-      \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];
-    },
-  }
+  \tikzset{transformer/.pic={\draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];}};%
   \pgfmathsetmacro{\xl}{0};%
   \pgfmathsetmacro{\xy}{1.75};%
   \pgfmathsetmacro{\xlt}{2.5};%
@@ -37,9 +33,9 @@
   %
   % Transformer
   \draw (\xt,\yt) node[transformer] (T) {};
-  \node[above] at ($(T.base)-(0,0.2)$) {$k$};%
-  \draw (T.inner dot A1) node[circ] {}; %
-  \draw (T.inner dot B1) node[circ] {}; %
+  \node[above] at ($(T.base) - (0,0.2)$) {$k$};%
+  \draw (T.inner dot A1) node[circ] {};%
+  \draw (T.inner dot B1) node[circ] {};%
 
   % Tensions amont
   \node[left] at (\xl,\ya) {$\underline{V_{1,\arm}}$};
@@ -51,18 +47,17 @@
 
   % Câbles principaux
   % A
-  \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{1,\arm}}$]
-  (\xy,\ya) to[short,-] (T.A1);
+  \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{1,\arm}}$] (\xy,\ya) to[short,-] (T.A1);
   \draw (T.B1) -- (\xrt,\ya) to[generic, l=$\underline{Z_2}$, -]
-  (\xz,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xm,\ya);%
+    (\xz,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xm,\ya);%
 
   % Neutre
-  \draw (\xl,\yn) to[short,*-*,i=$\underline{I_{1,\nrm}}$]
-  (\xy,\yn) to[short,-] (T.A2);
+  \draw (\xl,\yn) to[short,*-*,i=$\underline{I_{1,\nrm}}$] (\xy,\yn) to[short,-] (T.A2);
   \draw (T.B2) to[short, -] (\xz,\yn) to[short,-*,i<=$\underline{I_{2,\nrm}}$] (\xm,\yn);%
 
   % Ym
-  \draw (\xy,\ya) to[generic, l=$\underline{Y_{\mathrm{m}}}$, v>=$\underline{U_{1,\arm}}$, -] (\xy,\yn);%
+  \draw (\xy,\ya) to[generic, l=$\underline{Y_{\mathrm{m}}}$, v>=$\underline{U_{1,\arm}}$, -]
+    (\xy,\yn);%
   \draw (\xz,\ya) to[open, v>=$\underline{U_{2,\arm}}$] (\xz,\yn);%
 
 \end{tikzpicture}
@@ -74,5 +69,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

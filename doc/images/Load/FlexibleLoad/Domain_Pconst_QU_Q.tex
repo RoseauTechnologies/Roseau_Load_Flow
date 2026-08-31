@@ -2,15 +2,15 @@
 
 \begin{document}
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   \input{Load/FlexibleLoad/Domain_Common.tex}%
 
   % The domain is a segment with two portions of circle arc
-  \draw[domaine] (0,-\r) arc[start angle=-90, end angle=-\angthvaleur, radius=\r] --
-  (\pthvaleur,\qthmaxvaleur) arc [start angle=\angthvaleur, end angle=90, radius=\r];%
+  \draw[domaine] (0,-\r) arc[start angle=-90, end angle=-\angthvaleur, radius=\r]
+    -- (\pthvaleur,\qthmaxvaleur) arc [start angle=\angthvaleur, end angle=90, radius=\r];%
 
   \pic[domaine] at (\pthvaleur,\qthvaleur) {point};%
 \end{tikzpicture}
@@ -22,5 +22,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

@@ -3,21 +3,17 @@
 \begin{document}
 \ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm, voltage shift=0.5mm}%
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   % Version multifilaire
 
   %
   % Définitions
   %
   % No European transformer in circuitikz [BV, 17/07/2023]
-  \tikzset{
-    transformer/.pic={
-      \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];
-    },
-  }
+  \tikzset{ transformer/.pic={\draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];}};%
   \pgfmathsetmacro{\xl}{0};%
   \pgfmathsetmacro{\xy}{1.75};%
   \pgfmathsetmacro{\xlt}{2.5};%
@@ -51,24 +47,26 @@
 
   % Câbles principaux
   % A
-  \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{1,\arm}}$]
-  (\xy,\ya) to[short] (\xtransformerm,\ya) to[short] node[near start,above=0.25cm,circ] {} (T);%
+  \draw (\xl,\ya) to[short,*-*,i=$\underline{I_{1,\arm}}$] (\xy,\ya) to[short]
+    (\xtransformerm,\ya) to[short] node[near start,above=0.25cm,circ] {} (T);%
   \draw (\xtransformerp,\ya) to[short] node[near start,above=0.25cm,circ] {} (T);%
-  \draw (\xtransformerp,\ya) -- (\xrt,\ya) to[generic, l=$\dfrac{\underline{Z_2}}{2}$, label distance=6pt, -]
-  (\xz,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xm,\ya);%
+  \draw (\xtransformerp,\ya) -- (\xrt,\ya) to[generic, l=$\dfrac{\underline{Z_2}}{2}$,
+    label distance=6pt, -] (\xz,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xm,\ya);%
 
   % B
-  \draw (\xl,\yb) to[short,*-*,i=$\underline{I_{1,\brm}}$]
-  (\xy,\yb) to[short] (\xtransformerm,\yb) to[short] (T);%
+  \draw (\xl,\yb) to[short,*-*,i=$\underline{I_{1,\brm}}$] (\xy,\yb) to[short]
+    (\xtransformerm,\yb) to[short] (T);%
   \draw (\xtransformerp,\yb) to[short] (T);%
   \draw (\xtransformerp,\yb) -- (\xrt,\yb) to[generic, l_=$\dfrac{\underline{Z_2}}{2}$, -]
-  (\xz,\yb) to[short,-*,i<=$\underline{I_{2,\brm}}$] (\xm,\yb);%
+    (\xz,\yb) to[short,-*,i<=$\underline{I_{2,\brm}}$] (\xm,\yb);%
 
   % Neutre
-  \draw (T.east) to[short] (\xtransformerp,\yn) -- (\xz,\yn) to[short,-*,i<=$\underline{I_{2,\nrm}}$] (\xm,\yn);%
+  \draw (T.east) to[short] (\xtransformerp,\yn)
+    -- (\xz,\yn) to[short,-*,i<=$\underline{I_{2,\nrm}}$] (\xm,\yn);%
 
   % Ym
-  \draw (\xy,\ya) to[generic, l=$\underline{Y_{\mathrm{m}}}$, v<=$\underline{U_{1,\abrm}}$, -] (\xy,\yb);%
+  \draw (\xy,\ya) to[generic, l=$\underline{Y_{\mathrm{m}}}$, v<=$\underline{U_{1,\abrm}}$, -]
+    (\xy,\yb);%
 
   % Tensions
   \draw (\xz,\ya) to[open, v^<=$\underline{U_{2,\arm}}$] (\xz,\yn);%
@@ -86,5 +84,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

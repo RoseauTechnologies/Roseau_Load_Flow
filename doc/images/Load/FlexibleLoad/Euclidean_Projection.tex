@@ -2,14 +2,14 @@
 
 \begin{document}
 \begin{tikzpicture}[%
-    show background rectangle,%
-    tight background,%
-    background rectangle/.style={fill=white}%
-  ]
+  show background rectangle,%
+  tight background,%
+  background rectangle/.style={fill=white}%
+]
   % Styles
   \tikzset{fleche/.style={->, -{Latex}}}%
   \tikzset{interdit/.style={fill=red!75!white, draw=black}}%
-  \tikzset{point/.pic={\filldraw[#1] (0,0) circle[radius=0.05];}, point/.default=black}%
+  \tikzset{point/.pic={\filldraw[#1] (0,0) circle[radius=0.05];},point/.default=black}%
 
   % Paramètres
   \pgfmathsetmacro{\r}{3.5}%
@@ -26,17 +26,17 @@
   \pgfmathsetmacro{\tmpdeux}{\r*cos(\endangle)};%
   \pgfmathsetmacro{\tmptrois}{\r*sin(\endangle)};%
   \fill[interdit] (0,\tmp) -- (\tmpdeux,\tmp) -- (\tmpdeux,\tmptrois) arc[start angle=\endangle,
-      end angle=90, radius=\r];%
+    end angle=90, radius=\r];%
   \draw[fleche] (0,0) -- (20:\r) node[above, midway, sloped] {$\smax$};%
 
   % Rectangle
   \draw (0,\r) -- (\r,\r) -- (\r,0);%
 
   % Theoretical power
-  \draw (\pth,0) -- (\pth,\r) node[below left] at (\pth,0) {$P^{\theo}$};%
+  \draw (\pth,0) -- (\pth,\r) node[below left] at (\pth,0) {$P^\theo$};%
   \pgfmathsetmacro{\tmp}{\r*sin(\startangle)};%
-  \fill[interdit] (\pth,\qth) arc[start angle=\angth, end angle=\startangle, radius=\r] --
-  (\pth,\tmp);%
+  \fill[interdit] (\pth,\qth) arc[start angle=\angth, end angle=\startangle, radius=\r]
+    -- (\pth,\tmp);%
 
   % Axes
   \pgfmathsetmacro{\tmp}{\r*cos(90-\startangle)};%
@@ -69,5 +69,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

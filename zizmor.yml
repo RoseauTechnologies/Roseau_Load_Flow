@@ -4,7 +4,7 @@ rules:
       policies:
         # Trust some actions providers enough to allow pin with reference
         actions/*: ref-pin
-        pre-commit/action: ref-pin
+        j178/prek-action: ref-pin
         astral-sh/*: ref-pin
   cache-poisoning:
     ignore:

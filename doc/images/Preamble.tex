@@ -88,8 +88,10 @@
 \newcommand{\const}{\ensuremath{\mathrm{const.}}}%
 
 % Variables
+% badness-lint skip redundant-script-braces: \max expands to \mathop, breaks bare U^\max
 \newcommand{\umax}{\ensuremath{U^{\max}}}%
 \newcommand{\umaxnorm}{\ensuremath{U^{\max\,\text{norm.}}}}%
+% badness-lint skip redundant-script-braces: \min expands to \mathop, breaks bare U^\min
 \newcommand{\umin}{\ensuremath{U^{\min}}}%
 \newcommand{\uminnorm}{\ensuremath{U^{\min\,\text{norm.}}}}%
 \newcommand{\unom}{\ensuremath{U^{\text{nom.}}}}%
@@ -100,6 +102,8 @@
 \newcommand{\udown}{\ensuremath{U^{\text{down}}}}%
 \newcommand{\udownnorm}{\ensuremath{U^{\text{down}\,\text{norm.}}}}%
 \newcommand{\udownprime}{\ensuremath{U^{\text{down}\,\prime}}}%
+% badness-lint skip redundant-script-braces: \max expands to \mathop, breaks bare S^\max
 \newcommand{\smax}{\ensuremath{S^{\max}}}%
+% badness-lint skip redundant-script-braces: \max expands to \mathop, breaks bare P^\max
 \newcommand{\pmax}{\ensuremath{P^{\max}}}%
 \newcommand{\sproj}{\ensuremath{\underline{S^{\text{proj.}}}}}%
