@@ -11,8 +11,8 @@
   % Définitions
   %
   % No European transformer in circuitikz [BV, 17/07/2023]
-  \tikzset{ transformer/.pic={ \draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4]; },}
-    \pgfmathsetmacro{\xzero}{0};%
+  \tikzset{transformer/.pic={\draw (-0.2,0) circle[radius=0.4] (0.2,0) circle[radius=0.4];}};%
+  \pgfmathsetmacro{\xzero}{0};%
   \pgfmathsetmacro{\xone}{1};%
   \pgfmathsetmacro{\xtwo}{3};%
   \pgfmathsetmacro{\xthree}{5};%
@@ -79,8 +79,8 @@
     v>=$\underline{U_{\Xrm}}$%
     ] (\xym,\yxm);%
   \node[above] at ($(TX.base) - (0,0.2)$) {$k$};%
-  \draw (TX.inner dot A1) node[circ] {}; %
-  \draw (TX.inner dot B1) node[circ] {}; %
+  \draw (TX.inner dot A1) node[circ] {};%
+  \draw (TX.inner dot B1) node[circ] {};%
 
   % First winding (Y)
   \pgfmathsetmacro{\ytmp}{0.5*(\yyp+\yym)};%
@@ -97,8 +97,8 @@
     v>=$\underline{U_{\Yrm}}$%
     ] (\xym,\yym);%
   \node[above] at ($(TY.base) - (0,0.2)$) {$k$};%
-  \draw (TY.inner dot A1) node[circ] {}; %
-  \draw (TY.inner dot B1) node[circ] {}; %
+  \draw (TY.inner dot A1) node[circ] {};%
+  \draw (TY.inner dot B1) node[circ] {};%
 
   % First winding (Z)
   \pgfmathsetmacro{\ytmp}{0.5*(\yzp+\yzm)};%
@@ -115,8 +115,8 @@
     v>=$\underline{U_{\Zrm}}$%
     ] (\xym,\yzm);%
   \node[above] at ($(TZ.base) - (0,0.2)$) {$k$};%
-  \draw (TZ.inner dot A1) node[circ] {}; %
-  \draw (TZ.inner dot B1) node[circ] {}; %
+  \draw (TZ.inner dot A1) node[circ] {};%
+  \draw (TZ.inner dot B1) node[circ] {};%
 
   % xyz
   % Second winding (x)
