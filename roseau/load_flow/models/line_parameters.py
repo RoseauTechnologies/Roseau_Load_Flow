@@ -655,8 +655,17 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 )
                 logger.error(msg)
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
+            # The phase conductors sit on a circle of radius external_diameter/4 around the neutral,
+            # 120° apart, so they are external_diameter * sqrt(3) / 4 apart from each other.
+            if phase_radius * 2 > external_diameter * SQRT3 / 4:
+                msg = (
+                    f"Conductors too big for 'twisted' line parameter of id {id!r}. Inequality "
+                    f"`phase_radius*2 <= external_diameter * sqrt(3) / 4` is not satisfied."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
         elif line_type == LineType.UNDERGROUND:
-            max_radii = external_diameter / 4 * np.sqrt(2)
+            max_radii = external_diameter / 4 * math.sqrt(2)
             if phase_radius + neutral_radius > max_radii:
                 msg = (
                     f"Conductors too big for 'underground' line parameter of id {id!r}. Inequality "
@@ -673,14 +682,30 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
                 raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_LINE_MODEL)
         else:
             pass  # TODO Overhead lines check
-        gmr = radius * np.exp(-0.25)  # geometric mean radius (m)
-        # distance between two wires (m)
-        coord_new_dim = coord[:, None, :]
-        diff = coord_new_dim - coord
-        distance = np.sqrt(np.einsum("ijk,ijk->ij", diff, diff))
-        # distance between a wire and the image of another wire (m)
-        diff = coord_new_dim - coord_prim
-        distance_prim = np.sqrt(np.einsum("ijk,ijk->ij", diff, diff))
+        gmr = radius * math.exp(-0.25)  # geometric mean radius (m)
+        epsilons = np.array([epsilon, epsilon, epsilon, epsilon_neutral], dtype=np.float64)
+
+        # A twisted cable's phase conductors physically rotate around the neutral along its
+        # length, so their inductance and capacitance are the average of the three symmetric
+        # rotations of the phase conductors around the neutral (equivalent to using the
+        # geometric mean distance), not of a single arbitrary cross-section snapshot. Other line
+        # types keep a fixed cross-section, i.e. a single "rotation".
+        phase_rotations = ((0, 1, 2), (1, 2, 0), (2, 0, 1)) if line_type == LineType.TWISTED else ((0, 1, 2),)
+        inductance = np.zeros((4, 4), dtype=np.float64)
+        lambdas = np.zeros((4, 4), dtype=np.float64)
+        for rotation in phase_rotations:
+            order = (*rotation, 3)
+            rotation_inductance, rotation_lambdas = cls._get_inductance_and_lambdas(
+                coord=coord[order, :],
+                coord_prim=coord_prim[order, :],
+                gmr=gmr,
+                radius=radius,
+                epsilons=epsilons,
+            )
+            inductance += rotation_inductance
+            lambdas += rotation_lambdas
+        inductance /= len(phase_rotations)
+        lambdas /= len(phase_rotations)
 
         # Useful matrices
         minus = -np.ones((4, 4), dtype=np.float64)
@@ -690,11 +715,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         materials = np.array([material, material, material, material_neutral], dtype=np.object_)
         rho = np.array([RHO[x].m for x in materials], dtype=np.float64)
         r = rho / sections_m2 * np.eye(4, dtype=np.float64) * 1e3  # resistance (ohm/km)
-        np.fill_diagonal(distance, gmr)
-        inductance = MU_0.m / (2 * PI) * np.log(1 / distance) * 1e3  # H/m->H/km
-        np.fill_diagonal(distance, radius)
-        epsilons = np.array([epsilon, epsilon, epsilon, epsilon_neutral], dtype=np.float64)
-        lambdas = 1 / (2 * PI * epsilons) * np.log(distance_prim / distance)  # m/F
 
         # Extract the conductivity and the capacities from the lambda (potential coefficients)
         lambda_inv = nplin.inv(lambdas) * 1e3  # capacities (F/km)
@@ -715,6 +735,27 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         np.fill_diagonal(y_shunt, np.einsum("ij->i", y))
 
         return z_line, y_shunt, line_type, materials, insulators, sections_mm2
+
+    @staticmethod
+    def _get_inductance_and_lambdas(
+        coord: FloatArray, coord_prim: FloatArray, gmr: FloatArray, radius: FloatArray, epsilons: FloatArray
+    ) -> tuple[FloatArray, FloatArray]:
+        """Compute the inductance matrix (H/km) and potential coefficients lambda matrix (m/F) for
+        one conductor cross-section.
+        """
+        # distance between two wires (m)
+        coord_new_dim = coord[:, None, :]
+        diff = coord_new_dim - coord
+        distance = np.sqrt(np.einsum("ijk,ijk->ij", diff, diff))
+        # distance between a wire and the image of another wire (m)
+        diff = coord_new_dim - coord_prim
+        distance_prim = np.sqrt(np.einsum("ijk,ijk->ij", diff, diff))
+
+        np.fill_diagonal(distance, gmr)
+        inductance = MU_0.m / (2 * PI) * np.log(1 / distance) * 1e3  # H/m->H/km
+        np.fill_diagonal(distance, radius)
+        lambdas = 1 / (2 * PI * epsilons) * np.log(distance_prim / distance)  # m/F
+        return inductance, lambdas
 
     @staticmethod
     def _get_geometric_configuration(

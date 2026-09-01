@@ -451,6 +451,14 @@ From these figures, the following geometric positions can be deduced:
 The position $(x_{\mathrm{a}}, y_{\mathrm{a}})$ are the position of the point $A$, $(x_{\mathrm{b}}, y_{\mathrm{b}})$
 the point $B$, etc. The prime positions are the positions of the images of the conductor with respect to the ground.
 
+A twisted (aerial bundled) cable physically rotates its phase conductors around the neutral along its length, so points
+$A$, $B$ and $C$ above are only one cross-section snapshot; the phases spend an equal length of cable at the two other
+positions reached by rotating by $\dfrac{2\pi}{3}$ and $\dfrac{4\pi}{3}$ radians. The inductance matrix $L$ and the
+potential coefficients matrix $\lambda$ are therefore each computed once per rotation and averaged, which is equivalent
+to using the geometric mean distance between conductors (as is classically done for transposed overhead lines). This
+makes the phase-to-phase and phase-to-neutral mutual terms equal, matching the balancing effect of the twist. $R$ is
+unaffected (it does not depend on geometry), and $C$ is obtained by inverting the averaged $\lambda$ matrix as before.
+
 The formulas of the previous sections are used to get the impedance and shunt admittances matrices.
 
 ```pycon
@@ -465,23 +473,23 @@ The formulas of the previous sections are used to get the impedance and shunt ad
 ...     section=150,  # mm²
 ...     section_neutral=70,  # mm²
 ...     height=10,  # m
-...     external_diameter=rlf.Q_(4, "cm"),
+...     external_diameter=rlf.Q_(5, "cm"),
 ... )
 
 >>> line_parameters.z_line
 array(
-    [[0.188     +0.32828403j, 0.        +0.25483745j, 0.        +0.25483745j, 0.        +0.28935138j],
-     [0.        +0.25483745j, 0.188     +0.32828403j, 0.        +0.25483745j, 0.        +0.28935138j],
-     [0.        +0.25483745j, 0.        +0.25483745j, 0.188     +0.32828403j, 0.        +0.28935138j],
-     [0.        +0.28935138j, 0.        +0.28935138j, 0.        +0.28935138j, 0.40285714+0.35222736j]]
+    [[0.18842667+0.32828403j, 0.        +0.24081693j, 0.        +0.24081693j, 0.        +0.27533085j],
+     [0.        +0.24081693j, 0.18842667+0.32828403j, 0.        +0.24081693j, 0.        +0.27533085j],
+     [0.        +0.24081693j, 0.        +0.24081693j, 0.18842667+0.32828403j, 0.        +0.27533085j],
+     [0.        +0.27533085j, 0.        +0.27533085j, 0.        +0.27533085j, 0.40377143+0.35222736j]]
 ) <Unit('ohm / kilometer')>
 
 >>> line_parameters.y_shunt.to("uS/km")
 array(
-    [[0.09883654 +48.82465468j, 0.          -1.92652134j, 0.          -1.92555213j, 0.         -12.02706891j],
-     [0.          -1.92652134j, 0.09883654 +48.82465468j, 0.          -1.92555213j, 0.         -12.02706891j],
-     [0.          -1.92555213j, 0.          -1.92555213j, 0.09884227 +48.82653968j, 0.         -12.02801059j],
-     [0.         -12.02706891j, 0.         -12.02706891j, 0.         -12.02801059j, 0.21303236+107.09293474j]]
+    [[0.10014898+37.06479711j, 0.         -2.29347609j, 0.         -2.29347609j, 0.         -7.44059991j],
+     [0.         -2.29347609j, 0.10014898+37.06479711j, 0.         -2.29347609j, 0.         -7.44059991j],
+     [0.         -2.29347609j, 0.         -2.29347609j, 0.10014898+37.06479711j, 0.         -7.44059991j],
+     [0.         -7.44059991j, 0.         -7.44059991j, 0.         -7.44059991j, 0.17653382+66.45525429j]]
 ) <Unit('microsiemens / kilometer')>)
 ```
 

@@ -21,6 +21,10 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`496` {gh-issue}`284` Fix `LineParameters.from_geometry` for twisted lines: the phase conductors physically
+  rotate around the neutral along the length of the cable, so the inductance and capacitance are now averaged over the
+  three symmetric rotations of the phase conductors instead of using a single, arbitrary cross-section snapshot. Also
+  add a missing check rejecting phase conductors that are too big and would physically overlap each other.
 - {gh-pr}`493` Set `en.name` to the network (`ElmNet`) name and `en.crs` to `EPSG:4326` when loading a network from a
   DGS file.
 - {gh-pr}`492` Improve import time of `roseau.load_flow` by caching the pint registry instantiation.
