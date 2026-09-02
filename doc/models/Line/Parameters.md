@@ -120,6 +120,22 @@ $\underline{Y_{\mathrm{m}}}$ as before and:
 respectively the phase-to-neutral series impedance (in $\Omega$/km), the neutral shunt admittance (in S/km) and the
 phase-to-neutral shunt admittance (in S/km).
 
+```{note}
+$\underline{Z_{\mathrm{s}}}$ and $\underline{Z_{\mathrm{m}}}$ are not only the phase conductors' own impedance:
+whenever $\underline{Z_0} \neq \underline{Z_1}$, part of them reflects the impedance of whatever shared, non-ideal
+return path (lossy earth, a bonded cable sheath, etc.) was present when the sequence data was computed or
+measured. This is expected, not a modelling error, and is why $\underline{Z_{\mathrm{m}}}$ commonly has a non-zero
+real part.
+
+The neutral conductor is the exception: when it is modelled explicitly (`zn` and `xpn` given), its own impedance
+and its coupling to the phases are meant to be captured separately by $\underline{Z_{\mathrm{n}}}$ and
+$\underline{Z_{p\mathrm{n}}}$, not folded into $\underline{Z_{\mathrm{s}}}$/$\underline{Z_{\mathrm{m}}}$. If the
+provided $\underline{Z_0}$ already accounts for a return path that the explicit neutral should represent instead
+(e.g. sequence data reported for the neutral-eliminated equivalent of the line), using it as-is together with
+`zn`/`xpn` double-counts that impedance. You can check for this by eliminating the neutral back with Kron's
+reduction (`LineParameters.to_sym(eliminate_neutral=True)`) and comparing the result to the original $\underline{Z_0}$.
+```
+
 ````{note}
 If the computed impedance matrix is non-invertible, the `from_sym` class method builds impedance
 and shunt admittance matrices using the following definitions:

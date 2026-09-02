@@ -17,17 +17,15 @@ def test_line_parameters():
     bus2 = Bus(id="junction2", phases="abcn")
     ground = Ground("ground")
 
-    # Real element off the diagonal (Z)
+    # Real element off the diagonal (Z): allowed, e.g. represents a shared earth/neutral return
     z_line = np.ones(shape=(4, 4), dtype=complex)
     y_shunt = np.eye(4, dtype=complex)
-    with pytest.warns(UserWarning, match=r"z_line .* has off-diagonal elements with a non-zero"):
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+    LineParameters("test", z_line=z_line, y_shunt=y_shunt)
 
-    # Real element off the diagonal (Y)
+    # Real element off the diagonal (Y): allowed
     z_line = np.eye(3, dtype=complex)
     y_shunt = np.ones(shape=(3, 3), dtype=complex)
-    with pytest.warns(UserWarning, match=r"y_shunt .* has off-diagonal elements with a non-zero"):
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+    LineParameters("test", z_line=z_line, y_shunt=y_shunt)
 
     # Negative real values (Z)
     z_line = 2 * np.eye(4, dtype=complex)
