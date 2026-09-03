@@ -2,7 +2,6 @@ import cmath
 import logging
 import math
 import re
-import warnings
 from collections.abc import Sequence
 from enum import StrEnum
 from importlib import resources
@@ -1176,19 +1175,16 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
             y_shunt[-1, -1] = 1j * bn * 1e-6
         cls._check_z_line_matrix(id=id, z_line=z_line)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-            obj = cls(
-                id=id,
-                z_line=z_line,
-                y_shunt=y_shunt,
-                ampacities=params["ampacity"],
-                line_type=params["line_type"],
-                materials=params["material"],
-                insulators=params["insulator"],
-                sections=params["section"],
-            )
-        return obj
+        return cls(
+            id=id,
+            z_line=z_line,
+            y_shunt=y_shunt,
+            ampacities=params["ampacity"],
+            line_type=params["line_type"],
+            materials=params["material"],
+            insulators=params["insulator"],
+            sections=params["section"],
+        )
 
     @classmethod
     def _parse_open_dss_params(
@@ -1329,11 +1325,7 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         params = cls._parse_open_dss_params(id=id, normamps=normamps, linetype=linetype)
 
-        # Create the RLF line parameters with off-diagonal resistance allowed
-        with warnings.catch_warnings():
-            warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-            obj = cls(id=id, z_line=z, y_shunt=yc, ampacities=params["ampacities"], line_type=params["line_type"])
-        return obj
+        return cls(id=id, z_line=z, y_shunt=yc, ampacities=params["ampacities"], line_type=params["line_type"])
 
     #
     # Catalogue Mixin
@@ -1730,15 +1722,6 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
         ]:
             if matrix_name == "y_shunt" and not self.with_shunt:
                 continue
-
-            # Check that the off-diagonal element have a zero real part
-            off_diagonal_elements = matrix[~np.eye(*matrix.shape, dtype=np.bool_)]
-            if not np.allclose(off_diagonal_elements.real, 0):
-                warn_external(
-                    f"The {matrix_name} matrix of line type {self.id!r} has off-diagonal elements "
-                    f"with a non-zero real part.",
-                    category=UserWarning,
-                )
 
             # Check that the real coefficients are non-negative
             if (matrix.real < 0.0).any():
