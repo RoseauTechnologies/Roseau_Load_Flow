@@ -21,6 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`498` Revert use of `"CartoDB Positron"` by default in interactive map plots after Carto API key requirement.
 - {gh-pr}`497` Remove the warning by when the `z_line` or `y_shunt` matrix has off-diagonal elements with a non-zero
   real part which commonly represents the resistance of a shared, non-ideal return path.
 - {gh-pr}`496` {gh-issue}`284` Fix `LineParameters.from_geometry` for twisted lines: the phase conductors physically
