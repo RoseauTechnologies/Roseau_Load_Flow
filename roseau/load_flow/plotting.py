@@ -790,7 +790,6 @@ def _plot_interactive_map_internal(
 
     if "zoom_control" not in map_kws and add_search:
         map_kws["zoom_control"] = "topright"
-    map_kws.setdefault("tiles", "CartoDB Positron")
 
     m = folium.Map(**map_kws)
     # `folium`/`Leaflet` only support `setStyle` (used to implement highlighting) on vector layers
@@ -1005,8 +1004,6 @@ def plot_interactive_map(
             Additional keyword arguments to pass to the :class:`folium.Map` constructor. The
             following keywords are passed by default:
 
-            - ``tiles="CartoDB Positron"``: A light background map that does not obscure network
-              elements.
             - ``location``: The centroid of the network geometry if ``fit_bounds`` is false. No
               default value is set otherwise.
             - ``zoom_start``: Calculated based on its bounding box if ``fit_bounds`` is false. No
@@ -1142,8 +1139,6 @@ def plot_results_interactive_map(
             Additional keyword arguments to pass to the :class:`folium.Map` constructor. The
             following keywords are passed by default:
 
-            - ``tiles="CartoDB Positron"``: A light background map that does not obscure network
-              elements.
             - ``location``: The centroid of the network geometry if ``fit_bounds`` is false. No
               default value is set otherwise.
             - ``zoom_start``: Calculated based on its bounding box if ``fit_bounds`` is false. No
