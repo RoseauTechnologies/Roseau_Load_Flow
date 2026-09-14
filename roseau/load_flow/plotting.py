@@ -1485,21 +1485,6 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             label = f"{self.mode.capitalize()} {label}"
         return label
 
-    def _edge_segs(self, edge: "VoltageProfileEdge") -> tuple[tuple[float, float], tuple[float, float]]:
-        """Get the segments for an edge in the form ((x1, y1), (x2, y2))."""
-        return (
-            (self.buses[edge["from_bus"]]["distance"], self.buses[edge["from_bus"]]["voltage"]),
-            (self.buses[edge["to_bus"]]["distance"], self.buses[edge["to_bus"]]["voltage"]),
-        )
-
-    def _edge_xs(self, edge: "VoltageProfileEdge") -> tuple[float, float]:
-        """Get the x coordinates for an edge in the form (x1, x2)."""
-        return (self.buses[edge["from_bus"]]["distance"], self.buses[edge["to_bus"]]["distance"])
-
-    def _edge_ys(self, edge: "VoltageProfileEdge") -> tuple[float, float]:
-        """Get the y coordinates for an edge in the form (y1, y2)."""
-        return (self.buses[edge["from_bus"]]["voltage"], self.buses[edge["to_bus"]]["voltage"])
-
     # Public API
     # ----------
     def plot_matplotlib(self, *, ax: "Axes | None" = None) -> "Axes":
@@ -1524,9 +1509,13 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if ax is None:
             ax = plt.gca()
 
+        def get_segments(edge: "VoltageProfileEdge") -> tuple[tuple[float, float], tuple[float, float]]:
+            fb, tb = self.buses[edge["from_bus"]], self.buses[edge["to_bus"]]
+            return (fb["distance"], fb["voltage"]), (tb["distance"], tb["voltage"])
+
         ax.add_collection(
             LineCollection(
-                segments=[self._edge_segs(ln) for ln in self.lines.values()],
+                segments=[get_segments(ln) for ln in self.lines.values()],
                 colors=[self.colors[ln["state"]] for ln in self.lines.values()],
                 zorder=2,
             )
@@ -1535,7 +1524,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if self.transformers:
             ax.add_collection(
                 LineCollection(
-                    segments=[self._edge_segs(tr) for tr in self.transformers.values()],
+                    segments=[get_segments(tr) for tr in self.transformers.values()],
                     colors=[self.colors[tr["state"]] for tr in self.transformers.values()],
                     linewidths=3,
                     zorder=3,
@@ -1546,7 +1535,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if self.regulators:
             ax.add_collection(
                 LineCollection(
-                    segments=[self._edge_segs(reg) for reg in self.regulators.values()],
+                    segments=[get_segments(reg) for reg in self.regulators.values()],
                     colors=[self.colors[reg["state"]] for reg in self.regulators.values()],
                     linewidths=4,
                     zorder=3,
@@ -1556,7 +1545,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if self.switches:
             ax.add_collection(
                 LineCollection(
-                    segments=[self._edge_segs(sw) for sw in self.switches.values()],
+                    segments=[get_segments(sw) for sw in self.switches.values()],
                     colors=[self.colors[sw["state"]] for sw in self.switches.values()],
                     linestyles="dashed",
                     linewidths=3,
@@ -1590,8 +1579,17 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         ax.grid(alpha=0.25)
         return ax
 
-    def plot_plotly(self) -> "go.Figure":
+    def plot_plotly(self, *, renderer: Literal["svg", "webgl"] = "svg") -> "go.Figure":
         """Plot the network voltage profile using Plotly.
+
+        Args:
+            renderer:
+                `"svg"` (default) draws vector `go.Scatter` traces. `"webgl"` draws `go.Scattergl`
+                traces instead, rendered on the GPU, which stays responsive on large networks
+                (thousands of buses/lines) when panning/zooming. Prefer SVG for static exports as
+                WebGL rasterizes the plot instead of using vector paths and for plotting small to
+                medium sized networks because browsers only support a limited number of simultaneous
+                WebGL contexts per page.
 
         Returns:
             A Plotly Figure with the voltage profile plot.
@@ -1602,12 +1600,15 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             e.add_note("plotly is required for plotting the voltage profile using plot_plotly.")
             raise
 
-        traces: list[go.Scatter] = []
+        # Note that for parallel transformers/lines/etc, only the last one might be shown in hover
+        # https://github.com/plotly/plotly.py/issues/2476
+
+        scatter_cls = go.Scattergl if renderer == "webgl" else go.Scatter
         is_multi_phase = self.network.is_multi_phase
 
         # Buses
         voltage_key = "voltages" if self.network.is_multi_phase else "voltage"
-        buses_trace = go.Scatter(
+        buses_trace = scatter_cls(
             x=[bus["distance"] for bus in self.buses.values()],
             y=[bus["voltage"] for bus in self.buses.values()],
             mode="markers",
@@ -1641,20 +1642,36 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 + "<b>Phases:               </b> %{customdata[6]}<br>" * is_multi_phase
                 + "</span><extra></extra>"
             ),
-            zorder=3,
         )
-        traces.append(buses_trace)
+        bus_scatter_traces = [buses_trace]
+
+        # Cannot hover on `mode="lines"` traces (https://github.com/plotly/plotly.js/issues/1960),
+        # so a single midpoint per transformer/regulator/line/switch is collected here and turned
+        # into one combined invisible hover-marker trace below.
+        hover_trace: dict[str, list[Any]] = {"x": [], "y": [], "color": [], "html": []}
+
+        def add_hover_point(state: ResultState, x: float, y: float, html: str) -> None:
+            hover_trace["x"].append(x)
+            hover_trace["y"].append(y)
+            hover_trace["color"].append(self.colors[state])
+            hover_trace["html"].append(html)
+
+        def get_xs(edge: "VoltageProfileEdge") -> tuple[float, float]:
+            return self.buses[edge["from_bus"]]["distance"], self.buses[edge["to_bus"]]["distance"]
+
+        def get_ys(edge: "VoltageProfileEdge") -> tuple[float, float]:
+            return self.buses[edge["from_bus"]]["voltage"], self.buses[edge["to_bus"]]["voltage"]
 
         # Transformers
+        transformer_scatter_traces: list[go.Scatter | go.Scattergl] = []
         if self.transformers:
             # Black borders for transformers
-            traces.append(
-                go.Scatter(
-                    x=[x for tr in self.transformers.values() for x in (*self._edge_xs(tr), None)],
-                    y=[y for tr in self.transformers.values() for y in (*self._edge_ys(tr), None)],
+            transformer_scatter_traces.append(
+                scatter_cls(
+                    x=[x for tr in self.transformers.values() for x in (*get_xs(tr), None)],
+                    y=[y for tr in self.transformers.values() for y in (*get_ys(tr), None)],
                     mode="lines",
                     line={"color": "black", "width": 6},
-                    zorder=2,
                     hoverinfo="skip",
                 )
             )
@@ -1662,215 +1679,165 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             tr_traces: dict[ResultState, dict[str, list[float | None]]] = {
                 state: {"x": [], "y": []} for state in ("normal", "high", "very-high")
             }
-            for tr in self.transformers.values():
-                tr_traces[tr["state"]]["x"].extend((*self._edge_xs(tr), None))
-                tr_traces[tr["state"]]["y"].extend((*self._edge_ys(tr), None))
-            traces.extend(
-                go.Scatter(
+            for tr_id, tr in self.transformers.items():
+                tr_traces[tr["state"]]["x"].extend((*get_xs(tr), None))
+                tr_traces[tr["state"]]["y"].extend((*get_ys(tr), None))
+                tr_info = self._get_extra_transformer_info(tr_id)
+                tr_html = (
+                    '<span style="font-family: monospace">'
+                    + f"<b>Transformer:      </b> {_pp_eid(tr_id, indent='                   ')}<br>"
+                    + f"<b>Loading (%):      </b> {tr['loading']:.5g}<br>"
+                    + f"<b>Loading limit (%):</b> {tr['max_loading']:.5g}<br>"
+                    + f"<b>Parameters:       </b> {tr_info['parameters_id']}<br>"
+                    + f"<b>Vector Group:     </b> {tr_info['vg']}<br>"
+                    + f"<b>Sn (kVA):         </b> {tr_info['sn']:.5g}<br>"
+                    + f"<b>Ur [ʜv,ʟv] (V):   </b> {tr_info['rated_voltages']}<br>"
+                    + f"<b>Tap Position (%): </b> {tr_info['tap']:.5g}<br>"
+                    + f"<b>Phases [ʜv,ʟv]:   </b> {tr_info['phases']}<br>" * is_multi_phase
+                    + "</span>"
+                )
+                add_hover_point(tr["state"], sum(get_xs(tr)) / 2, sum(get_ys(tr)) / 2, tr_html)
+            transformer_scatter_traces.extend(
+                scatter_cls(
                     x=t["x"],
                     y=t["y"],
                     mode="lines",
                     line={"color": self.colors[s], "width": 3},
-                    zorder=2,
                     hoverinfo="skip",
                 )
                 for s, t in tr_traces.items()
                 if t["x"]  # skip empty colors
             )
-            # Cannot hover on line traces, add invisible midpoint markers to show hover info
-            # https://github.com/plotly/plotly.js/issues/1960
-            traces.append(
-                go.Scatter(
-                    x=[sum(self._edge_xs(tr)) / 2 for tr in self.transformers.values()],
-                    y=[sum(self._edge_ys(tr)) / 2 for tr in self.transformers.values()],
-                    mode="markers",
-                    marker={"opacity": 0, "color": [self.colors[tr["state"]] for tr in self.transformers.values()]},
-                    customdata=[
-                        # indent has the size of the longest legend item: "Loading limit (%): "
-                        (
-                            _pp_eid(tr_id, indent="                   "),
-                            tr["loading"],
-                            tr["max_loading"],
-                            *self._get_extra_transformer_info(tr_id).values(),
-                        )
-                        for tr_id, tr in self.transformers.items()
-                    ],
-                    hovertemplate=(
-                        # For parallel transformers, only the last one might be shown in hover
-                        # https://github.com/plotly/plotly.py/issues/2476
-                        '<span style="font-family: monospace">'
-                        + "<b>Transformer:      </b> %{customdata[0]}<br>"
-                        + "<b>Loading (%):      </b> %{customdata[1]:.5g}<br>"
-                        + "<b>Loading limit (%):</b> %{customdata[2]:.5g}<br>"
-                        + "<b>Parameters:       </b> %{customdata[3]}<br>"
-                        + "<b>Vector Group:     </b> %{customdata[4]}<br>"
-                        + "<b>Sn (kVA):         </b> %{customdata[5]:.5g}<br>"
-                        + "<b>Ur [ʜv,ʟv] (V):   </b> %{customdata[6]}<br>"
-                        + "<b>Tap Position (%): </b> %{customdata[7]:.5g}<br>"
-                        + "<b>Phases [ʜv,ʟv]:   </b> %{customdata[8]}<br>" * is_multi_phase
-                        + "</span><extra></extra>"
-                    ),
-                )
-            )
 
         # Regulators
+        regulator_scatter_traces: list[go.Scatter | go.Scattergl] = []
         if self.regulators:
             assert not self.network.is_multi_phase, "Regulators are only supported in single-phase networks."
             # Traces for regulators (grouped by color for better performance)
             reg_traces: dict[ResultState, dict[str, list[float | None]]] = {
                 state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
             }
-            for reg in self.regulators.values():
-                reg_traces[reg["state"]]["x"].extend((*self._edge_xs(reg), None))
-                reg_traces[reg["state"]]["y"].extend((*self._edge_ys(reg), None))
-            traces.extend(
-                go.Scatter(
+            for reg_id, reg in self.regulators.items():
+                reg_traces[reg["state"]]["x"].extend((*get_xs(reg), None))
+                reg_traces[reg["state"]]["y"].extend((*get_ys(reg), None))
+                reg_info = self._get_extra_regulator_info(reg_id)
+                reg_html = (
+                    '<span style="font-family: monospace">'
+                    + f"<b>Regulator:    </b> {_pp_eid(reg_id, indent='               ')}<br>"
+                    + f"<b>Loading (%):  </b> {reg['loading']:.5g}<br>"
+                    + f"<b>Parameters:   </b> {reg_info['parameters_id']}<br>"
+                    + f"<b>Sn (kVA):     </b> {reg_info['sn']:.5g}<br>"
+                    + f"<b>Un (V):       </b> {reg_info['un']:.5g}<br>"
+                    + f"<b>Uref (%):     </b> {reg_info['u_ref']:.5g}<br>"
+                    + f"<b>Tap ratio (%):</b> {reg_info['tap']:.5g}<br>"
+                    + "</span>"
+                )
+                add_hover_point(reg["state"], sum(get_xs(reg)) / 2, sum(get_ys(reg)) / 2, reg_html)
+            regulator_scatter_traces.extend(
+                scatter_cls(
                     x=t["x"],
                     y=t["y"],
                     mode="lines",
                     line={"color": self.colors[s], "width": 4},
-                    zorder=2,
                     hoverinfo="skip",
                 )
                 for s, t in reg_traces.items()
                 if t["x"]  # skip empty colors
-            )
-            # Cannot hover on line traces, add invisible midpoint markers to show hover info
-            # https://github.com/plotly/plotly.js/issues/1960
-            traces.append(
-                go.Scatter(
-                    x=[sum(self._edge_xs(reg)) / 2 for reg in self.regulators.values()],
-                    y=[sum(self._edge_ys(reg)) / 2 for reg in self.regulators.values()],
-                    mode="markers",
-                    marker={"opacity": 0, "color": [self.colors[reg["state"]] for reg in self.regulators.values()]},
-                    customdata=[
-                        # indent has the size of the longest legend item: "Tap ratio (%): "
-                        (
-                            _pp_eid(reg_id, indent="               "),
-                            reg["loading"],
-                            *self._get_extra_regulator_info(reg_id).values(),
-                        )
-                        for reg_id, reg in self.regulators.items()
-                    ],
-                    hovertemplate=(
-                        # For parallel regulators, only the last one might be shown in hover
-                        # https://github.com/plotly/plotly.py/issues/2476
-                        '<span style="font-family: monospace">'
-                        + "<b>Regulator:    </b> %{customdata[0]}<br>"
-                        + "<b>Loading (%):  </b> %{customdata[1]:.5g}<br>"
-                        + "<b>Parameters:   </b> %{customdata[2]}<br>"
-                        + "<b>Sn (kVA):     </b> %{customdata[3]:.5g}<br>"
-                        + "<b>Un (V):       </b> %{customdata[4]:.5g}<br>"
-                        + "<b>Uref (%):     </b> %{customdata[5]:.5g}<br>"
-                        + "<b>Tap ratio (%):</b> %{customdata[6]:.5g}<br>"
-                        + "</span><extra></extra>"
-                    ),
-                )
             )
 
         # Lines
         lines_traces: dict[ResultState, dict[str, list[float | None]]] = {
             state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
         }
-        loading_key = "loadings" if self.network.is_multi_phase else "loading"
-        for line in self.lines.values():
-            lines_traces[line["state"]]["x"].extend((*self._edge_xs(line), None))
-            lines_traces[line["state"]]["y"].extend((*self._edge_ys(line), None))
+        loading_key = "loadings" if is_multi_phase else "loading"
+        for ln_id, ln in self.lines.items():
+            lines_traces[ln["state"]]["x"].extend((*get_xs(ln), None))
+            lines_traces[ln["state"]]["y"].extend((*get_ys(ln), None))
+            ln_info = self._get_extra_line_info(ln_id)
+            ln_html = (
+                '<span style="font-family: monospace">'
+                + f"<b>Line:             </b> {_pp_eid(ln_id, indent='                   ')}<br>"
+                + f"<b>Loading (%):      </b> {_pp_num(ln[loading_key])}<br>"
+                + f"<b>Loading limit (%):</b> {_pp_num(ln['max_loading'])}<br>"
+                + f"<b>Length (km):      </b> {ln_info['length']:.5g}<br>"
+                + f"<b>Parameters:       </b> {ln_info['parameters_id']}<br>"
+                + f"<b>Line type:        </b> {ln_info['line_type']}<br>"
+                + f"<b>Material:         </b> {ln_info['material']}<br>"
+                + f"<b>Section (mm²):    </b> {ln_info['section']}<br>"
+                + f"<b>Ampacity (A):     </b> {ln_info['ampacity']}<br>"
+                + f"<b>Phases:           </b> {ln_info['phases']}<br>" * is_multi_phase
+                + "</span>"
+            )
+            add_hover_point(ln["state"], sum(get_xs(ln)) / 2, sum(get_ys(ln)) / 2, ln_html)
         # Traces for lines (grouped by color for better performance)
-        traces.extend(
-            go.Scatter(
+        line_scatter_traces = [
+            scatter_cls(
                 x=t["x"],
                 y=t["y"],
                 mode="lines",
                 line={"color": self.colors[s], "width": 1.5},
-                zorder=1,
                 hoverinfo="skip",
             )
             for s, t in lines_traces.items()
             if t["x"]  # skip empty colors
-        )
-        # Cannot hover on line traces, add invisible midpoint markers to show hover info
-        # https://github.com/plotly/plotly.js/issues/1960
-        traces.append(
-            go.Scatter(
-                x=[sum(self._edge_xs(line)) / 2 for line in self.lines.values()],
-                y=[sum(self._edge_ys(line)) / 2 for line in self.lines.values()],
-                mode="markers",
-                marker={"opacity": 0, "color": [self.colors[ln["state"]] for ln in self.lines.values()]},
-                customdata=[
-                    # indent has the size of the longest legend item: "Loading limit (%): "
-                    (
-                        _pp_eid(ln_id, indent="                   "),
-                        _pp_num(ln[loading_key]),
-                        _pp_num(ln["max_loading"]),
-                        *self._get_extra_line_info(ln_id).values(),
-                    )
-                    for ln_id, ln in self.lines.items()
-                ],
-                hovertemplate=(
-                    '<span style="font-family: monospace">'
-                    + "<b>Line:             </b> %{customdata[0]}<br>"
-                    + "<b>Loading (%):      </b> %{customdata[1]}<br>"
-                    + "<b>Loading limit (%):</b> %{customdata[2]:.5g}<br>"
-                    + "<b>Length (km):      </b> %{customdata[3]:.5g}<br>"
-                    + "<b>Parameters:       </b> %{customdata[4]}<br>"
-                    + "<b>Line type:        </b> %{customdata[5]}<br>"
-                    + "<b>Material:         </b> %{customdata[6]}<br>"
-                    + "<b>Section (mm²):    </b> %{customdata[7]}<br>"
-                    + "<b>Ampacity (A):     </b> %{customdata[8]}<br>"
-                    + "<b>Phases:           </b> %{customdata[9]}<br>" * is_multi_phase
-                    + "</span><extra></extra>"
-                ),
-            )
-        )
+        ]
 
         # Switches
+        switch_scatter_traces: list[go.Scatter | go.Scattergl] = []
         if self.switches:
             sw_traces: dict[ResultState, dict[str, list[float | None]]] = {
                 state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
             }
-            for sw in self.switches.values():
-                sw_traces[sw["state"]]["x"].extend((*self._edge_xs(sw), None))
-                sw_traces[sw["state"]]["y"].extend((*self._edge_ys(sw), None))
+            for sw_id, sw in self.switches.items():
+                sw_traces[sw["state"]]["x"].extend((*get_xs(sw), None))
+                sw_traces[sw["state"]]["y"].extend((*get_ys(sw), None))
+                sw_info = self._get_extra_switch_info(sw_id)
+                sw_html = (
+                    '<span style="font-family: monospace">'
+                    + f"<b>Switch: </b> {_pp_eid(sw_id, indent='        ')}<br>"
+                    + f"<b>Status: </b> {sw_info['status']}<br>"
+                    + f"<b>Phases: </b> {sw_info['phases']}<br>" * is_multi_phase
+                    + "</span>"
+                )
+                add_hover_point(sw["state"], sum(get_xs(sw)) / 2, sum(get_ys(sw)) / 2, sw_html)
             # Traces for switches (grouped by color for better performance)
-            traces.extend(
-                go.Scatter(
+            switch_scatter_traces.extend(
+                scatter_cls(
                     x=t["x"],
                     y=t["y"],
                     mode="lines",
                     line={"color": self.colors[s], "width": 5, "dash": "dash"},
-                    zorder=2,
                     hoverinfo="skip",
                 )
                 for s, t in sw_traces.items()
                 if t["x"]  # skip empty colors
             )
-            # Cannot hover on line traces, add invisible midpoint markers to show hover info
-            # https://github.com/plotly/plotly.js/issues/1960
-            traces.append(
-                go.Scatter(
-                    x=[sum(self._edge_xs(sw)) / 2 for sw in self.switches.values()],
-                    y=[sum(self._edge_ys(sw)) / 2 for sw in self.switches.values()],
+
+        # One combined invisible hover-marker trace for transformers/regulators/lines/switches,
+        # instead of one such trace per element type.
+        hover_scatter_traces: list[go.Scatter | go.Scattergl] = []
+        if hover_trace["x"]:
+            hover_scatter_traces.append(
+                scatter_cls(
+                    x=hover_trace["x"],
+                    y=hover_trace["y"],
                     mode="markers",
-                    marker={"opacity": 0, "color": [self.colors[sw["state"]] for sw in self.switches.values()]},
-                    # indent has the size of the longest legend item: "Switch: "
-                    customdata=[
-                        (
-                            _pp_eid(sw_id, indent="        "),
-                            *self._get_extra_switch_info(sw_id).values(),
-                        )
-                        for sw_id in self.switches
-                    ],
-                    hovertemplate=(
-                        '<span style="font-family: monospace">'
-                        + "<b>Switch: </b> %{customdata[0]}<br>"
-                        + "<b>Status: </b> %{customdata[1]}<br>"
-                        + "<b>Phases: </b> %{customdata[2]}<br>" * is_multi_phase
-                        + "</span><extra></extra>"
-                    ),
+                    marker={"opacity": 0, "color": hover_trace["color"]},
+                    customdata=[(html,) for html in hover_trace["html"]],
+                    hovertemplate="%{customdata[0]}<extra></extra>",
                 )
             )
 
+        # Stacking (bottom to top): lines, then switches/transformers/regulators, then buses in
+        # order because `Scattergl` does not support `zorder`
+        traces = [
+            *line_scatter_traces,
+            *switch_scatter_traces,
+            *transformer_scatter_traces,
+            *regulator_scatter_traces,
+            *hover_scatter_traces,
+            *bus_scatter_traces,
+        ]
         return go.Figure(
             data=traces,
             layout=go.Layout(
