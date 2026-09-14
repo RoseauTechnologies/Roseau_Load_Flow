@@ -267,6 +267,13 @@ Pass `renderer="webgl"` to `plot_plotly` to render with WebGL (`go.Scattergl`) i
 (`go.Scatter`). Panning/zooming stays responsive on much larger networks, but static exports rasterize the plot instead
 of using vector paths, and browsers only support a limited number of simultaneous WebGL contexts per page.
 
+**Interactive Maps (Folium)**
+
+Pass `prefer_canvas=True` via `map_kws` (forwarded to the `folium.Map` constructor) to switch Leaflet's rendering from
+SVG to canvas, which keeps panning/zooming responsive on networks with many buses and lines. Sources and transformers
+use custom multi-color/shape markers that are not affected by `prefer_canvas`, but there are typically far fewer of them
+than buses and lines.
+
 ## Plotting Elements
 
 ### Voltage Phasors

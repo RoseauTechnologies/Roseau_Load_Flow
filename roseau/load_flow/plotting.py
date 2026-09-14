@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     type FeatureMap = dict[str, Any]
     type StyleDict = dict[str, Any]
-    type MapElementType = Literal["bus", BranchType]
+    type MapElementType = Literal["bus", "source", BranchType]
     type StyleColorCallback = Callable[[MapElementType, Id], str | None]
 
     class VoltageProfileNode(TypedDict):
@@ -76,6 +76,7 @@ _RESULT_COLORS: dict[ResultState, str] = {
 _MV, _LV = 60e3, 1e3
 _DEFAULT_MAP_STYLE_COLORS: dict["MapElementType", str] = {
     "bus": "#234e83",
+    "source": "#234e83",
     "line": "#234e83",
     "transformer": "#000000",
     "switch": "#888888",
@@ -350,6 +351,14 @@ _MAP_FIELDS: dict["MapElementType", dict[str, str]] = {
         "min_voltage_level": "Umin (%):",
         "max_voltage_level": "Umax (%):",
     },
+    "source": {
+        "id": "Source ID:",
+        "phases": "Phases:",
+        "bus_id": "Bus:",
+        "nominal_voltage": "Un (V):",
+        "min_voltage_level": "Umin (%):",
+        "max_voltage_level": "Umax (%):",
+    },
     "line": {
         "id": "Line ID:",
         "phases": "Phases:",
@@ -403,6 +412,14 @@ _MAP_FIELDS: dict["MapElementType", dict[str, str]] = {
 _MAP_RESULTS_FIELDS: dict["MapElementType", dict[str, str]] = {
     "bus": {
         **_MAP_FIELDS["bus"],
+        "res_separator": "--",
+        "res_voltage": "U (V):",
+        "res_voltage_level": "U (%):",
+        "res_active_power": "P (kW):",
+        "res_reactive_power": "Q (kvar):",
+    },
+    "source": {
+        **_MAP_FIELDS["source"],
         "res_separator": "--",
         "res_voltage": "U (V):",
         "res_voltage_level": "U (%):",
@@ -472,7 +489,23 @@ def _map_get_bus_style_dict(
     bus_id: Id,
     *,
     nominal_voltages: Mapping[Id, float],
-    source_buses: Container[Id],
+    color_callback: Callable[["MapElementType", Id], str],
+) -> dict[str, Any]:
+    if nominal_voltages[bus_id] < _LV:
+        diameter = 4  # LV
+    elif nominal_voltages[bus_id] < _MV:
+        diameter = 7  # MV
+    else:
+        diameter = 10  # HV
+    color = color_callback("bus", bus_id)
+    return {"radius": diameter / 2, "color": color, "fillColor": color, "fill": True, "fillOpacity": 1, "stroke": False}
+
+
+def _map_get_source_style_dict(
+    source_id: Id,
+    *,
+    bus_id: Id,
+    nominal_voltages: Mapping[Id, float],
     color_callback: Callable[["MapElementType", Id], str],
 ) -> dict[str, str]:
     vn = nominal_voltages[bus_id]
@@ -482,13 +515,8 @@ def _map_get_bus_style_dict(
         radius = 7  # MV
     else:
         radius = 10  # HV
-    # Make source buses larger and square to distinguish them from other buses
-    if bus_id in source_buses:
-        radius += 3
-        border_radius = 0  # Source bus: square
-    else:
-        border_radius = radius / 2
-    color = color_callback("bus", bus_id)
+    radius += 3  # Make sources larger to distinguish them from other buses
+    color = color_callback("source", source_id)
     markup = f"""\
     <div style="position: absolute;
                 left: 0;
@@ -496,7 +524,6 @@ def _map_get_bus_style_dict(
                 transform: translate(-50%, -50%);
                 width: {radius}px;
                 height: {radius}px;
-                border-radius: {border_radius}px;
                 background-color: {color};
                 ">
     </div>
@@ -615,7 +642,13 @@ def _plot_interactive_map_elements(  # noqa: C901
             return _map_get_bus_style_dict(
                 bus_id=e_id,
                 nominal_voltages=nominal_voltages,
-                source_buses=source_buses,
+                color_callback=style_color_callback,
+            )
+        elif e_type == "source":
+            return _map_get_source_style_dict(
+                source_id=e_id,
+                bus_id=feature["properties"]["bus_id"],
+                nominal_voltages=nominal_voltages,
                 color_callback=style_color_callback,
             )
         elif e_type == "line":
@@ -665,7 +698,13 @@ def _plot_interactive_map_elements(  # noqa: C901
             return _map_get_bus_style_dict(
                 bus_id=e_id,
                 nominal_voltages=nominal_voltages,
-                source_buses=source_buses,
+                color_callback=lambda e_type, e_id: highlight_color,
+            )
+        elif e_type == "source":
+            return _map_get_source_style_dict(
+                source_id=e_id,
+                bus_id=feature["properties"]["bus_id"],
+                nominal_voltages=nominal_voltages,
                 color_callback=lambda e_type, e_id: highlight_color,
             )
         elif e_type == "line":
@@ -696,11 +735,14 @@ def _plot_interactive_map_elements(  # noqa: C901
     source_buses = {src.bus.id for src in network.sources.values()}
     nominal_voltages = network._get_nominal_voltages()
 
-    # Filter out buses that are represented by the transformers/regulators on the map
-    buses_to_skip = {bus.id for tr in network.transformers.values() for bus in (tr.bus_hv, tr.bus_lv)} | {
+    # Filter out buses that are represented by the transformers/regulators/sources on the map
+    tr_reg_buses = {bus.id for tr in network.transformers.values() for bus in (tr.bus_hv, tr.bus_lv)} | {
         bus.id for reg in network.regulators.values() for bus in (reg.bus1, reg.bus2)
     }
-    dataframes["bus"] = dataframes["bus"].loc[~dataframes["bus"]["id"].isin(buses_to_skip)]
+    dataframes["bus"] = dataframes["bus"].loc[~dataframes["bus"]["id"].isin(tr_reg_buses | source_buses)]
+    # Sources whose bus coincides with a transformer/regulator terminal are already represented by
+    # the (enlarged) transformer/regulator marker, so they don't get their own marker.
+    dataframes["source"] = dataframes["source"].loc[~dataframes["source"]["bus_id"].isin(tr_reg_buses)]
 
     tooltips: dict[MapElementType, folium.GeoJsonTooltip | None] = {}
     if add_tooltips:
@@ -728,6 +770,7 @@ def _plot_interactive_map_elements(  # noqa: C901
         popups = dict.fromkeys(fields.keys(), None)
     names = {
         "bus": "Buses",
+        "source": "Sources",
         "line": "Lines",
         "transformer": "Transformers",
         "switch": "Switches",
@@ -737,11 +780,14 @@ def _plot_interactive_map_elements(  # noqa: C901
     for e_type, frame in dataframes.items():
         if frame.empty:
             continue
-        marker = (
-            folium.Marker(icon=folium.DivIcon(icon_size=(0, 0), icon_anchor=(0, 0)))
-            if e_type not in ("line", "switch")
-            else None
-        )
+        if e_type == "bus":
+            # `CircleMarker` is a `Path` (vector layer), so it respects `prefer_canvas` (unlike
+            # `Marker`, which is always a real DOM element) and natively supports `setStyle`.
+            marker = folium.CircleMarker(radius=5, fill=True)
+        elif e_type in ("line", "switch"):
+            marker = None
+        else:  # source, transformer, regulator: rare, specially-styled point features
+            marker = folium.Marker(icon=folium.DivIcon(icon_size=(0, 0), icon_anchor=(0, 0)))
         name = names[e_type]
         layers[name] = folium.GeoJson(
             data=frame.assign(element_type=e_type),
@@ -793,9 +839,10 @@ def _plot_interactive_map_internal(
 
     m = folium.Map(**map_kws)
     # `folium`/`Leaflet` only support `setStyle` (used to implement highlighting) on vector layers
-    # (e.g. `Path`), not on `Marker`s. Since buses and transformers are rendered as `Marker`s with a
-    # `DivIcon`, we need to teach `L.Marker` how to apply a style produced by `highlight_function`
-    # (an `{"html": ...}` dict) by rebuilding its icon.
+    # (e.g. `Path`), not on `Marker`s. Sources, transformers and regulators are rendered as
+    # `Marker`s with a `DivIcon` (to support their multi-color/shape styling), so we need to teach
+    # `L.Marker` how to apply a style produced by `highlight_function` (an `{"html": ...}` dict) by
+    # rebuilding its icon.
     root = m.get_root()
     assert isinstance(root, folium.Figure)
     folium.Element(
@@ -856,6 +903,33 @@ def _get_buses_data_for_map_plot(network: ElectricalNetwork, with_results: bool)
         buses_data["res_active_power"].append(_pp_num(_real(bus_agg_powers)))
         buses_data["res_reactive_power"].append(_pp_num(_imag(bus_agg_powers)))
     return gpd.GeoDataFrame(buses_data, crs=network.crs)
+
+
+def _get_sources_data_for_map_plot(
+    network: ElectricalNetwork, with_results: bool, buses_frame: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    sources_data: dict[str, list[Any]] = {
+        field: [] for field in (_MAP_RESULTS_FIELDS if with_results else _MAP_FIELDS)["source"]
+    }
+    sources_data["geometry"] = []
+    buses_frame = buses_frame.set_index("id")
+    for src in network.sources.values():
+        bus_id = src.bus.id
+        sources_data["id"].append(src.id)
+        sources_data["phases"].append(src.phases)
+        sources_data["bus_id"].append(bus_id)
+        sources_data["nominal_voltage"].append(buses_frame.at[bus_id, "nominal_voltage"])
+        sources_data["min_voltage_level"].append(buses_frame.at[bus_id, "min_voltage_level"])
+        sources_data["max_voltage_level"].append(buses_frame.at[bus_id, "max_voltage_level"])
+        sources_data["geometry"].append(src.bus.geometry)
+        if not with_results:
+            continue
+        sources_data["res_separator"].append("")  # Results separator
+        sources_data["res_voltage"].append(buses_frame.at[bus_id, "res_voltage"])
+        sources_data["res_voltage_level"].append(buses_frame.at[bus_id, "res_voltage_level"])
+        sources_data["res_active_power"].append(buses_frame.at[bus_id, "res_active_power"])
+        sources_data["res_reactive_power"].append(buses_frame.at[bus_id, "res_reactive_power"])
+    return gpd.GeoDataFrame(sources_data, crs=network.crs)
 
 
 def _get_lines_data_for_map_plot(network: ElectricalNetwork, with_results: bool) -> gpd.GeoDataFrame:
@@ -972,21 +1046,21 @@ def plot_interactive_map(
     This function uses the `folium` library to create an interactive map of the electrical network.
 
     Make sure you have defined the geometry of the buses and lines in the network before using this
-    function. You can do this by setting the `geometry` attribute of the buses and lines.
-    Transformers use the geometry of their HV buses.
+    function. You can do this by setting the `geometry` attribute of the buses and lines. Sources
+    use the geometry of their buses and transformers use the geometry of their HV buses.
 
     Args:
         network:
-            The electrical network to plot. Buses, lines and transformers are plotted. Buses of
-            source elements are represented with bigger square markers.
+            The electrical network to plot. Buses, sources, lines and transformers are plotted.
+            Sources are represented with bigger square markers.
 
         style_color:
             A string to use as the default color of all elements, or a callback function in the form
             ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
-            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``. Return ``None`` from
-            the callable to use the default color for that element instead. Defaults to
-            :roseau-primary:`■ #234e83` for buses and lines, :color-gray:`■ #888888` for switches,
-            and :color-black:`■ #000000` for transformers.
+            is one of ``"bus"``, ``"source"``, ``"line"``, ``"transformer"``, ``"switch"``. Return
+            ``None`` from the callable to use the default color for that element instead. Defaults to
+            :roseau-primary:`■ #234e83` for buses, sources and lines, :color-gray:`■ #888888` for
+            switches, and :color-black:`■ #000000` for transformers.
 
         highlight_color:
             The color of the default style when an element is highlighted. Defaults to
@@ -1035,12 +1109,19 @@ def plot_interactive_map(
             "Only multi-phase networks can be plotted. Did you mean to use rlfs.plotting.plot_interactive_map?"
         )
     buses_gdf = _get_buses_data_for_map_plot(network, with_results=False)
+    sources_gdf = _get_sources_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
     lines_gdf = _get_lines_data_for_map_plot(network, with_results=False)
     transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
     switches_gdf = _get_switches_data_for_map_plot(network, with_results=False)
     m = _plot_interactive_map_internal(
         network=network,
-        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
+        dataframes={
+            "bus": buses_gdf,
+            "source": sources_gdf,
+            "line": lines_gdf,
+            "transformer": transformers_gdf,
+            "switch": switches_gdf,
+        },
         fields=_MAP_FIELDS,
         style_color_callback=_make_style_color_callback(style_color, lambda et, eid: _DEFAULT_MAP_STYLE_COLORS[et]),
         highlight_color=highlight_color,
@@ -1060,6 +1141,8 @@ def _default_map_results_style_color(
 ) -> str:
     if et == "bus":
         return _RESULT_COLORS[network.buses[eid]._res_state_getter()]
+    elif et == "source":
+        return _RESULT_COLORS[network.sources[eid].bus._res_state_getter()]
     elif et == "line":
         return _RESULT_COLORS[network.lines[eid]._res_state_getter()]
     elif et == "transformer":
@@ -1092,23 +1175,23 @@ def plot_results_interactive_map(
     their loadings.
 
     Make sure you have defined the geometry of the buses and lines in the network before using this
-    function. You can do this by setting the `geometry` attribute of the buses and lines.
-    Transformers use the geometry of their HV buses. Also, ensure that the network has valid results
-    by running a load flow calculation before plotting.
+    function. You can do this by setting the `geometry` attribute of the buses and lines. Sources
+    use the geometry of their buses and transformers use the geometry of their HV buses. Also,
+    ensure that the network has valid results by running a load flow calculation before plotting.
 
     Args:
         network:
-            The electrical network to plot. Buses, lines and transformers are plotted. Buses of
-            source elements are represented with bigger square markers.
+            The electrical network to plot. Buses, sources, lines and transformers are plotted.
+            Sources are represented with bigger square markers.
 
         style_color:
             A string to use as the default color of all elements, or a callback function in the form
             ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
-            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``. Return ``None`` from
-            the callable to use the default color for that element instead. The default colors depend
-            on the element type and its results:
+            is one of ``"bus"``, ``"source"``, ``"line"``, ``"transformer"``, ``"switch"``. Return
+            ``None`` from the callable to use the default color for that element instead. The default
+            colors depend on the element type and its results:
 
-            For buses, the default color is determined by their voltage levels:
+            For buses and sources, the default color is determined by their voltage levels:
 
             - blue: `U` below `Umin`
             - cyan: `U` close to `Umin`; specifically, `Umin ≤ U < 0.75 * Umin + 0.25`
@@ -1171,12 +1254,19 @@ def plot_results_interactive_map(
         )
     network._check_valid_results()
     buses_gdf = _get_buses_data_for_map_plot(network, with_results=True)
+    sources_gdf = _get_sources_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
     lines_gdf = _get_lines_data_for_map_plot(network, with_results=True)
     transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
     switches_gdf = _get_switches_data_for_map_plot(network, with_results=True)
     m = _plot_interactive_map_internal(
         network=network,
-        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
+        dataframes={
+            "bus": buses_gdf,
+            "source": sources_gdf,
+            "line": lines_gdf,
+            "transformer": transformers_gdf,
+            "switch": switches_gdf,
+        },
         fields=_MAP_RESULTS_FIELDS,
         style_color_callback=_make_style_color_callback(
             style_color, partial(_default_map_results_style_color, network=network)
