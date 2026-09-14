@@ -57,6 +57,32 @@ def _get_buses_data_for_map_plot(network: ElectricalNetwork, with_results: bool)
     return gpd.GeoDataFrame(buses_data, crs=network.crs)
 
 
+def _get_sources_data_for_map_plot(
+    network: ElectricalNetwork, with_results: bool, buses_frame: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    sources_data: dict[str, list[Any]] = {
+        field: [] for field in (_MAP_RESULTS_FIELDS if with_results else _MAP_FIELDS)["source"]
+    }
+    sources_data["geometry"] = []
+    buses_frame = buses_frame.set_index("id")
+    for src in network.sources.values():
+        bus_id = src.bus.id
+        sources_data["id"].append(src.id)
+        sources_data["bus_id"].append(bus_id)
+        sources_data["nominal_voltage"].append(buses_frame.at[bus_id, "nominal_voltage"])
+        sources_data["min_voltage_level"].append(buses_frame.at[bus_id, "min_voltage_level"])
+        sources_data["max_voltage_level"].append(buses_frame.at[bus_id, "max_voltage_level"])
+        sources_data["geometry"].append(src.bus.geometry)
+        if not with_results:
+            continue
+        sources_data["res_separator"].append("")  # Results separator
+        sources_data["res_voltage"].append(buses_frame.at[bus_id, "res_voltage"])
+        sources_data["res_voltage_level"].append(buses_frame.at[bus_id, "res_voltage_level"])
+        sources_data["res_active_power"].append(buses_frame.at[bus_id, "res_active_power"])
+        sources_data["res_reactive_power"].append(buses_frame.at[bus_id, "res_reactive_power"])
+    return gpd.GeoDataFrame(sources_data, crs=network.crs)
+
+
 def _get_lines_data_for_map_plot(network: ElectricalNetwork, with_results: bool) -> gpd.GeoDataFrame:
     lines_data: dict[str, list[Any]] = {
         field: [] for field in (_MAP_RESULTS_FIELDS if with_results else _MAP_FIELDS)["line"]
@@ -196,21 +222,22 @@ def plot_interactive_map(
     This function uses the `folium` library to create an interactive map of the electrical network.
 
     Make sure you have defined the geometry of the buses and lines in the network before using this
-    function. You can do this by setting the `geometry` attribute of the buses and lines.
-    Transformers use the geometry of their HV buses.
+    function. You can do this by setting the `geometry` attribute of the buses and lines. Sources
+    use the geometry of their buses and transformers use the geometry of their HV buses.
 
     Args:
         network:
-            The electrical network to plot. Buses, lines, transformers and regulators are plotted.
-            Buses of source elements are represented with bigger square markers.
+            The electrical network to plot. Buses, sources, lines, transformers and regulators are
+            plotted. Sources are represented with bigger square markers.
 
         style_color:
             A string to use as the default color of all elements, or a callback function in the form
             ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
-            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``, ``"regulator"``. Return
-            ``None`` from the callable to use the default color for that element instead. Defaults to
-            :roseau-primary:`■ #234e83` for buses and lines, :color-gray:`■ #888888` for switches and
-            regulators, and :color-black:`■ #000000` for transformers.
+            is one of ``"bus"``, ``"source"``, ``"line"``, ``"transformer"``, ``"switch"``,
+            ``"regulator"``. Return ``None`` from the callable to use the default color for that
+            element instead. Defaults to :roseau-primary:`■ #234e83` for buses, sources and lines,
+            :color-gray:`■ #888888` for switches and regulators, and :color-black:`■ #000000` for
+            transformers.
 
         highlight_color:
             The color of the default style when an element is highlighted. Defaults to
@@ -259,6 +286,7 @@ def plot_interactive_map(
             "Only single-phase networks can be plotted. Did you mean to use rlf.plotting.plot_interactive_map?"
         )
     buses_gdf = _get_buses_data_for_map_plot(network, with_results=False)
+    sources_gdf = _get_sources_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
     lines_gdf = _get_lines_data_for_map_plot(network, with_results=False)
     transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
     switches_gdf = _get_switches_data_for_map_plot(network, with_results=False)
@@ -267,6 +295,7 @@ def plot_interactive_map(
         network=network,
         dataframes={
             "bus": buses_gdf,
+            "source": sources_gdf,
             "line": lines_gdf,
             "transformer": transformers_gdf,
             "switch": switches_gdf,
@@ -306,23 +335,23 @@ def plot_results_interactive_map(
     their loadings.
 
     Make sure you have defined the geometry of the buses and lines in the network before using this
-    function. You can do this by setting the `geometry` attribute of the buses and lines.
-    Transformers use the geometry of their HV buses. Also, ensure that the network has valid results
-    by running a load flow calculation before plotting.
+    function. You can do this by setting the `geometry` attribute of the buses and lines. Sources
+    use the geometry of their buses and transformers use the geometry of their HV buses. Also,
+    ensure that the network has valid results by running a load flow calculation before plotting.
 
     Args:
         network:
-            The electrical network to plot. Buses, lines, transformers and regulators are plotted.
-            Buses of source elements are represented with bigger square markers.
+            The electrical network to plot. Buses, sources, lines, transformers and regulators are
+            plotted. Sources are represented with bigger square markers.
 
         style_color:
             A string to use as the default color of all elements, or a callback function in the form
             ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
-            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``, ``"regulator"``. Return
-            ``None`` from the callable to use the default color for that element instead. The default
-            colors depend on the element type and its results:
+            is one of ``"bus"``, ``"source"``, ``"line"``, ``"transformer"``, ``"switch"``,
+            ``"regulator"``. Return ``None`` from the callable to use the default color for that
+            element instead. The default colors depend on the element type and its results:
 
-            For buses, the default color is determined by their voltage levels:
+            For buses and sources, the default color is determined by their voltage levels:
 
             - blue: `U` below `Umin`
             - cyan: `U` close to `Umin`; specifically, `Umin ≤ U < 0.75 * Umin + 0.25`
@@ -385,6 +414,7 @@ def plot_results_interactive_map(
         )
     network._check_valid_results()
     buses_gdf = _get_buses_data_for_map_plot(network, with_results=True)
+    sources_gdf = _get_sources_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
     lines_gdf = _get_lines_data_for_map_plot(network, with_results=True)
     transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
     switches_gdf = _get_switches_data_for_map_plot(network, with_results=True)
@@ -393,6 +423,7 @@ def plot_results_interactive_map(
         network=network,
         dataframes={
             "bus": buses_gdf,
+            "source": sources_gdf,
             "line": lines_gdf,
             "transformer": transformers_gdf,
             "switch": switches_gdf,

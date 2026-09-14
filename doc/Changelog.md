@@ -21,6 +21,14 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`501` {gh-issue}`499` Improve the performance of the folium interactive map plots on large networks.
+  - Buses are now rendered as canvas-compatible `folium.CircleMarker`s instead of DOM-based `Marker`s with a custom
+    `DivIcon`. This means passing `prefer_canvas=True` in `map_kws` (already forwarded to the `folium.Map` constructor)
+    now also speeds up panning/zooming of buses, not just lines.
+  - Voltage sources are no longer folded into oversized square bus markers; they are now plotted as their own `"source"`
+    map elements with their own tooltip/popup fields (`phases`, `bus_id`, `nominal_voltage`, ...). If you use a custom
+    `style_color` callback, it must now also handle the new `"source"` `el_type` in addition to `"bus"`, `"line"`,
+    `"transformer"`, `"switch"`.
 - {gh-pr}`500` {gh-issue}`499` Improve the performance of the voltage profile Plotly plot on large networks by reducing
   the number of traces, and add a `renderer="webgl"` option to `plot_plotly` for much better pan/zoom performance on
   very large networks.
