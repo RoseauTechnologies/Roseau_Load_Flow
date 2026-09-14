@@ -256,6 +256,17 @@ align: center
 
 See the [networkx docs](https://networkx.org/documentation/stable/tutorial.html#drawing-graphs) for more information.
 
+### Rendering Large Networks
+
+For large networks with thousands of buses/lines, interactive plots can become sluggish to pan, zoom, or hover over.
+Some plotting options trade a bit of rendering fidelity for much better interactivity performance.
+
+**Voltage Profile (Plotly)**
+
+Pass `renderer="webgl"` to `plot_plotly` to render with WebGL (`go.Scattergl`) instead of the default SVG
+(`go.Scatter`). Panning/zooming stays responsive on much larger networks, but static exports rasterize the plot instead
+of using vector paths, and browsers only support a limited number of simultaneous WebGL contexts per page.
+
 ## Plotting Elements
 
 ### Voltage Phasors
