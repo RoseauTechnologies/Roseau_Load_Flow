@@ -813,6 +813,7 @@ def _plot_interactive_map_internal(
     add_tooltips: bool,
     add_popups: bool,
     add_search: bool,
+    add_control: bool,
     fit_bounds: bool,
 ) -> "folium.Map":
     import folium
@@ -865,7 +866,8 @@ def _plot_interactive_map_internal(
         add_popups=add_popups,
     ).items():
         layer.add_to(FeatureGroupSubGroup(network_layer, name).add_to(m))
-    folium.LayerControl(collapsed=False, draggable=True, position="bottomright").add_to(m)
+    if add_control:
+        folium.LayerControl(collapsed=False, draggable=True, position="bottomright").add_to(m)
     if add_search:
         Search(network_layer, search_label="id", placeholder="Search network elements...").add_to(m)
     if fit_bounds:
@@ -1039,6 +1041,7 @@ def plot_interactive_map(
     add_tooltips: bool = True,
     add_popups: bool = True,
     add_search: bool = True,
+    add_control: bool = True,
     fit_bounds: bool = True,
 ) -> "folium.Map":
     """Plot an electrical network on an interactive map.
@@ -1095,6 +1098,9 @@ def plot_interactive_map(
             If ``True`` (default), a search bar will be added to the map to search for network
             elements by their ID.
 
+        add_control:
+            If ``True`` (default), layer control will be added to the map.
+
         fit_bounds:
             If ``True`` (default), the map view will be adjusted to fit all network elements. If
             ``False``, the initial view is determined by the `location` and `zoom_start` parameters
@@ -1116,9 +1122,10 @@ def plot_interactive_map(
     m = _plot_interactive_map_internal(
         network=network,
         dataframes={
+            # Order matters: buses/sources are drawn after lines so they render on top of them.
+            "line": lines_gdf,
             "bus": buses_gdf,
             "source": sources_gdf,
-            "line": lines_gdf,
             "transformer": transformers_gdf,
             "switch": switches_gdf,
         },
@@ -1131,6 +1138,7 @@ def plot_interactive_map(
         add_tooltips=add_tooltips,
         add_popups=add_popups,
         add_search=add_search,
+        add_control=add_control,
         fit_bounds=fit_bounds,
     )
     return m
@@ -1166,6 +1174,7 @@ def plot_results_interactive_map(
     add_tooltips: bool = True,
     add_popups: bool = True,
     add_search: bool = True,
+    add_control: bool = True,
     fit_bounds: bool = True,
 ) -> "folium.Map":
     """Plot an electrical network on an interactive map with the load flow results.
@@ -1239,6 +1248,9 @@ def plot_results_interactive_map(
             If ``True`` (default), a search bar will be added to the map to search for network
             elements by their ID.
 
+        add_control:
+            If ``True`` (default), layer control will be added to the map.
+
         fit_bounds:
             If ``True`` (default), the map view will be adjusted to fit all network elements. If
             ``False``, the initial view is determined by the `location` and `zoom_start` parameters
@@ -1261,9 +1273,10 @@ def plot_results_interactive_map(
     m = _plot_interactive_map_internal(
         network=network,
         dataframes={
+            # Order matters: buses/sources are drawn after lines so they render on top of them.
+            "line": lines_gdf,
             "bus": buses_gdf,
             "source": sources_gdf,
-            "line": lines_gdf,
             "transformer": transformers_gdf,
             "switch": switches_gdf,
         },
@@ -1278,6 +1291,7 @@ def plot_results_interactive_map(
         add_tooltips=add_tooltips,
         add_popups=add_popups,
         add_search=add_search,
+        add_control=add_control,
         fit_bounds=fit_bounds,
     )
     return m
