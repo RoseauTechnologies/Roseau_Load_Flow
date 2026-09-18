@@ -715,9 +715,9 @@ def test_from_catalogue():
 
     # Several line parameters
     with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters.from_catalogue(name=r"U_AL_.*")
+        LineParameters.from_catalogue(name=r"^U_AL_.*$")
     assert e.value.msg == (
-        "Several line parameters matching the query (name='U_AL_.*') have been found: "
+        "Several line parameters matching the query (name='^U_AL_.*$') have been found: "
         "'U_AL_19', 'U_AL_20', 'U_AL_22', 'U_AL_25', 'U_AL_28', 'U_AL_29', 'U_AL_33', "
         "'U_AL_34', 'U_AL_37', 'U_AL_38', 'U_AL_40', 'U_AL_43', 'U_AL_48', 'U_AL_50', "
         "'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60', 'U_AL_69', 'U_AL_70', 'U_AL_74', "
@@ -757,7 +757,7 @@ def test_get_catalogue():
 
     # Filter on a single attribute
     for field_name, value, expected_size in (
-        ("name", r"U_AL_150.*", 1),
+        ("name", r"^U_AL_150.*$", 1),
         ("line_type", "OvErHeAd", 122),
         ("material", "Cu", 121),
         ("material_neutral", "Cu", 121),
@@ -772,7 +772,7 @@ def test_get_catalogue():
 
     # Filter on two attributes
     for field_name, value, expected_size in (
-        ("name", r"U_AL_150.*", 1),
+        ("name", r"^U_AL_150.*$", 1),
         ("line_type", "OvErHeAd", 40),
         ("section", 150, 7),
         ("section_neutral", 150, 4),

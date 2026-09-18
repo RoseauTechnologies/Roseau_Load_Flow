@@ -450,9 +450,9 @@ def test_from_catalogue():
 
     # Several transformers
     with pytest.raises(RoseauLoadFlowException) as e:
-        TransformerParameters.from_catalogue(vg=r"yzn.*", efficiency="A0Ak", sn=50e3)
+        TransformerParameters.from_catalogue(vg=r"^yzn.*$", efficiency="A0Ak", sn=50e3)
     assert e.value.msg == (
-        "Several transformers matching the query (efficiency='A0Ak', vg='yzn.*', sn=50.0 kVA) have been found: "
+        "Several transformers matching the query (efficiency='A0Ak', vg='^yzn.*$', sn=50.0 kVA) have been found: "
         "'SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11', 'SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11'."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
@@ -474,9 +474,9 @@ def test_get_catalogue():
     for field_name, value, expected_size in [
         ("name", "SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11", 1),
         ("manufacturer", "Schneider Electric", 260),
-        ("range", r"min.*", 123),
-        ("efficiency", r"c0.*", 58),
-        ("vg", r"dy.*", 304),
+        ("range", r"^min.*$", 123),
+        ("efficiency", r"^c0.*$", 58),
+        ("vg", r"^dy.*$", 304),
         ("sn", Q_(160, "kVA"), 19),
         ("uhv", Q_(20, "kV"), 175),
         ("ulv", 400, 57),
@@ -489,7 +489,7 @@ def test_get_catalogue():
     for field_name, value, expected_size in [
         ("name", "SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11", 1),
         ("range", "minera", 123),
-        ("efficiency", r"c0.*", 58),
+        ("efficiency", r"^c0.*$", 58),
         ("vg", r"^d.*11$", 247),
         ("sn", Q_(160, "kVA"), 17),
         ("uhv", Q_(20, "kV"), 158),
@@ -503,8 +503,8 @@ def test_get_catalogue():
     # Filter on three attributes
     for field_name, value, expected_size in [
         ("name", "se VEGETA C0BK 3150kva 15/20Kv(20) 410v dyn11", 1),
-        ("efficiency", r"c0[abc]k", 30),
-        ("vg", r"dyn\d+", 71),
+        ("efficiency", r"^c0[abc]k$", 30),
+        ("vg", r"^dyn\d+$", 71),
         ("sn", Q_(160, "kVA"), 5),
         ("uhv", Q_(20, "kV"), 41),
         ("ulv", 400, 0),

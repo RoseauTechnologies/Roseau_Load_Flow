@@ -99,11 +99,12 @@ there are two available load points:
 - "Winter": it contains power loads without production.
 - "Summer": it contains power loads with production and 20% of the "Winter" load.
 
-The arguments of the method `get_catalogue` can be used to filter the output. If you want to get the LV networks only,
-you can call:
+The arguments of the method `get_catalogue` can be used to filter the output. A plain string performs a case-insensitive
+literal match; wrap it in `^...$` to perform a case-insensitive regular expression search instead (or pass a compiled
+`re.Pattern` to control the flags yourself). If you want to get the LV networks only, you can use a regular expression:
 
 ```pycon
->>> rlf.ElectricalNetwork.get_catalogue(name=r"LVFeeder.*")
+>>> rlf.ElectricalNetwork.get_catalogue(name=r"^LVFeeder.*$")
 ```
 
 | Name          | Nb buses | Nb lines | Nb transformers | Nb switches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
@@ -129,10 +130,10 @@ you can call:
 | LVFeeder37263 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
 | LVFeeder38211 |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
 
-A regular expression can also be used:
+A more specific regular expression can also be used:
 
 ```pycon
->>> rlf.ElectricalNetwork.get_catalogue(name=r"LVFeeder38[0-9]+")
+>>> rlf.ElectricalNetwork.get_catalogue(name=r"^LVFeeder38[0-9]+$")
 ```
 
 | Name          | Nb buses | Nb lines | Nb transformers | Nb switches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
@@ -277,13 +278,13 @@ _Truncated output_
 or only transformers with a wye winding on the high voltage side (using a regular expression)
 
 ```pycon
->>> rlf.TransformerParameters.get_catalogue(vg=r"Y.*")
+>>> rlf.TransformerParameters.get_catalogue(vg=r"^Y.*$")
 ```
 
 <!-- Generated with:
     import roseau.load_flow as rlf
     from roseau.load_flow.utils.doc_utils import to_markdown
-    tr_catalogue = rlf.TransformerParameters.get_catalogue(vg=r"Y.*").head(10)
+    tr_catalogue = rlf.TransformerParameters.get_catalogue(vg=r"^Y.*$").head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
@@ -303,13 +304,13 @@ or only transformers with a wye winding on the high voltage side (using a regula
 or only transformers meeting both criteria
 
 ```pycon
->>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", vg=r"Y.*")
+>>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", vg=r"^Y.*$")
 ```
 
 <!-- Generated with:
     import roseau.load_flow as rlf
     from roseau.load_flow.utils.doc_utils import to_markdown
-    tr_catalogue = rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", vg=r"Y.*").head(10)
+    tr_catalogue = rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", vg=r"^Y.*$").head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
@@ -360,7 +361,7 @@ filter the data to get a single transformer. You can apply the same filtering te
 For instance, these parameters filter the catalogue down to a single transformer parameters:
 
 ```pycon
->>> rlf.TransformerParameters.from_catalogue(efficiency="A0Ak", vg=r"Y.*", uhv=15000)
+>>> rlf.TransformerParameters.from_catalogue(efficiency="A0Ak", vg=r"^Y.*$", uhv=15000)
 <TransformerParameters: id='SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11', vg='Yzn11', sn=50000,
 uhv=15000, ulv=410, fn=50.0, p0=90.0, i0=0.005, psc=750.0, vsc=0.04, manufacturer='Schneider Electric',
 range='Minera', efficiency='A0Ak', cooling='ONAN', insulation='liquid-immersed'>
@@ -575,13 +576,14 @@ LineParameters(id='U_AL_3x150+70')
 In case no or several results match the parameters, an error is raised:
 
 ```pycon
->>> rlf.LineParameters.from_catalogue(name=r"U_AL.*")
-RoseauLoadFlowException: Several line parameters matching the query (name='U_AL.*') have been found:
+>>> rlf.LineParameters.from_catalogue(name=r"^U_AL.*$")
+RoseauLoadFlowException: Several line parameters matching the query (name='^U_AL.*$') have been found:
 'U_AL_19', 'U_AL_20', 'U_AL_22', 'U_AL_25', 'U_AL_28', 'U_AL_29', 'U_AL_33', 'U_AL_34', 'U_AL_37',
 'U_AL_38', 'U_AL_40', 'U_AL_43', 'U_AL_48', 'U_AL_50', 'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60',
 'U_AL_69', 'U_AL_70', 'U_AL_74', 'U_AL_75', 'U_AL_79', 'U_AL_80', 'U_AL_90', 'U_AL_93', 'U_AL_95',
 'U_AL_100', 'U_AL_116', 'U_AL_117', 'U_AL_120', 'U_AL_147', 'U_AL_148', 'U_AL_150', 'U_AL_228',
-'U_AL_240', 'U_AL_288'. [catalogue_several_found]
+'U_AL_240', 'U_AL_288', 'U_AL_3x50+50', 'U_AL_3x95+50', 'U_AL_3x150+70', 'U_AL_3x150+150',
+'U_AL_3x240+95'. [catalogue_several_found]
 ```
 
 or if no results:

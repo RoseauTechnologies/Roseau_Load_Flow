@@ -15,7 +15,7 @@ try:
     import orjson
 
 except ImportError:
-    orjson = None  # ty:ignore[invalid-assignment]
+    orjson = None
 
 import numpy as np
 import pandas as pd
@@ -337,6 +337,9 @@ class CatalogueMixin[T](metaclass=ABCMeta):
     ) -> "pd.Series[bool] | list[str]":
         """Filter the catalogue using a string/regexp value.
 
+        A compiled pattern is used as-is (its flags respected); a string wrapped in ``^...$`` is used
+        as a case-insensitive regex; any other string is matched literally, case-insensitively.
+
         Args:
             value:
                 The string or regular expression to use as a filter.
@@ -349,18 +352,15 @@ class CatalogueMixin[T](metaclass=ABCMeta):
             the list of matching results.
         """
         vector = pd.Series(strings)
-        if isinstance(value, re.Pattern):
-            result = vector.str.fullmatch(value.pattern, case=False, flags=value.flags)
-        else:
-            try:
-                result = vector.str.fullmatch(value, case=False) | (vector.str.casefold() == value.casefold())
-            except re.error:
-                # fallback to string comparison
-                result = vector.str.casefold() == value.casefold()
-        if isinstance(strings, pd.Series):
-            return result
-        else:
-            return vector[result].tolist()
+        if isinstance(value, str) and value.startswith("^") and value.endswith("$"):
+            value = re.compile(value, flags=re.IGNORECASE)
+        if isinstance(value, re.Pattern):  # Regex search
+            pat = value.pattern
+            flags = value.flags
+            result = vector.str.fullmatch(pat, flags=flags)
+        else:  # Literal case insensitive comparison
+            result = vector.str.casefold() == value.casefold()
+        return result if isinstance(strings, pd.Series) else vector[result].tolist()
 
     @staticmethod
     def _raise_not_found_in_catalogue(
@@ -1396,11 +1396,13 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
 
         Args:
             name:
-                The name of the network to get from the catalogue. It can be a regular expression.
+                The name of the network to get from the catalogue. Case-insensitive literal match by
+                default; wrap it in ``^...$`` for a regex, or pass a compiled pattern to set your own
+                flags.
 
             load_point_name:
-                The name of the load point to get. For each network, several load points may be available. It can be
-                a regular expression.
+                The name of the load point to get. For each network, several load points may be
+                available. Matched the same way as `name`.
 
         Returns:
             The dictionary containing the network data.
