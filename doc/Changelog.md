@@ -21,6 +21,9 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`503` Catalogue string filters now have clearer matching rules: any string is a case-insensitive literal match,
+  unless wrapped in `^...$`, in which case it is a case-insensitive regex; a compiled `re.Pattern` is used as-is (its
+  flags respected). Invalid patterns no longer pass silently.
 - {gh-pr}`502` Add an `add_control` parameter to `plot_interactive_map` and `plot_results_interactive_map` to optionally
   omit the layer control, similar to the existing `add_search` parameter.
 - {gh-pr}`501` {gh-pr}`502` {gh-issue}`499` Improve the performance of the folium interactive map plots on large

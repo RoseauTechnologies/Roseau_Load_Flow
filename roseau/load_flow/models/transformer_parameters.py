@@ -1341,18 +1341,19 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         Args:
             name:
-                The name of the transformer to get from the catalogue. It can be a regular expression.
-                The name is subject to change when the catalogue is updated. Prefer using the other
-                filters.
+                The name of the transformer to get from the catalogue. Case-insensitive literal match
+                by default; wrap it in ``^...$`` for a regex, or pass a compiled pattern to set your
+                own flags. The name is subject to change when the catalogue is updated. Prefer using
+                the other filters.
 
             manufacturer:
-                The name of the manufacturer to get. It can be a regular expression.
+                The name of the manufacturer to get. Matched the same way as `name`.
 
             range:
-                The name of the product range to get. It can be a regular expression.
+                The name of the product range to get. Matched the same way as `name`.
 
             efficiency:
-                The efficiency of the transformer get. It can be a regular expression.
+                The efficiency of the transformer get. Matched the same way as `name`.
 
             cooling:
                 The cooling class of the transformer to get (ONAN, ONAF, etc.).  See also
@@ -1363,7 +1364,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 gas-filled). See also :class:`~roseau.load_flow.TransformerInsulation`.
 
             vg:
-                The vector group of the transformer to get. It can be a regular expression.
+                The vector group of the transformer to get. Matched the same way as `name`.
 
             sn:
                 The nominal power of the transformer to get.
@@ -1457,16 +1458,17 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
 
         Args:
             name:
-                An optional name to filter the output. It can be a regular expression.
+                An optional name to filter the output. Case-insensitive literal match by default;
+                wrap it in ``^...$`` for a regex, or pass a compiled pattern to set your own flags.
 
             manufacturer:
-                An optional manufacturer to filter the output. It can be a regular expression.
+                An optional manufacturer to filter the output. Matched the same way as `name`.
 
             range:
-                An optional product range to filter the output. It can be a regular expression.
+                An optional product range to filter the output. Matched the same way as `name`.
 
             efficiency:
-                An optional efficiency to filter the output. It can be a regular expression.
+                An optional efficiency to filter the output. Matched the same way as `name`.
 
             cooling:
                 An optional cooling class to filter the output (ONAN, ONAF, etc.). See also
@@ -1477,7 +1479,7 @@ class TransformerParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame
                 liquid-immersed, gas-filled). See also :class:`~roseau.load_flow.TransformerInsulation`.
 
             vg:
-                An optional vector group of the transformer. It can be a regular expression.
+                An optional vector group of the transformer. Matched the same way as `name`.
 
             sn:
                 An optional nominal power of the transformer to filter the output.
