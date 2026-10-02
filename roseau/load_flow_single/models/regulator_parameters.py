@@ -18,9 +18,13 @@ logger = logging.getLogger(__name__)
 class RegulatorParameters(Identifiable, JsonMixin):
     """Parameters that define the electrical model of a single-phase voltage regulator.
 
-    A voltage regulator is modelled as an autotransformer with a continuous tanh tap control law:
+    A voltage regulator is modelled as an autotransformer whose tap ratio ``a`` keeps the load-side
+    voltage at ``u_ref`` while ``a`` stays within ``[1 - u_range, 1 + u_range]``, and stays at its bound
+    otherwise. The control law is the fixed point:
 
-        a = 1 + u_range · tanh(alpha · (u_ref - |U_sec|) / u_ref)
+        a = softclamp(a · u_ref / |U_sec|, 1 - u_range, 1 + u_range)
+
+    where ``softclamp`` is a clamp smoothed with softplus functions of steepness ``alpha``.
 
     The parameters here define the physical and control characteristics shared across all
     regulator instances that use the same parameter set. The per-instance target voltage ``u_ref``
@@ -39,7 +43,7 @@ class RegulatorParameters(Identifiable, JsonMixin):
         z2: QtyOrMag[Complex],
         ym: QtyOrMag[Complex],
         u_range: Float = 0.1,
-        alpha: Float = 100.0,
+        alpha: Float = 1000.0,
     ) -> None:
         """RegulatorParameters constructor.
 
@@ -63,8 +67,9 @@ class RegulatorParameters(Identifiable, JsonMixin):
                 Voltage regulation range as a fraction, e.g. ``0.1`` means ±10 %. Defaults to 0.1.
 
             alpha:
-                Steepness of the tanh droop. Larger values give tighter voltage regulation.
-                Must be positive. Defaults to 100.
+                Steepness of the softplus functions smoothing the tap bounds: the corners of the
+                characteristic are rounded over about ``1 / alpha`` in tap ratio. Must be positive.
+                Defaults to 1000.
         """
         super().__init__(id)
         if u_range <= 0 or u_range >= 1:
@@ -116,7 +121,7 @@ class RegulatorParameters(Identifiable, JsonMixin):
 
     @property
     def alpha(self) -> float:
-        """Steepness of the tanh droop."""
+        """Steepness of the softplus functions smoothing the tap bounds."""
         return self._alpha
 
     def _create_cy_element(self, u_ref: float) -> "CySingleVoltageRegulator":
@@ -134,35 +139,37 @@ class RegulatorParameters(Identifiable, JsonMixin):
         """Return a pretty string representation of the regulator rating."""
         return f"{pretty_unit(self._sn, 'VA')} - {pretty_unit(self._un, 'V')}"
 
-    def _compute_tap(self, u_out: Float, cy_element: "CySingleVoltageRegulator") -> float:
-        return cy_element.compute_tap(float(u_out) / SQRT3)
+    def _compute_tap(self, u_in: Float, cy_element: "CySingleVoltageRegulator") -> float:
+        return cy_element.compute_tap(float(u_in) / SQRT3)
 
-    def compute_tap(self, u_ref: Float, u_out: Float) -> float:
-        """Compute the tap ratio for the given load-side voltage magnitude (V).
+    def compute_tap(self, u_ref: Float, u_in: Float) -> float:
+        """Compute the no-load tap ratio for the given source-side voltage magnitude (V).
+
+        This is the steady-state tap of an ideal regulator (no series impedance, no load).
 
         Args:
             u_ref:
                 Target voltage on the load side (p.u.).
 
-            u_out:
-                Load-side voltage magnitude (V).
+            u_in:
+                Source-side voltage magnitude (V).
 
         Returns:
             The tap ratio (a) as a fraction, e.g. 1.05 means +5 % boost, 0.95 means -5 % buck.
             Bounded to (1 - u_range, 1 + u_range).
         """
         cy_element = self._create_cy_element(u_ref=float(u_ref))
-        return self._compute_tap(u_out=u_out, cy_element=cy_element)
+        return self._compute_tap(u_in=u_in, cy_element=cy_element)
 
     def plot_tap(self, u_ref: Float, voltages: np.ndarray, *, ax: "Axes | None" = None) -> "Axes":
-        """Plot the tap position (%) as a function of load-side voltage.
+        """Plot the no-load tap position (%) as a function of source-side voltage.
 
         Args:
             u_ref:
                 Target voltage on the load side (p.u.).
 
             voltages:
-                Array of load-side voltage magnitudes to evaluate (V).
+                Array of source-side voltage magnitudes to evaluate (V).
 
             ax:
                 Axes to draw on. Uses the current axes if not provided.
@@ -181,7 +188,7 @@ class RegulatorParameters(Identifiable, JsonMixin):
 
         voltages = np.asarray(voltages, dtype=float)
         cy_element = self._create_cy_element(u_ref=u_ref)
-        taps = np.array([self._compute_tap(u_out=u, cy_element=cy_element) for u in voltages])
+        taps = np.array([self._compute_tap(u_in=u, cy_element=cy_element) for u in voltages])
         taps_pct = (taps - 1.0) * 100.0
 
         ax.scatter(voltages * scale, taps_pct, color="steelblue", marker=".", s=20, label="Tap (%)")
@@ -208,7 +215,7 @@ class RegulatorParameters(Identifiable, JsonMixin):
             label=f"Max buck ({-self._u_range * 100:.0f} %)",
         )
         ax.grid(visible=True)
-        ax.set_xlabel(f"Load-side voltage ({unit})")
+        ax.set_xlabel(f"Source-side voltage ({unit})")
         ax.set_ylabel("Tap position (%)")
         ax.legend()
 
@@ -217,17 +224,15 @@ class RegulatorParameters(Identifiable, JsonMixin):
     def plot_voltage(self, u_ref: Float, voltages: np.ndarray, *, ax: "Axes | None" = None) -> "Axes":
         """Plot the regulated load-side voltage as a function of source-side voltage.
 
-        The ``voltages`` array is interpreted as *output* voltage targets. For each target
-        ``u_out``, the tap ``a = f(u_out)`` is computed directly and the corresponding
-        source voltage is derived as ``u_in = u_out / a``. This gives the exact no-load
-        regulation curve without solving an implicit equation.
+        For each source-side voltage ``u_in``, the no-load tap ``a`` is computed and the output
+        voltage is ``u_out = a · u_in``. This gives the exact no-load regulation curve.
 
         Args:
             u_ref:
                 Target voltage on the load side (p.u.).
 
             voltages:
-                Array of output voltage magnitudes to evaluate (V). Should span the range
+                Array of source-side voltage magnitudes to evaluate (V). Should span the range
                 of interest around ``u_ref * un``, e.g. ``np.linspace(0.8, 1.2, 100) * un``.
 
             ax:
@@ -245,11 +250,11 @@ class RegulatorParameters(Identifiable, JsonMixin):
         scale, unit = (1e-3, "kV") if self._un > 1000 else (1.0, "V")
         u_ref_v = u_ref * self._un * scale  # convert p.u. → V for the voltage axis
 
-        u_out = np.asarray(voltages, dtype=float)
+        u_in = np.asarray(voltages, dtype=float)
         cy_element = self._create_cy_element(u_ref=u_ref)
-        taps = np.array([self._compute_tap(u_out=u, cy_element=cy_element) for u in u_out])
-        u_out *= scale
-        u_in = u_out / taps  # source voltage that produces this output (exact at no-load)
+        taps = np.array([self._compute_tap(u_in=u, cy_element=cy_element) for u in u_in])
+        u_in = u_in * scale
+        u_out = taps * u_in  # output voltage produced by this source voltage (exact at no-load)
 
         ax.plot(u_in, u_out, color="steelblue", marker=".", label="Output voltage")
         ax.plot(u_in, u_in, color="gray", marker=".", label="No regulation ($a = 1$)")
