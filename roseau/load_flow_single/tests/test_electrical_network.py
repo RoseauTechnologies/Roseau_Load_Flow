@@ -648,6 +648,48 @@ def test_network_res_transformers(small_network_with_results: ElectricalNetwork)
     assert_res_transformers()
 
 
+def test_network_res_regulators(all_elements_network_with_results: ElectricalNetwork):
+    en = all_elements_network_with_results
+    assert en.regulators
+    expected_dtypes = {  # in the expected order
+        "regulator_id": object,
+        "tap": float,
+        "current1": complex,
+        "current2": complex,
+        "power1": complex,
+        "power2": complex,
+        "voltage1": complex,
+        "voltage2": complex,
+        "violated": pd.BooleanDtype(),
+        "loading": float,
+        "max_loading": float,
+        "sn": float,
+    }
+    expected_results = [
+        {
+            "regulator_id": regulator.id,
+            "tap": regulator.res_tap,
+            "current1": strip_q(regulator.side1.res_current),
+            "current2": strip_q(regulator.side2.res_current),
+            "power1": strip_q(regulator.side1.res_power),
+            "power2": strip_q(regulator.side2.res_power),
+            "voltage1": strip_q(regulator.side1.res_voltage),
+            "voltage2": strip_q(regulator.side2.res_voltage),
+            "violated": regulator.res_violated,
+            "loading": strip_q(regulator.res_loading),
+            "max_loading": strip_q(regulator.max_loading),
+            "sn": strip_q(regulator.sn),
+        }
+        for regulator in en.regulators.values()
+    ]
+    expected_frame = (
+        pd.DataFrame.from_records(expected_results, columns=list(expected_dtypes))
+        .astype(expected_dtypes)
+        .set_index("regulator_id")
+    )
+    assert_frame_equal(en.res_regulators, expected_frame)
+
+
 def test_network_res_lines(small_network_with_results: ElectricalNetwork):
     en = small_network_with_results
     expected_dtypes = {  # in the expected order
