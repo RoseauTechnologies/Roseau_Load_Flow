@@ -85,11 +85,6 @@ fail_under = 93
 [tool.coverage.html]
 directory = "htmlcov"
 
-# MD format
-[tool.mdformat]
-wrap = 120
-number = true
-
 # Pytest
 [tool.pytest]
 addopts = ["--color=yes", "--import-mode=importlib"]
@@ -135,14 +130,42 @@ mccabe.max-complexity = 15
 [tool.ruff.format]
 docstring-code-format = true
 
+# Rumdl
+[tool.rumdl.global]
+line-length = 100
+flavor = "gfm"
+disable = ["MD036"]  # Emphasis used instead of a heading
+
+[tool.rumdl.per-file-flavor]
+"doc/**/*.md" = "myst"
+".github/workflows/**/*.md" = "gh-aw"
+
+[tool.rumdl.per-file-ignores]
+"LICENSE.md" = ["MD041"]
+# MD014: keep `$` prompts in console blocks
+# MD057: links to MyST targets `(label)=` are not detected
+# MD069: breaks the `* - ` rows of `list-table` directives
+"doc/**/*.md" = ["MD014", "MD041", "MD057", "MD069"]
+
+[tool.rumdl.MD013]
+code-blocks = false
+
+[tool.rumdl.MD033]
+allowed-elements = ["a", "div", "iframe", "img"]
+
 # Tombi
 [tool.tombi]
 files.exclude = ["uv.lock"]
-schema.strict = false
+format.rules.line-width = 100
 
 [[tool.tombi.schemas]]
 root = "tool.typos"
 path = "https://raw.githubusercontent.com/crate-ci/typos/refs/heads/master/config.schema.json"
+include = ["pyproject.toml"]
+
+[[tool.tombi.schemas]]
+root = "tool.rumdl"
+path = "https://raw.githubusercontent.com/rvben/rumdl/main/rumdl.schema.json"
 include = ["pyproject.toml"]
 
 # Typos

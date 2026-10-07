@@ -2,13 +2,13 @@
 myst:
   html_meta:
     description lang=en: |
-      Include Ground elements in your electrical model with Roseau Load Flow - Three-phase unbalanced load flow solver
-      in a Python API by Roseau Technologies.
+      Include Ground elements in your electrical model with Roseau Load Flow - Three-phase
+      unbalanced load flow solver in a Python API by Roseau Technologies.
     keywords lang=en: simulation, distribution grid, ground, earth, model
     # spellchecker:off
     description lang=fr: |
-      Inclure des éléments Terre dans votre modèle électrique avec Roseau Load Flow - Solveur d'écoulement de
-      charge triphasé et déséquilibré dans une API Python par Roseau Technologies.
+      Inclure des éléments Terre dans votre modèle électrique avec Roseau Load Flow - Solveur
+      d'écoulement de charge triphasé et déséquilibré dans une API Python par Roseau Technologies.
     keywords lang=fr: simulation, réseau, électrique, terre, roseau load flow, modèle
     # spellchecker:on
 ---
@@ -17,9 +17,10 @@ myst:
 
 ## Definition
 
-The `Ground` element represents the Earth as an infinite perfectly-conductive plane. Connections to the ground can be
-made with ideal or impedant connections using the `GroundConnection` element. Lines with shunt admittances require a
-`Ground` element for their shunt connections. The symbols of `Ground` and `GroundConnection` elements are the following:
+The `Ground` element represents the Earth as an infinite perfectly-conductive plane. Connections to
+the ground can be made with ideal or impedant connections using the `GroundConnection` element.
+Lines with shunt admittances require a `Ground` element for their shunt connections. The symbols of
+`Ground` and `GroundConnection` elements are the following:
 
 ```{image} /_static/Ground.svg
 ---
@@ -29,12 +30,13 @@ align: center
 ---
 ```
 
-`Ground` adds the equation $\underline{I_{\mathrm{g}}} = 0$, where $\underline{I_{\mathrm{g}}}$ is the sum of the
-currents of all elements connected to the ground. `GroundConnection` adds the equation
-$\underline{V} - \underline{V_{\mathrm{g}}} = \underline{Z} \cdot \underline{I}$, where $\underline{V}$ is the potential
-of the terminal element connected to the ground, $\underline{V_{\mathrm{g}}}$ is the potential of the ground,
-$\underline{I}$ is the current flowing through the ground connection towards the ground and $\underline{Z}$ is the
-impedance of the ground connection.
+`Ground` adds the equation $\underline{I_{\mathrm{g}}} = 0$, where $\underline{I_{\mathrm{g}}}$ is
+the sum of the currents of all elements connected to the ground. `GroundConnection` adds the
+equation $\underline{V} - \underline{V_{\mathrm{g}}} = \underline{Z} \cdot \underline{I}$, where
+$\underline{V}$ is the potential of the terminal element connected to the ground,
+$\underline{V_{\mathrm{g}}}$ is the potential of the ground, $\underline{I}$ is the current flowing
+through the ground connection towards the ground and $\underline{Z}$ is the impedance of the ground
+connection.
 
 ```{warning}
 In electrical engineering, it is common to also add the equation $\underline{V_{\mathrm{g}}}=0$ when
@@ -61,8 +63,8 @@ and the following results are available for a `GroundConnection` element:
 In _Roseau Load Flow_, a `Ground` element is used with:
 
 1. A line with shunt components (i.e, `y_shunt` in `LineParameters` is non-zero).
-2. A ground connection (using the `GroundConnection` element) to connect a phase of a bus or other terminal elements to
-   the ground.
+2. A ground connection (using the `GroundConnection` element) to connect a phase of a bus or other
+   terminal elements to the ground.
 3. A potential reference (using the `PotentialRef` element) to set the potential of the ground to 0V.
 
 ```python
@@ -173,9 +175,9 @@ en.res_buses.transform([np.abs, ft.partial(np.angle, deg=True)])
 
 ## Advanced Usage
 
-In _Roseau Load Flow_, several grounds can be defined to represent separate Earth references. You almost never need to
-do that but in case you do, create multiple `Ground` elements and use them independently in the `GroundConnection` and
-`Line` elements.
+In _Roseau Load Flow_, several grounds can be defined to represent separate Earth references. You
+almost never need to do that but in case you do, create multiple `Ground` elements and use them
+independently in the `GroundConnection` and `Line` elements.
 
 ## API Reference
 

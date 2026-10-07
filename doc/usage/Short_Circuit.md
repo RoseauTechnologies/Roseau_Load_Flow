@@ -2,15 +2,17 @@
 myst:
   html_meta:
     description lang=en: |
-      A detailed example of a short-circuit calculation with Roseau Load Flow. Easily simulate a phase-to-phase,
-      multiphase or phase-to-ground fault.
+      A detailed example of a short-circuit calculation with Roseau Load Flow. Easily simulate a
+      phase-to-phase, multiphase or phase-to-ground fault.
     keywords lang=en: |
-      simulation, distribution grid, short-circuit, phase-to-phase, multiphase, phase-to-ground, calculation
+      simulation, distribution grid, short-circuit, phase-to-phase, multiphase, phase-to-ground,
+      calculation
     # spellchecker:off
     description lang=fr: |
-      Un exemple détaillé de calcul de court-circuit avec Roseau Load Flow. Simulez aisément un défaut entre phases,
-      multiphasé ou entre phases et terre.
-    keywords lang=fr: simulation, réseau, électrique, court-circuit, entre phases, multiphase, phase-terre
+      Un exemple détaillé de calcul de court-circuit avec Roseau Load Flow. Simulez aisément un
+      défaut entre phases, multiphasé ou entre phases et terre.
+    keywords lang=fr: |
+      simulation, réseau, électrique, court-circuit, entre phases, multiphase, phase-terre
     # spellchecker:on
 ---
 
@@ -18,12 +20,13 @@ myst:
 
 Let's see how we can make a short-circuit calculation.
 
-We will start by creating a simple network composed of two LV lines. As usual with short-circuit calculations, we won't
-add any loads.
+We will start by creating a simple network composed of two LV lines. As usual with short-circuit
+calculations, we won't add any loads.
 
 ```{note}
-While impedance loads could technically be added to the network, it is not possible to add a power or current load to
-a short-circuited bus. This is because having `I = (S/U)*` with `U=0` cannot be solved.
+While impedance loads could technically be added to the network, it is not possible to add a power
+or current load to a short-circuited bus. This is because having `I = (S/U)*` with `U=0` cannot be
+solved.
 ```
 
 ```pycon
@@ -91,19 +94,20 @@ All the following tables are rounded to 2 decimals to be properly displayed.
 | Line2   | c     |    -0.08-0.05j |               0+0j |         0-21.11j |                  0+0j | -115.46+200.02j |   -115.45+200.03j |             0+0j |    -0.04-0.02j | False    |       0 |           1 |      300 |
 | Line2   | n     |           0+0j |               0+0j |             0+0j |                  0+0j |            0+0j |              0+0j |             0+0j |           0+0j | False    |       0 |           1 |      300 |
 
-Looking at the line results of the second bus of the line `Line2`, which is `Bus3` where we added the short-circuit, one
-can notice that:
+Looking at the line results of the second bus of the line `Line2`, which is `Bus3` where we added
+the short-circuit, one can notice that:
 
 - the potentials of phases "a" and "b" are equal;
-- the currents and powers in phases "a" and "b" are equal with opposite signs, i.e. the sum of the currents is zero;
+- the currents and powers in phases "a" and "b" are equal with opposite signs, i.e. the sum of the
+  currents is zero;
 - the currents and powers in these two phases are very high;
 
 which is expected from a short-circuit.
 
 ## Multi-phase
 
-It is also possible to create short-circuits between more than two phases. Let's create a short-circuit between phases
-"a", "b", and "c".
+It is also possible to create short-circuits between more than two phases. Let's create a
+short-circuit between phases "a", "b", and "c".
 
 ```pycon
 >>> en = create_network()
@@ -124,13 +128,13 @@ It is also possible to create short-circuits between more than two phases. Let's
 | Line2   | c     |  -40.51+390.53j |   **40.48-390.54j** | 63514.6+24659.9j |         **-0-0j** | -79.16+154.43j |      **-0+0j** | 63514.6+24665.8j |  -40.48+390.54j | True     |    1.31 |           1 |      300 |
 | Line2   | n     |            0+0j |                0+0j |             0+0j |              0+0j |           0+0j |           0+0j |             0+0j |            0+0j | False    |       0 |           1 |      300 |
 
-Now the potentials of the three phases are equal and the currents and powers add up to zero at the bus where the
-short-circuit is applied.
+Now the potentials of the three phases are equal and the currents and powers add up to zero at the
+bus where the short-circuit is applied.
 
 ## Phase-to-ground
 
-Phase-to-ground short-circuits are also possible. Let's remove the existing short-circuit and create a new one between
-phase "a" and ground.
+Phase-to-ground short-circuits are also possible. Let's remove the existing short-circuit and create
+a new one between phase "a" and ground.
 
 ```pycon
 >>> en = create_network()
@@ -161,13 +165,13 @@ phase "a" and ground.
 | :-------- | --------: |
 | Gnd       |      0+0j |
 
-Here the potential at phase "a" of bus `Bus3` is zero, equal to the ground potential. The currents in the other phases
-are also zero indicating that the current of phase "a" went through the ground.
+Here the potential at phase "a" of bus `Bus3` is zero, equal to the ground potential. The currents
+in the other phases are also zero indicating that the current of phase "a" went through the ground.
 
 ## Additional notes
 
-The library will prevent the user from making mistakes, for example when trying to add a voltage source, a
-constant-power, or a constant-current load on a short-circuited bus:
+The library will prevent the user from making mistakes, for example when trying to add a voltage
+source, a constant-power, or a constant-current load on a short-circuited bus:
 
 ```pycon
 >>> try:

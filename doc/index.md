@@ -2,15 +2,18 @@
 myst:
   html_meta:
     description lang=en: |
-      Documentation of the Roseau Load Flow solver. Multi-phase, unbalanced power flow analysis with a performance optimized solver. Free academic licence and demo version available !
-    keywords lang=en: power flow, Roseau, Load flow, python, distribution grid, three-phase, multiphase, unbalanced
+      Documentation of the Roseau Load Flow solver. Multi-phase, unbalanced power flow analysis with
+      a performance optimized solver. Free academic licence and demo version available !
+    keywords lang=en: |
+      power flow, Roseau, Load flow, python, distribution grid, three-phase, multiphase, unbalanced
     # spellchecker:off
     description lang=fr: |
-      Documentation du solveur d'écoulements de charge Roseau Load Flow. Simulation des réseaux électriques
-      multiphasés et déséquilibrés par Roseau Technologies. Licences académiques offertes.
+      Documentation du solveur d'écoulements de charge Roseau Load Flow. Simulation des réseaux
+      électriques multiphasés et déséquilibrés par Roseau Technologies. Licences académiques
+      offertes.
     keywords lang=fr: |
-      Roseau, load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, triphasé, power flow
-      déséquilibré
+      Roseau, load flow, python, écoulement de charge, écoulement de puissance, réseau de
+      distribution, triphasé, power flow déséquilibré
     # spellchecker:on
 ---
 
@@ -36,8 +39,8 @@ More details are given in the [Catalogues page](catalogues-networks).
 
 ## Installation
 
-`roseau-load-flow` is the python interface to the power flow solver. It is compatible with Python version 3.11 and newer
-and can be installed with:
+`roseau-load-flow` is the python interface to the power flow solver. It is compatible with Python
+version 3.12 and newer and can be installed with:
 
 ```{toctree}
 ---
@@ -79,8 +82,8 @@ usage/Data_Exchange
 
 ## Models
 
-A description of the electrical models used for each component, an example usage, and a reference to the API of the
-classes are available here:
+A description of the electrical models used for each component, an example usage, and a reference to
+the API of the classes are available here:
 
 ```{toctree}
 ---
@@ -121,7 +124,8 @@ Changelog
 
 ## API Reference
 
-If you want the full documentation of all the classes and functions, you can refer to the following references:
+If you want the full documentation of all the classes and functions, you can refer to the following
+references:
 
 ```{toctree}
 ---

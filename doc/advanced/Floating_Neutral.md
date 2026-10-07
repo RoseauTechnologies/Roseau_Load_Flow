@@ -7,8 +7,8 @@ myst:
     keywords lang=en: simulation, floating neutral, unbalanced power flow
     # spellchecker:off
     description lang=fr: |
-      En savoir plus sur le concept de neutres flottants avec Roseau Load Flow, solveur d'écoulements
-      de charge pour le calcul électrique des réseaux intelligents.
+      En savoir plus sur le concept de neutres flottants avec Roseau Load Flow, solveur
+      d'écoulements de charge pour le calcul électrique des réseaux intelligents.
     keywords lang=fr: simulation, neutre flottant, écoulement de charge déséquilibré
     # spellchecker:on
 ---
@@ -17,17 +17,19 @@ myst:
 
 ## What is floating neutral
 
-A "floating" neutral occurs when the neutral wire, crucial for balancing electrical loads, becomes disconnected or
-loose. This can happen within the electrical panel or between the utility and the panel due to mechanical failure,
-corrosion, or other factors. This condition is hazardous because it disrupts the normal voltage distribution across
-electrical components. As a result, some appliances may receive excessive voltage while others receive insufficient
-power. In severe cases, outlets can become dangerously energized with full phase-to-phase voltage, posing a significant
-risk of equipment damage, electric shock, or fire.
+A "floating" neutral occurs when the neutral wire, crucial for balancing electrical loads, becomes
+disconnected or loose. This can happen within the electrical panel or between the utility and the
+panel due to mechanical failure, corrosion, or other factors. This condition is hazardous because it
+disrupts the normal voltage distribution across electrical components. As a result, some appliances
+may receive excessive voltage while others receive insufficient power. In severe cases, outlets can
+become dangerously energized with full phase-to-phase voltage, posing a significant risk of
+equipment damage, electric shock, or fire.
 
-With a perfectly balanced load, both the neutral current and voltage are zero. With an unbalanced load, the neutral
-current is non-zero. In this case, it is the role of the neutral to balance the voltage across the electrical phases. In
-a floating neutral situation, the phase-to-phase voltages remain normal, but the 0V reference of the neutral gets lost.
-The larger the load imbalance, the more serious the issue becomes.
+With a perfectly balanced load, both the neutral current and voltage are zero. With an unbalanced
+load, the neutral current is non-zero. In this case, it is the role of the neutral to balance the
+voltage across the electrical phases. In a floating neutral situation, the phase-to-phase voltages
+remain normal, but the 0V reference of the neutral gets lost. The larger the load imbalance, the
+more serious the issue becomes.
 
 ## Modelling floating neutral in Roseau Load Flow
 
@@ -35,9 +37,10 @@ Roseau Load Flow offers a simple interface for modelling floating neutrals.
 
 ### Implicit floating neutral
 
-When defining a load, a source, or a transformer with a neutral connection (e.g., 3-phase load with phases "abcn"), on a
-bus without a neutral port (e.g., 3-phase bus with phases "abc"), the neutral is implicitly floating. This is because
-the bus doesn't have a neutral to connect to. The following example shows a load with an implicit floating neutral:
+When defining a load, a source, or a transformer with a neutral connection (e.g., 3-phase load with
+phases "abcn"), on a bus without a neutral port (e.g., 3-phase bus with phases "abc"), the neutral
+is implicitly floating. This is because the bus doesn't have a neutral to connect to. The following
+example shows a load with an implicit floating neutral:
 
 ```python
 import matplotlib.pyplot as plt
@@ -72,21 +75,23 @@ align: center
 ---
 ```
 
-Notice that although the bus doesn't have a neutral, loads connected to this bus can have a neutral connection. This is
-because the neutral of a load or source is implicitly considered floating.
+Notice that although the bus doesn't have a neutral, loads connected to this bus can have a neutral
+connection. This is because the neutral of a load or source is implicitly considered floating.
 
-The plots of the voltage phasors above show what happens to the potential at the neutral point when the neutral is
-floating. For the balanced load, the neutral remains at the center of the phasor diagram, while for the unbalanced load,
-the neutral moves away from the center towards the phase with the lowest impedance. The phase with the highest impedance
-(i.e with the lowest power) is the one exposed to the highest voltage.
+The plots of the voltage phasors above show what happens to the potential at the neutral point when
+the neutral is floating. For the balanced load, the neutral remains at the center of the phasor
+diagram, while for the unbalanced load, the neutral moves away from the center towards the phase
+with the lowest impedance. The phase with the highest impedance (i.e with the lowest power) is the
+one exposed to the highest voltage.
 
 ### Explicit floating neutral
 
-You can explicitly define a floating neutral by passing `connect_neutral=False` to the constructor of a load or source
-element. This is useful for modelling both elements with floating neutrals and elements with connected neutrals on the
-same bus. For transformers, you can explicitly define a floating neutral on the HV side by passing
-`connect_neutral_hv=False` or on the LV side by passing `connect_neutral_lv=False`. The following example shows how to
-create a load with an explicit floating neutral:
+You can explicitly define a floating neutral by passing `connect_neutral=False` to the constructor
+of a load or source element. This is useful for modelling both elements with floating neutrals and
+elements with connected neutrals on the same bus. For transformers, you can explicitly define a
+floating neutral on the HV side by passing `connect_neutral_hv=False` or on the LV side by passing
+`connect_neutral_lv=False`. The following example shows how to create a load with an explicit
+floating neutral:
 
 ```python
 import matplotlib.pyplot as plt
@@ -123,13 +128,13 @@ align: center
 ---
 ```
 
-Notice that here even though the bus has a neutral, we can have loads with connected or floating neutrals connected to
-this bus.
+Notice that here even though the bus has a neutral, we can have loads with connected or floating
+neutrals connected to this bus.
 
-In the plots above, the neutral of the connected load remains at the center of the phasor diagram, even though the load
-is unbalanced. In this case, the neutral potential is fixed by the source and the voltages remain balanced. On the other
-hand, the neutral of the load with a floating neutral drifts away from the center towards the phase with the lowest
-impedance as we saw before.
+In the plots above, the neutral of the connected load remains at the center of the phasor diagram,
+even though the load is unbalanced. In this case, the neutral potential is fixed by the source and
+the voltages remain balanced. On the other hand, the neutral of the load with a floating neutral
+drifts away from the center towards the phase with the lowest impedance as we saw before.
 
 ````{note}
 Passing `connect_neutral=True` to an element on a bus without a neutral raises an error because the
@@ -202,6 +207,7 @@ align: center
 ---
 ```
 
-In the plots above, the neutral of both loads remain at 0V as defined by the ground they are connected. The neutral of
-the transformer with a connected neutral also remains at 0V while the neutral of the transformer with a floating neutral
-drifts away from 0V. In both cases, the voltages of the transformer remain balanced as they are fixed by the MV source.
+In the plots above, the neutral of both loads remain at 0V as defined by the ground they are
+connected. The neutral of the transformer with a connected neutral also remains at 0V while the
+neutral of the transformer with a floating neutral drifts away from 0V. In both cases, the voltages
+of the transformer remain balanced as they are fixed by the MV source.

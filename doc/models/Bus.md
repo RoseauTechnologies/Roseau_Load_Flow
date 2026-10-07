@@ -2,12 +2,13 @@
 myst:
   html_meta:
     description lang=en: |
-      Buses in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
+      Buses in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
+      Technologies.
     keywords lang=en: simulation, distribution grid, bus, model
     # spellchecker:off
     description lang=fr: |
-      Les bus dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une API Python par
-      Roseau Technologies.
+      Les bus dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans
+      une API Python par Roseau Technologies.
     keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, modèle
     # spellchecker:on
 ---
@@ -16,8 +17,9 @@ myst:
 
 ## Definition
 
-It represents a multiphase node in the network that other elements (loads, lines, transformers, voltage sources...) can
-connect to. A bus is a node where the voltage is computed during the load flow analysis.
+It represents a multiphase node in the network that other elements (loads, lines, transformers,
+voltage sources...) can connect to. A bus is a node where the voltage is computed during the load
+flow analysis.
 
 ```{image} /_static/Bus.svg
 ---
@@ -62,8 +64,8 @@ And the following results are available for _three-phase_ buses:
 
 ## Usage
 
-A bus is identified by its unique id and must define the phases it is connected to. A bus must have all the phases of
-the elements connected to it.
+A bus is identified by its unique id and must define the phases it is connected to. A bus must have
+all the phases of the elements connected to it.
 
 ```python
 import roseau.load_flow as rlf
@@ -89,7 +91,8 @@ from shapely import Point
 bus = rlf.Bus(id="bus", phases="abc", geometry=Point(1.0, -2.5))
 ```
 
-This information is not used by the load flow solver but could be used to generate geographical plots of the results.
+This information is not used by the load flow solver but could be used to generate geographical
+plots of the results.
 
 ## Short-circuit
 

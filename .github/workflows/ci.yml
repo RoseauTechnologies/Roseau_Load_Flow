@@ -59,7 +59,7 @@ jobs:
           git lfs prune --verify-remote
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v10.2.0
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
@@ -67,7 +67,8 @@ jobs:
       - name: Install dependencies
         run: |
           # TODO orjson (fast-json extra) does not yet support free-threaded Python
-          uv sync --frozen --all-extras ${{ matrix.python-version == '3.14t' && '--no-extra fast-json' || '' }}
+          uv sync --frozen --all-extras \
+            ${{ matrix.python-version == '3.14t' && '--no-extra fast-json' || '' }}
 
       - name: Test with pytest
         run: |

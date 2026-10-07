@@ -3,10 +3,10 @@
 \begin{document}
 \ctikzset{european, straight voltages, cute inductors}%
 \begin{tikzpicture}[%
-  show background rectangle,%
-  tight background,%
-  background rectangle/.style={fill=white}%
-]
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
   % Version multifilaire
 
   %
@@ -149,7 +149,8 @@
   \draw[fleche] (\xrm,\yb) to[bend left] node[midway,right]{$\underline{M_{\bcrm}}$} (\xrm,\yc);%
   \draw[fleche] (\xrm,\yc) to[bend left] node[midway,right]{$\underline{M_{\cnrm}}$} (\xrm,\yn);%
   \pgfmathsetmacro{\xrm}{\xri+0.25*(\zm-\xri)};%
-  \draw[fleche] (\xrm,\ya) to[bend left] node[near start,right]{$\underline{M_{\carm}}$} (\xrm,\yc);%
+  \draw[fleche] (\xrm,\ya) to[bend left] node[near start,right]{$\underline{M_{\carm}}$}
+    (\xrm,\yc);%
   \pgfmathsetmacro{\xrm}{\xri+0.40*(\zm-\xri)};%
   \draw[fleche] (\xrm,\yb) to[bend left] node[near end,right]{$\underline{M_{\bnrm}}$} (\xrm,\yn);%
   \pgfmathsetmacro{\xrm}{\xri+0.75*(\zm-\xri)};%

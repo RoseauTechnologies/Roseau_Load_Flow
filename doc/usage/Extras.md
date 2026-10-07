@@ -2,12 +2,13 @@
 myst:
   html_meta:
     description lang=en: |
-      Additional Roseau Load Flow features: graph theory, conversions to symmetrical components, constants, etc.
+      Additional Roseau Load Flow features: graph theory, conversions to symmetrical components,
+      constants, etc.
     keywords lang=en: simulation, distribution grid, symmetrical components, conversion
     # spellchecker:off
     description lang=fr: |
-      Fonctionnalités supplémentaires de Roseau Load Flow: affichage du graphe, conversions vers des composantes
-      symétriques, constantes, etc.
+      Fonctionnalités supplémentaires de Roseau Load Flow: affichage du graphe, conversions vers des
+      composantes symétriques, constantes, etc.
     keywords lang=fr: simulation, réseau, électrique, composantes symétriques, conversions
     # spellchecker:on
 ---
@@ -18,22 +19,24 @@ myst:
 
 ## Graph theory
 
-{meth}`ElectricalNetwork.to_graph() <roseau.load_flow.ElectricalNetwork.to_graph>` can be used to get a
-{class}`networkx.MultiGraph` object from the electrical network.
+{meth}`ElectricalNetwork.to_graph() <roseau.load_flow.ElectricalNetwork.to_graph>` can be used to
+get a {class}`networkx.MultiGraph` object from the electrical network.
 
-The graph contains the geometries of the buses in the nodes data and the geometries and branch types in the edges data.
+The graph contains the geometries of the buses in the nodes data and the geometries and branch types
+in the edges data.
 
 ```{note}
-This method requires *networkx* which is not installed by default. You can install it with the `"graph"` extra using:
-`pip install "roseau-load-flow[graph]"`.
+This method requires _networkx_ which is not installed by default. You can install it with the
+`"graph"` extra using: `pip install "roseau-load-flow[graph]"`.
 ```
 
 In addition, you can use the property
-{meth}`ElectricalNetwork.buses_clusters <roseau.load_flow.ElectricalNetwork.buses_clusters>` to get a list of sets of
-IDs of buses in galvanically isolated sections of the network. In other terms, to get groups of buses connected by one
-or more lines or a switches, stopping at transformers. For example, for a network with a MV feeder, this property
-returns a list containing a set of MV buses IDs and all sets of LV subnetworks buses IDs. If you want to get the cluster
-of only one bus, you can use {meth}`Bus.get_connected_buses <roseau.load_flow.models.Bus.get_connected_buses>`
+{meth}`ElectricalNetwork.buses_clusters <roseau.load_flow.ElectricalNetwork.buses_clusters>` to get
+a list of sets of IDs of buses in galvanically isolated sections of the network. In other terms, to
+get groups of buses connected by one or more lines or a switches, stopping at transformers. For
+example, for a network with a MV feeder, this property returns a list containing a set of MV buses
+IDs and all sets of LV subnetworks buses IDs. If you want to get the cluster of only one bus, you
+can use {meth}`Bus.get_connected_buses <roseau.load_flow.models.Bus.get_connected_buses>`
 
 If we take the example network from the [Getting Started page](./Getting_Started.md#creating-a-network):
 
@@ -50,8 +53,8 @@ As there are no transformers between the two buses, they all belong to the same 
 
 ## Symmetrical components
 
-{mod}`roseau.load_flow.sym` contains helpers to work with symmetrical components. For example, to convert a phasor
-voltage to symmetrical components:
+{mod}`roseau.load_flow.sym` contains helpers to work with symmetrical components. For example, to
+convert a phasor voltage to symmetrical components:
 
 ```pycon
 >>> import numpy as np
@@ -66,8 +69,8 @@ array([[ 8.52651283e-14-1.42108547e-14j],
        [-7.10542736e-14-2.84217094e-14j]])
 ```
 
-As you can see, for this positive-sequence balanced voltage, only the positive-sequence component is non-zero.
-Converting back to phasor, you get the original voltage values back:
+As you can see, for this positive-sequence balanced voltage, only the positive-sequence component is
+non-zero. Converting back to phasor, you get the original voltage values back:
 
 ```pycon
 >>> rlf.sym.sym_to_phasor(v_sym)
@@ -91,8 +94,9 @@ sb      zero        9.947598e-14-1.421085e-14j
 Name: voltage, dtype: complex128
 ```
 
-The `rlf.sym` module also provides useful helpers to create three-phase balanced quantities by only providing the
-magnitude of the quantities. For example, to create a three-phase balanced positive sequence voltage:
+The `rlf.sym` module also provides useful helpers to create three-phase balanced quantities by only
+providing the magnitude of the quantities. For example, to create a three-phase balanced positive
+sequence voltage:
 
 ```pycon
 >>> import numpy as np
@@ -106,13 +110,14 @@ array([230., 230., 230.])
 array([   0., -120.,  120.])
 ```
 
-Similarly, you can use `rlf.sym.NegativeSequence` and `rlf.sym.ZeroSequence` to create negative-sequence and
-zero-sequence quantities respectively. Because these are so common, you can also access them directly from the top-level
-module as `rlf.PositiveSequence`, etc.
+Similarly, you can use `rlf.sym.NegativeSequence` and `rlf.sym.ZeroSequence` to create
+negative-sequence and zero-sequence quantities respectively. Because these are so common, you can
+also access them directly from the top-level module as `rlf.PositiveSequence`, etc.
 
 ## Potentials to voltages conversion
 
-{mod}`roseau.load_flow.converters` contains helpers to convert a vector of potentials to a vector of voltages. Example:
+{mod}`roseau.load_flow.converters` contains helpers to convert a vector of potentials to a vector of
+voltages. Example:
 
 ```pycon
 >>> import numpy as np
@@ -126,8 +131,8 @@ array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j,
 array([ 230.  +0.j        , -115.-199.18584287j, -115.+199.18584287j]) <Unit('volt')>
 ```
 
-Because the phases include the neutral, the voltages calculated are phase-to-neutral voltages. You can also calculate
-phase-to-phase voltages by omitting the neutral:
+Because the phases include the neutral, the voltages calculated are phase-to-neutral voltages. You
+can also calculate phase-to-phase voltages by omitting the neutral:
 
 ```pycon
 >>> rlf.converters.calculate_voltages(potentials[:-1], phases[:-1])
@@ -158,10 +163,10 @@ array([345.+199.18584287j]) <Unit('volt')>
 
 ## Kron's reduction
 
-Kron's reduction is a method to reduce the size of an admittance or impedance matrix by eliminating nodes that are not
-of interest, typically the neutral conductor in power systems. You can use the function
-{func}`roseau.load_flow.converters.kron_reduction` to perform Kron's reduction on any square matrix of real or complex
-numbers. Example:
+Kron's reduction is a method to reduce the size of an admittance or impedance matrix by eliminating
+nodes that are not of interest, typically the neutral conductor in power systems. You can use the
+function {func}`roseau.load_flow.converters.kron_reduction` to perform Kron's reduction on any
+square matrix of real or complex numbers. Example:
 
 ```pycon
 >>> import numpy as np
@@ -183,24 +188,26 @@ array([[ 4. ,  1. ,  2. ],
 
 ## Constants
 
-{mod}`roseau.load_flow.constants` contains some common mathematical and physical constants like the resistivity and
-permeability of common materials in addition to other useful constants. Please refer to the module documentation for
-more details. An enumeration of available materials can be found in the {mod}`roseau.load_flow.types` module.
+{mod}`roseau.load_flow.constants` contains some common mathematical and physical constants like the
+resistivity and permeability of common materials in addition to other useful constants. Please refer
+to the module documentation for more details. An enumeration of available materials can be found in
+the {mod}`roseau.load_flow.types` module.
 
-Some commonly used constants can be accessed directly from the top-level module for convenience. Notable top-level
-constants:
+Some commonly used constants can be accessed directly from the top-level module for convenience.
+Notable top-level constants:
 
-- `rlf.SQRT3`: the square root of 3. Useful for converting between phase-to-phase and phase-to-neutral voltages.
+- `rlf.SQRT3`: the square root of 3. Useful for converting between phase-to-phase and
+  phase-to-neutral voltages.
 - `rlf.ALPHA`: the alpha constant. Rotates a complex number by 120°.
 - `rlf.ALPHA2`: the alpha constant squared. Rotates a complex number by 240° (or -120°).
 
 ## Unbalance calculations
 
-`roseau-load-flow` supports common voltage and current unbalance calculations in three-phase elements. Voltage unbalance
-definitions are thoroughly discussed in {cite:p}`Girigoudar_2019`.
+`roseau-load-flow` supports common voltage and current unbalance calculations in three-phase
+elements. Voltage unbalance definitions are thoroughly discussed in {cite:p}`Girigoudar_2019`.
 
-The {meth}`~roseau.load_flow.models.AbstractTerminal.res_voltage_unbalance` method on a 3-phase terminal elements
-calculates the voltage balance depending on the `definition` parameter:
+The {meth}`~roseau.load_flow.models.AbstractTerminal.res_voltage_unbalance` method on a 3-phase
+terminal elements calculates the voltage balance depending on the `definition` parameter:
 
 1. IEC's _Voltage Unbalance Factor (VUF)_ by default (`definition="VUF"`):
 
@@ -208,7 +215,8 @@ calculates the voltage balance depending on the `definition` parameter:
    VUF = \frac{|V_{\mathrm{n}}|}{|V_{\mathrm{p}}|} \times 100 (\%)
    ```
 
-   Where $V_{\mathrm{n}}$ is the negative-sequence voltage and $V_{\mathrm{p}}$ is the positive-sequence voltage.
+   Where $V_{\mathrm{n}}$ is the negative-sequence voltage and $V_{\mathrm{p}}$ is the
+   positive-sequence voltage.
 
 2. NEMA's _Line Voltage Unbalance Rate (LVUR)_ (`definition="LVUR"`):
 
@@ -217,8 +225,8 @@ calculates the voltage balance depending on the `definition` parameter:
    ```
 
    Where {math}`\Delta V_\mathrm{Line,Mean}` is the arithmetic mean of the line voltages and
-   {math}`\Delta V_\mathrm{Line,Max}` is the maximum deviation between the measured line voltages and
-   {math}`\Delta V_\mathrm{Line,Mean}`.
+   {math}`\Delta V_\mathrm{Line,Max}` is the maximum deviation between the measured line voltages
+   and {math}`\Delta V_\mathrm{Line,Mean}`.
 
 3. IEEE's _Phase Voltage Unbalance Rate (PVUR)_ (`definition="PVUR"`):
 
@@ -227,17 +235,19 @@ calculates the voltage balance depending on the `definition` parameter:
    ```
 
    Where {math}`\Delta V_\mathrm{Phase,Mean}` is the arithmetic mean of the phase voltages and
-   {math}`\Delta V_\mathrm{Phase,Max}` is the maximum deviation between the measured phase voltages and
-   {math}`\Delta V_\mathrm{Phase,Mean}`.
+   {math}`\Delta V_\mathrm{Phase,Max}` is the maximum deviation between the measured phase voltages
+   and {math}`\Delta V_\mathrm{Phase,Mean}`.
 
-The {meth}`~roseau.load_flow.models.AbstractConnectable.res_current_unbalance` method on three-phase bus-connectable
-elements (loads, sources, branch sides) calculates the _Current Unbalance Factor (CUF)_ defined as:
+The {meth}`~roseau.load_flow.models.AbstractConnectable.res_current_unbalance` method on three-phase
+bus-connectable elements (loads, sources, branch sides) calculates the
+_Current Unbalance Factor (CUF)_ defined as:
 
 ```{math}
 CUF = \frac{|I_{\mathrm{n}}|}{|I_{\mathrm{p}}|} \times 100 (\%)
 ```
 
-Where $I_{\mathrm{n}}$ is the negative-sequence current and $I_{\mathrm{p}}$ is the positive-sequence current.
+Where $I_{\mathrm{n}}$ is the negative-sequence current and $I_{\mathrm{p}}$ is the
+positive-sequence current.
 
 ## Bibliography
 

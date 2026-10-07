@@ -2,13 +2,14 @@
 myst:
   html_meta:
     description lang=en: |
-      With Roseau Load Flow you can choose between two methods: Newton-Raphson and Goldstein and Price - Three-phase
-      unbalanced load flow solver in a Python API by Roseau Technologies.
+      With Roseau Load Flow you can choose between two methods: Newton-Raphson and Goldstein and
+      Price - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
     keywords lang=en: simulation, distribution grid, Goldstein and Price, Newton-Raphson, solver
     # spellchecker:off
     description lang=fr: |
-      Avec Roseau Load Flow choisissez entre deux méthodes: Newton-Raphson et Goldstein and Price. Solveur
-      d'écoulement de charge triphasé et déséquilibré dans une API Python par Roseau Technologies.
+      Avec Roseau Load Flow choisissez entre deux méthodes: Newton-Raphson et Goldstein and Price.
+      Solveur d'écoulement de charge triphasé et déséquilibré dans une API Python par Roseau
+      Technologies.
     keywords lang=fr: simulation, réseau, électrique, Goldstein and Price, Newton-Raphson, solveur
     # spellchecker:on
 ---
@@ -19,8 +20,8 @@ myst:
 
 ## General information
 
-The goal is to compute the voltages at each bus and the currents and powers flow in each branch of the network. The
-computation must respect Kirchhoff's laws and the constraints of the network.
+The goal is to compute the voltages at each bus and the currents and powers flow in each branch of
+the network. The computation must respect Kirchhoff's laws and the constraints of the network.
 
 More formally, this is done by solving a system of $n$ nonlinear equations with $n$ variables:
 
@@ -40,18 +41,19 @@ Computationally, this translates to finding a solution $x$ such that:
 ||F(x)||_{\infty} < \varepsilon
 ```
 
-With $\varepsilon$ being a small _tolerance_. In code, $\varepsilon$ can be set with `en.solve_load_flow(tolerance=...)`
-(by default `1e-6`).
+With $\varepsilon$ being a small _tolerance_. In code, $\varepsilon$ can be set with
+`en.solve_load_flow(tolerance=...)` (by default `1e-6`).
 
-There are several solvers to solve this kind of problems. In _Roseau Load Flow_, the following solvers are available:
+There are several solvers to solve this kind of problems. In _Roseau Load Flow_, the following
+solvers are available:
 
 ## Newton-Raphson
 
 This is the classical [_Newton-Raphson_ method](https://en.wikipedia.org/wiki/Newton%27s_method).
 
-First, an initial solution $x_0$ is chosen by initializing the voltages either by propagating the voltage of the sources
-or by re-using the results from the last successful run. The choice of either option depends on the `warm_start`
-argument to the `en.solve_load_flow()` method.
+First, an initial solution $x_0$ is chosen by initializing the voltages either by propagating the
+voltage of the sources or by re-using the results from the last successful run. The choice of either
+option depends on the `warm_start` argument to the `en.solve_load_flow()` method.
 
 Then, multiple iterations are made with:
 
@@ -64,9 +66,9 @@ x_{k+1} = x_k - J_F^{-1}(x_k)F(x_k)
 
 with $J_F$ being the jacobian of $F$.
 
-The algorithm stops when it finds a solution $x_k$ such that $||F(x_k)||_{\infty} < \varepsilon$ within a maximum number
-of iterations (modify with `en.solve_load_flow(max_iterations=...)`). If the maximum number of iterations is exceeded,
-the solver did not converge and the execution fails.
+The algorithm stops when it finds a solution $x_k$ such that $||F(x_k)||_{\infty} < \varepsilon$
+within a maximum number of iterations (modify with `en.solve_load_flow(max_iterations=...)`). If the
+maximum number of iterations is exceeded, the solver did not converge and the execution fails.
 
 ### Parameters
 
@@ -87,8 +89,9 @@ x_{k+1} = x_k + t d(x_k)
 
 with $d = -J_F^{-1}F$
 
-For the classical _Newton-Raphson_ solver, $t=1$ is chosen for the next iterate. The idea of the linear searches, in
-this case the _Goldstein and Price_ variant, is to find a "better" $t$ that improves the convergence of the solver.
+For the classical _Newton-Raphson_ solver, $t=1$ is chosen for the next iterate. The idea of the
+linear searches, in this case the _Goldstein and Price_ variant, is to find a "better" $t$ that
+improves the convergence of the solver.
 
 Let $g$ be a function to be minimized:
 
@@ -123,66 +126,68 @@ align: center
 
 In the figure above, any $t$ such that $a < t < b$ is satisfactory.
 
-This $t$ is found by dichotomy with multiple iterations, but in most cases only one iteration is needed. This is
-especially true when there are no flexible loads in the network.
+This $t$ is found by dichotomy with multiple iterations, but in most cases only one iteration is
+needed. This is especially true when there are no flexible loads in the network.
 
 $t$ is then used to compute $x_{k+1} = x_k + t d(x_k)$
 
-The _Goldstein and Price_ variant is thus as fast as the classical _Newton-Raphson_ while being more robust.
+The _Goldstein and Price_ variant is thus as fast as the classical _Newton-Raphson_ while being more
+robust.
 
 ### Parameters
 
 The _Goldstein and Price_ solver accepts the following parameters:
 
 - `"m1"` the first constant of the _Goldstein and Price_ variant. By default: `0.1`.
-- `"m2"` the second constant of the _Goldstein and Price_ variant. By default: `0.9`. Note that the constraint
-  $m_1 < m_2$ must be met.
-- `"weighted_merit"` whether to scale the residuals before applying the search criterion above. By default: `True`. See
-  [below](#weighted-merit-function).
+- `"m2"` the second constant of the _Goldstein and Price_ variant. By default: `0.9`. Note that the
+  constraint $m_1 < m_2$ must be met.
+- `"weighted_merit"` whether to scale the residuals before applying the search criterion above. By
+  default: `True`. See [below](#weighted-merit-function).
 
 ### Weighted merit function
 
-The criterion {eq}`goldstein_and_price` compares residuals against each other, but the entries of $F$ are not all on the
-same scale. How large a residual gets for a given error depends on the equation it comes from: a bus fed through a very
-low impedance produces a current mismatch orders of magnitude above one at the end of a long, weakly connected feeder,
-and a load under a steep voltage-dependent control law produces a larger one still. Measured by the raw norm $||F||_2$,
-the small-scale equations are nearly invisible: the line search can accept a step that quietly wrecks one of them as
-long as the large-scale equations improve.
+The criterion {eq}`goldstein_and_price` compares residuals against each other, but the entries of
+$F$ are not all on the same scale. How large a residual gets for a given error depends on the
+equation it comes from: a bus fed through a very low impedance produces a current mismatch orders of
+magnitude above one at the end of a long, weakly connected feeder, and a load under a steep
+voltage-dependent control law produces a larger one still. Measured by the raw norm $||F||_2$, the
+small-scale equations are nearly invisible: the line search can accept a step that quietly wrecks
+one of them as long as the large-scale equations improve.
 
-When `weighted_merit` is enabled (default), each residual is divided by $\max(1, ||J_i||_\infty)$, the infinity norm of
-its own Jacobian row, before the norm is taken:
+When `weighted_merit` is enabled (default), each residual is divided by $\max(1, ||J_i||_\infty)$,
+the infinity norm of its own Jacobian row, before the norm is taken:
 
 ```{math}
 g(x) := \frac{1}{2} ||W F(x)||_2 \qquad W = \mathrm{diag}\left(\frac{1}{\max(1, ||J_i||_\infty)}\right)
 ```
 
-The weights are recomputed from the current Jacobian at every iteration. This changes **only** which candidate $t$ is
-accepted; the convergence check against `tolerance` and the residual returned by `solve_load_flow` both stay on the raw,
-physical residuals.
+The weights are recomputed from the current Jacobian at every iteration. This changes **only** which
+candidate $t$ is accepted; the convergence check against `tolerance` and the residual returned by
+`solve_load_flow` both stay on the raw, physical residuals.
 
 ## Backward-Forward
 
-This is an implementation of the backward-forward sweep method, which offers an efficient alternative to traditional
-Newton-Raphson algorithms.
+This is an implementation of the backward-forward sweep method, which offers an efficient
+alternative to traditional Newton-Raphson algorithms.
 
 ### Advantages
 
-- **Faster Execution Time**: The backward-forward sweep method generally executes more quickly than Newton-Raphson-based
-  approaches.
+- **Faster Execution Time**: The backward-forward sweep method generally executes more quickly than
+  Newton-Raphson-based approaches.
 
 ### Limitations
 
 - **Modeling Restrictions**:
   - The network cannot contain loops.
   - Floating neutrals are not allowed for loads and sources.
-- **Convergence**: This method may exhibit weaker convergence properties, particularly in scenarios involving flexible
-  loads.
+- **Convergence**: This method may exhibit weaker convergence properties, particularly in scenarios
+  involving flexible loads.
 
 ### Important Note
 
-This solver is still in the **experimental** stage. Users should be aware that certain edge cases may not be handled
-correctly when utilizing the backward-forward sweep method. If you face any issues with this solver, please let us know
-by filing a GitHub issue
+This solver is still in the **experimental** stage. Users should be aware that certain edge cases
+may not be handled correctly when utilizing the backward-forward sweep method. If you face any
+issues with this solver, please let us know by filing a GitHub issue
 
 ### Parameters
 
