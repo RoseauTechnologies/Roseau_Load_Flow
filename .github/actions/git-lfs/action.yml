@@ -1,0 +1,25 @@
+name: Git LFS
+description: Fetch the Git LFS files of the repository, using a cache of the `.git/lfs` folder
+
+runs:
+  using: composite
+  steps:
+    - name: Create LFS file list
+      shell: bash
+      run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+    - name: Cache git LFS
+      uses: actions/cache@v6.1.0
+      with:
+        path: .git/lfs
+        key: git-lfs-v1-${{ hashFiles('.lfs-assets-id') }}
+        restore-keys: |
+          git-lfs-v1-
+          git-lfs
+
+    - name: Git LFS
+      shell: bash
+      run: |
+        git lfs checkout
+        git lfs pull
+        git lfs prune --verify-remote

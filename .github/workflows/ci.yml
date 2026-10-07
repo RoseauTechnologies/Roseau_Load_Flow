@@ -28,35 +28,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13", "3.14", "3.14t"]
+        python-version: ["3.12", "3.13", "3.14", "3.14t", "3.15", "3.15t"]
 
     permissions:
       contents: read
 
     steps:
+      # TODO: remove once pyogrio publishes wheels for Python 3.15
+      - name: Install GDAL to build pyogrio
+        if: startsWith(matrix.python-version, '3.15')
+        run: |
+          sudo apt update
+          sudo apt -yq --no-install-suggests --no-install-recommends install libgdal-dev
+
       - uses: actions/checkout@v7.0.1
         with:
           lfs: false
           persist-credentials: false
 
-      - name: Create LFS file list
-        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
-
-      - name: Cache git LFS
-        uses: actions/cache@v6.1.0
-        with:
-          path: .git/lfs
-          key: git-lfs-v1-${{ matrix.python-version }}-${{ hashFiles('.lfs-assets-id') }}
-          restore-keys: |
-            git-lfs-v1-${{ matrix.python-version }}
-            git-lfs-v1
-            git-lfs
-
       - name: Git LFS
-        run: |
-          git lfs checkout
-          git lfs pull
-          git lfs prune --verify-remote
+        uses: $/.github/actions/git-lfs
 
       - name: Install uv
         uses: astral-sh/setup-uv@v10.2.0
@@ -66,9 +57,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # TODO orjson (fast-json extra) does not yet support free-threaded Python
+          # TODO orjson (fast-json extra) has no wheels for free-threaded Python
           uv sync --frozen --all-extras \
-            ${{ matrix.python-version == '3.14t' && '--no-extra fast-json' || '' }}
+            ${{ endsWith(matrix.python-version, 't') && '--no-extra fast-json' || '' }}
 
       - name: Test with pytest
         run: |

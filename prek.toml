@@ -26,6 +26,7 @@ repo = "https://github.com/python-jsonschema/check-jsonschema"
 rev = "0.38.2"
 hooks = [
   { id = "check-github-workflows" },
+  { id = "check-github-actions" },
   { id = "check-dependabot" },
   { id = "check-readthedocs" }
 ]
