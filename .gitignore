@@ -246,6 +246,7 @@ benchmark/*.mtx
 *.log
 .ruff_cache/
 doc/images/*.pdf
+doc/images/_build/
 
 roseau/*
 !roseau/load_flow
