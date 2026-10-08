@@ -330,15 +330,18 @@ symmetrical components of the voltage phasors of a three-phase terminal element.
 
 The results in plots are color-coded based on the following predefined states:
 
-- **very-low** (blue): bus voltage below {math}`U_{min}`
-- **low** (light blue): bus voltage in the first quadrant of the {math}`(U_{min}, U_{n})` range
-- **normal** (green): bus voltage in the last three quadrants of the {math}`(U_{min}, U_{n})` range
-  or in the first three quadrants of the {math}`(U_{n}, U_{max})` range; line or transformer loading
-  below 75% {math}`load_{max}`
-- **high** (orange): bus voltage in the last quadrant of the {math}`(U_{n}, U_{max})` range; line or
-  transformer loading between 75% and 100% {math}`load_{max}`
-- **very-high** (red): bus voltage above {math}`U_{max}`; line or transformer loading above 100%
+- **very-low** (blue): bus voltage below {math}`U_{\mathrm{min}}`
+- **low** (light blue): bus voltage in the first quadrant of the
+  {math}`(U_{\mathrm{min}}, U_{\mathrm{n}})` range
+- **normal** (green): bus voltage in the last three quadrants of the
+  {math}`(U_{\mathrm{min}}, U_{\mathrm{n}})` range or in the first three quadrants of the
+  {math}`(U_{\mathrm{n}}, U_{\mathrm{max}})` range; line or transformer loading below 75%
   {math}`load_{max}`
+- **high** (orange): bus voltage in the last quadrant of the
+  {math}`(U_{\mathrm{n}}, U_{\mathrm{max}})` range; line or transformer loading between 75% and
+  100% {math}`load_{\mathrm{max}}`
+- **very-high** (red): bus voltage above {math}`U_{\mathrm{max}}`; line or transformer loading
+  above 100% {math}`load_{max}`
 - **unknown** (gray): bus nominal voltage or limits not defined; line ampacity not defined
 
 ```{image} /_static/Plotting/Result_States.webp

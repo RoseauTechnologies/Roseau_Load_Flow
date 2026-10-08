@@ -43,8 +43,8 @@ The following results are available for all potential references:
 
 ## Usage
 
-It is common to consider the earth as the reference of potentials (i.e $V_{earth} = 0V$). In
-_Roseau Load Flow_, the ground element which represents an earth connection does not add any
+It is common to consider the earth as the reference of potentials (i.e $V_{\mathrm{earth}} = 0V$).
+In _Roseau Load Flow_, the ground element which represents an earth connection does not add any
 potential reference equation, i.e. its potential is not fixed at $0V$. If you want to set its
 potential to $0V$, you must attach a potential reference element explicitly:
 
