@@ -1,6 +1,6 @@
 [project]
 name = "roseau-load-flow"
-version = "0.16.0a2"
+version = "0.16.0"
 description = "Highly capable multi-phase load flow solver"
 readme = "README.md"
 requires-python = ">=3.12"

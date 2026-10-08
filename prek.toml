@@ -33,7 +33,7 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/adhtruong/mirrors-typos"
-rev = "v1.50.3"
+rev = "v1.51.1"
 hooks = [{ id = "typos", args = ["--force-exclude"] }]
 
 [[repos]]

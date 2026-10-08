@@ -19,7 +19,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 # Changelog
 
-## Unreleased
+## Version 0.16.0
 
 - {gh-pr}`503` Catalogue string filters now have clearer matching rules: any string is a
   case-insensitive literal match, unless wrapped in `^...$`, in which case it is a case-insensitive
