@@ -2,14 +2,16 @@
 myst:
   html_meta:
     description lang=en: |
-      Flexible load controls in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
-      Technologies.
+      Flexible load controls in Roseau Load Flow - Three-phase unbalanced load flow solver in a
+      Python API by Roseau Technologies.
     keywords lang=en: simulation, distribution grid, flexible load, load, model, controls
     # spellchecker:off
     description lang=fr: |
-      Les contrôles des charge flexibles dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et
-      déséquilibré dans une API Python par Roseau Technologies.
-    keywords lang=fr: simulation, réseau, électrique, charge flexible, bus, roseau load flow, modèle, contrôles
+      Les contrôles des charge flexibles dans Roseau Load Flow - Solveur d'écoulement de charge
+      triphasé et déséquilibré dans une API Python par Roseau Technologies.
+    keywords lang=fr: |
+      simulation, réseau, électrique, charge flexible, bus, roseau load flow, modèle, contrôles
+
 # spellchecker:on
 ---
 
@@ -21,7 +23,8 @@ There are four available types of control.
 
 ## Constant control
 
-No control is applied, this is equivalent to a classical power load. The constant control can be built like this:
+No control is applied, this is equivalent to a classical power load. The constant control can be
+built like this:
 
 ```python
 import roseau.load_flow as rlf
@@ -41,22 +44,26 @@ Control the maximum active power of a load (often a PV inverter) based on the vo
 
 The $P(U)$ control accepts two approximation parameters: `alpha` and `epsilon`.
 
-- `alpha` is used to compute soft clipping functions. The higher `alpha` is, the better the approximations are.
+- `alpha` is used to compute soft clipping functions. The higher `alpha` is, the better the
+  approximations are.
 - `epsilon` is used to approximate a smooth inverse function:
+
   ```{math}
-  \forall x \geq 0, \frac{1}{x} \approx \frac{1}{\varepsilon \times \exp\left(\frac{-x}{\varepsilon}\right) + {x}}
+  \forall x \geq 0, \frac{1}{x} \approx \frac{1}{\varepsilon \times
+    \exp\left(\frac{-x}{\varepsilon}\right) + {x}}
   ```
+
   The lower `epsilon` is, the better the approximations are.
 
 ```{note}
-The functions $s_{\alpha}$ used for the $P(U)$ controls are derived from the *soft clipping function* of
-{cite:p}`Klimek_2020`.
+The functions $s_{\alpha}$ used for the $P(U)$ controls are derived from the
+*soft clipping function* of {cite:p}`Klimek_2020`.
 ```
 
 ### Production
 
-With this control, the following soft clipping family of functions $s_{\alpha}(U)$ is used. The default value of `alpha`
-is 1000.
+With this control, the following soft clipping family of functions $s_{\alpha}(U)$ is used. The
+default value of `alpha` is 1000.
 
 ```{image} /_static/Load/FlexibleLoad/Control_PU_Prod.svg
 ---
@@ -66,9 +73,9 @@ align: center
 ---
 ```
 
-The final $P$ is then $P(U) = \max(s_{\alpha}(U) \times S^{\max}, P^{\mathrm{th.}})$. Note that this final
-$\underline{S(U)}$ point may lie outside the disc of radius $S^{\max}$ in the $(P, Q)$ plane. See the
-[Projection page](models-flexible_load-projections) for more details about this case.
+The final $P$ is then $P(U) = \max(s_{\alpha}(U) \times S^{\max}, P^{\mathrm{th.}})$. Note that this
+final $\underline{S(U)}$ point may lie outside the disc of radius $S^{\max}$ in the $(P, Q)$ plane.
+See the [Projection page](models-flexible_load-projections) for more details about this case.
 
 ```python
 import roseau.load_flow as rlf
@@ -90,8 +97,8 @@ production_control = rlf.Control.p_max_u_production(
 
 ### Consumption
 
-With this control, the following soft clipping family of functions $s_{\alpha}(U)$ is used. The default value of `alpha`
-is 1000.
+With this control, the following soft clipping family of functions $s_{\alpha}(U)$ is used. The
+default value of `alpha` is 1000.
 
 ```{image} /_static/Load/FlexibleLoad/Control_PU_Cons.svg
 ---
@@ -101,9 +108,9 @@ align: center
 ---
 ```
 
-The final $P$ is then $P(U) = \min(s_{\alpha}(U) \times S^{\max}, P^{\mathrm{th.}})$. Note that this final
-$\underline{S(U)}$ point may lie outside the disc of radius $S^{\max}$ in the $(P, Q)$ plane. See the
-[Projection page](models-flexible_load-projections) for more details about this case.
+The final $P$ is then $P(U) = \min(s_{\alpha}(U) \times S^{\max}, P^{\mathrm{th.}})$. Note that this
+final $\underline{S(U)}$ point may lie outside the disc of radius $S^{\max}$ in the $(P, Q)$ plane.
+See the [Projection page](models-flexible_load-projections) for more details about this case.
 
 ```python
 import roseau.load_flow as rlf
@@ -127,8 +134,8 @@ consumption_control = rlf.Control.p_max_u_consumption(
 
 ## $Q(U)$ control
 
-Control the reactive power based on the voltage $Q(U)$. With this control, the following soft clipping family of
-functions $s_{\alpha}(U)$ is used. The default value of `alpha` is 1000.
+Control the reactive power based on the voltage $Q(U)$. With this control, the following soft
+clipping family of functions $s_{\alpha}(U)$ is used. The default value of `alpha` is 1000.
 
 ```{image} /_static/Load/FlexibleLoad/Control_QU.svg
 ---
@@ -138,9 +145,9 @@ align: center
 ---
 ```
 
-The final $Q$ is then $Q(U) = s_{\alpha}(U) \times S^{\max}$. Note that this final $\underline{S(U)}$ point may lie
-outside the disc of radius $S^{\max}$ in the $(P, Q)$ plane. See the [Projection page](models-flexible_load-projections)
-for more details about this case.
+The final $Q$ is then $Q(U) = s_{\alpha}(U) \times S^{\max}$. Note that this final
+$\underline{S(U)}$ point may lie outside the disc of radius $S^{\max}$ in the $(P, Q)$ plane. See
+the [Projection page](models-flexible_load-projections) for more details about this case.
 
 ```{note}
 The function $s_{\alpha}$ used for the $Q(U)$ control is derived from the *soft clipping function* of

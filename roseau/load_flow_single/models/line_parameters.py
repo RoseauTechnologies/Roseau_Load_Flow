@@ -619,8 +619,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         Args:
             name:
-                The name of the line parameters to get from the catalogue. It can be a regular
-                expression.
+                The name of the line parameters to get from the catalogue. Case-insensitive literal
+                match by default; wrap it in ``^...$`` for a regex, or pass a compiled pattern to set
+                your own flags.
 
             line_type:
                 The type of the line parameters to get. It can be ``"overhead"``, ``"twisted"``, or
@@ -706,8 +707,9 @@ class LineParameters(Identifiable, JsonMixin, CatalogueMixin[pd.DataFrame]):
 
         Args:
             name:
-                The name of the line parameters to get from the catalogue. It can be a regular
-                expression.
+                The name of the line parameters to get from the catalogue. Case-insensitive literal
+                match by default; wrap it in ``^...$`` for a regex, or pass a compiled pattern to set
+                your own flags.
 
             line_type:
                 The type of the line parameters to get. It can be ``"overhead"``, ``"twisted"``, or

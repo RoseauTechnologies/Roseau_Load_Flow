@@ -56,6 +56,7 @@ DTYPES: Final = {
     "loading": float,
     "max_loading": float,
     "sn": float,
+    "tap": float,
     "ampacity": float,
     "voltage_level": float,
     "nominal_voltage": float,

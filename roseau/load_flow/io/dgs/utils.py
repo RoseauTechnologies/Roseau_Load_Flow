@@ -74,6 +74,19 @@ def parse_dgs_version(data: Mapping[str, Any]) -> tuple[int, ...]:
     return dgs_version_tuple
 
 
+def parse_elm_net(data: Mapping[str, Any]) -> tuple[str, float | None]:
+    if "ElmNet" not in data or not data["ElmNet"]["Values"]:
+        return "Network", None
+    attrs: list[str] = data["ElmNet"]["Attributes"]
+    values: list[list] = data["ElmNet"]["Values"]
+    index = {attr: attrs.index(attr) for attr in attrs}
+    if len(values) > 1:
+        msg = "Multiple elm_net values found in the DGS file, only the first one will be used."
+        warn_external(msg)
+    values = values[0]
+    return values[index["loc_name"]], (values[index["frnom"]] if "frnom" in index else None)
+
+
 def parse_extra_rlf_data(desc: str) -> dict[str, str]:
     """Parse the extra data from the RLF marker in the description of an element."""
     if desc.startswith(RLF_MARKER):

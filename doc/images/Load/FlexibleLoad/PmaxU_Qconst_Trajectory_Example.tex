@@ -13,8 +13,7 @@
     pin style/.style={pin distance=1mm},%
   }%
 
-  \begin{axis}
-    [%
+  \begin{axis}[%
       xlabel={Active power (W)},%
       x label style={at={(axis description cs:0.5,-0.1)},anchor=north},%
       ylabel={Reactive power (VAr)},%
@@ -43,14 +42,15 @@
       xticklabel={%
         $\pgfmathprintnumber{\tick}$
         \pgfmathifthenelse{\tick==-2.5}{%
-          "\\$P^{\theo}$"%
+          "\\
+          $P^\theo$"%
         }{""}%
         \pgfmathresult%
       },%
       yticklabel style={align=center},%
       extra y tick label={%
         \pgfmathifthenelse{\tick==1000}{%
-          "$Q^{\theo}$\hspace{3mm}"%
+          "$Q^\theo$\hspace{3mm}"%
         }{""}%
         \pgfmathresult%
         \pgfmathparse{\tick/1000}%
@@ -64,21 +64,25 @@
       nodes near coords style={%
         anchor=center,%
       },%
-      %            coordinate style/.condition={\thisrow{v}==205}{pin={[pin style] below right:{\mylabel}}},%
-      %            coordinate style/.condition={\thisrow{v}==210}{pin={[pin style] below:\mylabel}},%
-      %            coordinate style/.condition={\thisrow{v}==215}{pin={[pin style] right:\mylabel}},%
-      %            coordinate style/.condition={\thisrow{v}==220}{pin={[pin style] below left:\mylabel}},%
-      %            coordinate style/.condition={\thisrow{v}==225}{pin={[pin style] below right:\mylabel}},%
-      %            coordinate style/.condition={\thisrow{v}==230}{pin={[pin style] right:\mylabel}},%
+      % coordinate style/.condition={\thisrow{v}==205}{pin={[pin style] below right:{\mylabel}}},%
+      % coordinate style/.condition={\thisrow{v}==210}{pin={[pin style] below:\mylabel}},%
+      % coordinate style/.condition={\thisrow{v}==215}{pin={[pin style] right:\mylabel}},%
+      % coordinate style/.condition={\thisrow{v}==220}{pin={[pin style] below left:\mylabel}},%
+      % coordinate style/.condition={\thisrow{v}==225}{pin={[pin style] below right:\mylabel}},%
+      % coordinate style/.condition={\thisrow{v}==230}{pin={[pin style] right:\mylabel}},%
       coordinate style/.condition={\thisrow{v}==235}{pin={[pin style] below:\mylabel}},coordinate
       style/.condition={\thisrow{v}==240}{pin={[pin style] left:\mylabel}},coordinate
       style/.condition={\thisrow{v}==245}{pin={[pin style] above:\mylabel}},coordinate
       style/.condition={\thisrow{v}==250}{pin={[pin style] above:\mylabel}},coordinate
-      style/.condition={\thisrow{v}==255}{pin={[pin style] below:\mylabel}},visualization depends on={\thisrow{v} \as
-      \myvalue},visualization depends on={value
-      $\qty[parse-numbers=false]{\pgfmathprintnumber{\thisrow{v}}}{V}$\as\mylabel},] \addplot[point meta={\thisrow{v}}]
-      table[x=p, y=q, col sep=comma] {Load/FlexibleLoad/PmaxU_Qconst_Example.csv};\draw[black] (axis cs:0,0)
-      circle[radius=5000];%%%%%% Required to use the "v" column for two usages%%%%%
+      style/.condition={\thisrow{v}==255}{pin={[pin style]
+          below:\mylabel}},visualization depends on={\thisrow{v} \as
+        \myvalue},visualization depends on={value
+        $\qty[parse-numbers=false]{\pgfmathprintnumber{\thisrow{v}}}{V}$\as\mylabel},
+    ]
+    \addplot[point meta={\thisrow{v}}] table[x=p, y=q, col sep=comma]
+      {Load/FlexibleLoad/PmaxU_Qconst_Example.csv};
+    \draw[black] (axis
+      cs:0,0) circle[radius=5000];%%%%%% Required to use the "v" column for two usages%%%%%
   \end{axis}
 \end{tikzpicture}
 \end{document}
@@ -89,5 +93,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

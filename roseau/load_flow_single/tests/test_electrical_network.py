@@ -648,6 +648,48 @@ def test_network_res_transformers(small_network_with_results: ElectricalNetwork)
     assert_res_transformers()
 
 
+def test_network_res_regulators(all_elements_network_with_results: ElectricalNetwork):
+    en = all_elements_network_with_results
+    assert en.regulators
+    expected_dtypes = {  # in the expected order
+        "regulator_id": object,
+        "tap": float,
+        "current1": complex,
+        "current2": complex,
+        "power1": complex,
+        "power2": complex,
+        "voltage1": complex,
+        "voltage2": complex,
+        "violated": pd.BooleanDtype(),
+        "loading": float,
+        "max_loading": float,
+        "sn": float,
+    }
+    expected_results = [
+        {
+            "regulator_id": regulator.id,
+            "tap": regulator.res_tap,
+            "current1": strip_q(regulator.side1.res_current),
+            "current2": strip_q(regulator.side2.res_current),
+            "power1": strip_q(regulator.side1.res_power),
+            "power2": strip_q(regulator.side2.res_power),
+            "voltage1": strip_q(regulator.side1.res_voltage),
+            "voltage2": strip_q(regulator.side2.res_voltage),
+            "violated": regulator.res_violated,
+            "loading": strip_q(regulator.res_loading),
+            "max_loading": strip_q(regulator.max_loading),
+            "sn": strip_q(regulator.sn),
+        }
+        for regulator in en.regulators.values()
+    ]
+    expected_frame = (
+        pd.DataFrame.from_records(expected_results, columns=list(expected_dtypes))
+        .astype(expected_dtypes)
+        .set_index("regulator_id")
+    )
+    assert_frame_equal(en.res_regulators, expected_frame)
+
+
 def test_network_res_lines(small_network_with_results: ElectricalNetwork):
     en = small_network_with_results
     expected_dtypes = {  # in the expected order
@@ -1041,9 +1083,9 @@ def test_from_catalogue():
 
     # Several network name matched
     with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork.from_catalogue(name=r"MVFeeder.*", load_point_name="winter")
+        ElectricalNetwork.from_catalogue(name=r"^MVFeeder.*$", load_point_name="winter")
     assert e.value.msg == (
-        "Several networks matching the query (name='MVFeeder.*') have been found: 'MVFeeder004', "
+        "Several networks matching the query (name='^MVFeeder.*$') have been found: 'MVFeeder004', "
         "'MVFeeder011', 'MVFeeder015', 'MVFeeder032', 'MVFeeder041', 'MVFeeder063', 'MVFeeder078', "
         "'MVFeeder115', 'MVFeeder128', 'MVFeeder151', 'MVFeeder159', 'MVFeeder176', 'MVFeeder210', "
         "'MVFeeder217', 'MVFeeder232', 'MVFeeder251', 'MVFeeder290', 'MVFeeder312', 'MVFeeder320', "
@@ -1053,9 +1095,9 @@ def test_from_catalogue():
 
     # Several load point name matched
     with pytest.raises(RoseauLoadFlowException) as e:
-        ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name=r".*")
+        ElectricalNetwork.from_catalogue(name="MVFeeder004", load_point_name=r"^.*$")
     assert e.value.msg == (
-        "Several load points for network 'MVFeeder004' matching the query (load_point_name='.*') have "
+        "Several load points for network 'MVFeeder004' matching the query (load_point_name='^.*$') have "
         "been found: 'Summer', 'Winter'."
     )
     assert e.value.code == RoseauLoadFlowExceptionCode.CATALOGUE_SEVERAL_FOUND
@@ -1070,10 +1112,12 @@ def test_get_catalogue():
     assert catalogue.shape == (40, 7)
 
     # Filter on the network name
-    catalogue = ElectricalNetwork.get_catalogue(name=r"MV.*")
+    catalogue = ElectricalNetwork.get_catalogue(name=r"^MV.*$")
     assert catalogue.shape == (20, 7)
     catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV.*"))
     assert catalogue.shape == (20, 7)
+    catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^mv.*"))
+    assert catalogue.shape == (0, 7)  # Respect the flags of compiled regex, here case sensitive
 
     # Filter on the load point name
     catalogue = ElectricalNetwork.get_catalogue(load_point_name="winter")
@@ -1082,20 +1126,20 @@ def test_get_catalogue():
     assert catalogue.shape == (40, 7)
 
     # Filter on both
-    catalogue = ElectricalNetwork.get_catalogue(name=r"MV.*", load_point_name="winter")
+    catalogue = ElectricalNetwork.get_catalogue(name=r"^MV.*$", load_point_name="winter")
     assert catalogue.shape == (20, 7)
-    catalogue = ElectricalNetwork.get_catalogue(name=r"MV.*", load_point_name=re.compile(r"^Winter"))
+    catalogue = ElectricalNetwork.get_catalogue(name=r"^MV.*$", load_point_name=re.compile(r"^Winter"))
     assert catalogue.shape == (20, 7)
     catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV.*"), load_point_name="winter")
     assert catalogue.shape == (20, 7)
     catalogue = ElectricalNetwork.get_catalogue(name=re.compile(r"^MV.*"), load_point_name=re.compile(r"^Winter"))
     assert catalogue.shape == (20, 7)
 
-    # Regexp error
-    catalogue = ElectricalNetwork.get_catalogue(name=r"^MV[0-")
-    assert catalogue.empty
-    catalogue = ElectricalNetwork.get_catalogue(load_point_name=r"^winter[0-]")
-    assert catalogue.empty
+    # Invalid regular expressions fail loudly
+    with pytest.raises(re.error):
+        ElectricalNetwork.get_catalogue(name=r"^MV[0-.*$")
+    with pytest.raises(re.error):
+        ElectricalNetwork.get_catalogue(load_point_name=r"^winter[0-$")
 
 
 def test_to_graph(small_network: ElectricalNetwork):

@@ -133,7 +133,7 @@ if __name__ == "__main__":
     # Plot the global map
     #
     print("Plotting the global map")
-    m = folium.Map(tiles="cartodbpositron")
+    m = folium.Map()
     mv_feeders_layer = folium.FeatureGroup(name="MV Feeders").add_to(m)
     lv_feeders_layer = folium.FeatureGroup(name="LV Feeders").add_to(m)
     for network_name in catalogue_data:

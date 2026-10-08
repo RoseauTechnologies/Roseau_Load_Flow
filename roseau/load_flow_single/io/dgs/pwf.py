@@ -127,7 +127,7 @@ def create_graphic_net(fid_counter: Iterator[str]) -> DGSData:
     }
 
 
-def create_grid(fid_counter: Iterator[str], grf_net_fid: str) -> DGSData:
+def create_grid(fid_counter: Iterator[str], grf_net_fid: str, name: str) -> DGSData:
     """Create the "ElmNet" object for the grid.
 
     Args:
@@ -136,6 +136,9 @@ def create_grid(fid_counter: Iterator[str], grf_net_fid: str) -> DGSData:
 
         grf_net_fid:
             The FID of the graphic network.
+
+        name:
+            The name of the network.
 
     Returns:
         The DGS data for the "ElmNet" object.
@@ -153,7 +156,7 @@ def create_grid(fid_counter: Iterator[str], grf_net_fid: str) -> DGSData:
             [
                 next(fid_counter),  # FID
                 "C",  # OP
-                "RLF Grid",  # loc_name
+                name,  # loc_name
                 None,  # fold_id
                 50,  # frnom
                 grf_net_fid,  # pDiagram

@@ -1,0 +1,53 @@
+[files]
+yaml = ["*.yaml", "*.yml", ".yamllint"]
+markdown = ["*.md"]  # opt-in: enables markdown linting
+
+[markdown]
+front-matter = true  # lint the --- ... --- block
+fenced-blocks = true  # lint yaml / yml fenced blocks
+
+[rules]
+anchors = "enable"
+comments = "disable"
+comments-indentation = "disable"
+document-end = "disable"
+document-start = "disable"
+empty-values = "disable"
+float-values = "disable"
+key-duplicates = "enable"
+key-ordering = "disable"
+new-line-at-end-of-file = "enable"
+new-lines = "enable"
+octal-values = "disable"
+quoted-strings = "disable"
+trailing-spaces = "enable"
+truthy = "disable"
+
+[rules.braces]
+level = "warning"
+max-spaces-inside = 1
+
+[rules.brackets]
+level = "warning"
+max-spaces-inside = 1
+
+[rules.colons]
+level = "warning"
+
+[rules.commas]
+level = "warning"
+
+[rules.empty-lines]
+level = "warning"
+
+[rules.hyphens]
+level = "warning"
+
+[rules.indentation]
+level = "warning"
+indent-sequences = "consistent"
+
+[rules.line-length]
+max = 100
+level = "warning"
+allow-non-breakable-inline-mappings = true

@@ -2,31 +2,33 @@
 myst:
   html_meta:
     description lang=en: |
-      Roseau Load Flow comes with a catalogue of components including numerous models of medium and low voltage
-      networks, transformers and lines.
+      Roseau Load Flow comes with a catalogue of components including numerous models of medium and
+      low voltage networks, transformers and lines.
     keywords lang=en: simulation, distribution grid, MT, LV, transformer, cables, model
     # spellchecker:off
     description lang=fr: |
-      Roseau Load Flow est livré avec un catalogue de composants comportant de nombreux modèles de réseaux
-      moyenne-tension et basse tension, de transformateurs et de lignes.
+      Roseau Load Flow est livré avec un catalogue de composants comportant de nombreux modèles de
+      réseaux moyenne-tension et basse tension, de transformateurs et de lignes.
     keywords lang=fr: |
-      simulation, réseau, électrique, réseaux, MT, BT, moyenne tension, basse tension, transformateurs, lignes, modèle
+      simulation, réseau, électrique, réseaux, MT, BT, moyenne tension, basse tension,
+      transformateurs, lignes, modèle
     # spellchecker:on
 ---
 
 # Catalogues
 
-In _Roseau Load Flow_, some classes are provided with a catalogue. This page describes how to use them.
+In _Roseau Load Flow_, some classes are provided with a catalogue. This page describes how to use
+them.
 
 (catalogues-networks)=
 
 ## Networks
 
-_Roseau Load Flow_ is provided with a small catalogue of MV and LV networks. These networks are available through the
-class `ElectricalNetwork`.
+_Roseau Load Flow_ is provided with a small catalogue of MV and LV networks. These networks are
+available through the class `ElectricalNetwork`.
 
-Here is an interactive plot to explore them. See the [Plotting page](./Plotting.md) to learn how to get such interactive
-map.
+Here is an interactive plot to explore them. See the [Plotting page](./Plotting.md) to learn how to
+get such interactive map.
 
 <iframe src="../_static/Network/Catalogue.html" height="600px" width="100%" frameborder="0"></iframe>
 
@@ -93,17 +95,19 @@ This catalogue can be retrieved in the form of a dataframe using:
 | <a href="../_static/Network/MVFeeder320.html" target="_blank">MVFeeder320</a>     |       20 |       18 |               0 |           1 |       12 |          1 |          1 |                 1 | ['Winter', 'Summer']  |
 | <a href="../_static/Network/MVFeeder339.html" target="_blank">MVFeeder339</a>     |       33 |       31 |               0 |           1 |       28 |          1 |          1 |                 1 | ['Summer', 'Winter']  |
 
-There are MV networks whose names start with "MVFeeder" and LV networks whose names with "LVFeeder". For each network,
-there are two available load points:
+There are MV networks whose names start with "MVFeeder" and LV networks whose names with "LVFeeder".
+For each network, there are two available load points:
 
 - "Winter": it contains power loads without production.
 - "Summer": it contains power loads with production and 20% of the "Winter" load.
 
-The arguments of the method `get_catalogue` can be used to filter the output. If you want to get the LV networks only,
-you can call:
+The arguments of the method `get_catalogue` can be used to filter the output. A plain string
+performs a case-insensitive literal match; wrap it in `^...$` to perform a case-insensitive regular
+expression search instead (or pass a compiled `re.Pattern` to control the flags yourself). If you
+want to get the LV networks only, you can use a regular expression:
 
 ```pycon
->>> rlf.ElectricalNetwork.get_catalogue(name=r"LVFeeder.*")
+>>> rlf.ElectricalNetwork.get_catalogue(name=r"^LVFeeder.*$")
 ```
 
 | Name          | Nb buses | Nb lines | Nb transformers | Nb switches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
@@ -129,10 +133,10 @@ you can call:
 | LVFeeder37263 |        3 |        1 |               1 |           0 |        2 |          1 |          1 |                 2 | ['Summer', 'Winter']  |
 | LVFeeder38211 |        6 |        4 |               1 |           0 |        8 |          1 |          1 |                 2 | ['Winter', 'Summer']  |
 
-A regular expression can also be used:
+A more specific regular expression can also be used:
 
 ```pycon
->>> rlf.ElectricalNetwork.get_catalogue(name=r"LVFeeder38[0-9]+")
+>>> rlf.ElectricalNetwork.get_catalogue(name=r"^LVFeeder38[0-9]+$")
 ```
 
 | Name          | Nb buses | Nb lines | Nb transformers | Nb switches | Nb loads | Nb sources | Nb grounds | Nb potential refs | Available load points |
@@ -141,8 +145,8 @@ A regular expression can also be used:
 
 ### Getting an instance
 
-You can build an `ElectricalNetwork` instance from the catalogue using the class method `from_catalogue`. The name of
-the network and the name of the load point must be provided:
+You can build an `ElectricalNetwork` instance from the catalogue using the class method
+`from_catalogue`. The name of the network and the name of the load point must be provided:
 
 ```pycon
 >>> en = rlf.ElectricalNetwork.from_catalogue(name="LVFeeder38211", load_point_name="Summer")
@@ -161,7 +165,8 @@ have been found. Please look at the catalogue using the `get_catalogue` class me
 
 ## Transformers
 
-_Roseau Load Flow_ ships with a catalogue of `TransformerParameters` obtained from data sheets of real transformers.
+_Roseau Load Flow_ ships with a catalogue of `TransformerParameters` obtained from data sheets of
+real transformers.
 
 ### Source of data
 
@@ -232,21 +237,24 @@ _Truncated output_
 
 The following data are available in this table:
 
-- the **name**: a unique name of the transformer in the catalogue. This is usually a concatenation of the manufacturer,
-  the product range, the efficiency class, the nominal power, the high voltage, the low voltage, and the vector group.
+- the **name**: a unique name of the transformer in the catalogue. This is usually a concatenation
+  of the manufacturer, the product range, the efficiency class, the nominal power, the high voltage,
+  the low voltage, and the vector group.
 - the **manufacturer**: the manufacturer of the transformer.
 - the product **range** which depends on the manufacturer
-- the **efficiency** class of the transformer. The efficiency class used in the catalogue follows the `Eco-Design`
-  requirements as defined by the `EN 50629` standard.
-- the **cooling** class of the transformer according to IEC 60076: (e.g., `ONAN`, `KNAN`, `AN`, etc.)
+- the **efficiency** class of the transformer. The efficiency class used in the catalogue follows
+  the `Eco-Design` requirements as defined by the `EN 50629` standard.
+- the **cooling** class of the transformer according to IEC 60076: (e.g., `ONAN`, `KNAN`, `AN`,
+  etc.)
 - the vector group of the transformer, noted **vg** (e.g., `Dyn11`, `Yzn11`, `Ii0`, etc.)
 - the nominal power, noted **sn**.
 - the rated high voltage (phase-to-phase), noted **uhv**.
 - the rated no-load low voltage (phase-to-phase), noted **ulv**.
 - the nominal frequency, noted **fn**.
 
-The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned table. The
-following command only retrieves transformer parameters of transformers with an efficiency of "A0Ak":
+The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned
+table. The following command only retrieves transformer parameters of transformers with an
+efficiency of "A0Ak":
 
 ```pycon
 >>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak")
@@ -277,13 +285,13 @@ _Truncated output_
 or only transformers with a wye winding on the high voltage side (using a regular expression)
 
 ```pycon
->>> rlf.TransformerParameters.get_catalogue(vg=r"Y.*")
+>>> rlf.TransformerParameters.get_catalogue(vg=r"^Y.*$")
 ```
 
 <!-- Generated with:
     import roseau.load_flow as rlf
     from roseau.load_flow.utils.doc_utils import to_markdown
-    tr_catalogue = rlf.TransformerParameters.get_catalogue(vg=r"Y.*").head(10)
+    tr_catalogue = rlf.TransformerParameters.get_catalogue(vg=r"^Y.*$").head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
@@ -303,13 +311,13 @@ or only transformers with a wye winding on the high voltage side (using a regula
 or only transformers meeting both criteria
 
 ```pycon
->>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", vg=r"Y.*")
+>>> rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", vg=r"^Y.*$")
 ```
 
 <!-- Generated with:
     import roseau.load_flow as rlf
     from roseau.load_flow.utils.doc_utils import to_markdown
-    tr_catalogue = rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", vg=r"Y.*").head(10)
+    tr_catalogue = rlf.TransformerParameters.get_catalogue(efficiency="A0Ak", vg=r"^Y.*$").head(10)
     print(to_markdown(tr_catalogue, no_wrap_index=True))
  -->
 
@@ -318,10 +326,10 @@ or only transformers meeting both criteria
 | <nobr>SE Minera A0Ak 50kVA 15/20kV(20) 410V Yzn11</nobr> | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                20 |             0.41 |             50 |
 | <nobr>SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11</nobr> | Schneider Electric | Minera        | A0Ak       | ONAN          | Yzn11        |                  50 |                15 |             0.41 |             50 |
 
-Among all the possible filters, the nominal power and voltages are expected in their default unit (VA and V). You can
-also use the [Pint](https://pint.readthedocs.io/en/stable/) library to express the values in different units. For
-instance, if you want to get transformer parameters with a nominal power of 3150 kVA, the following two commands return
-the same table:
+Among all the possible filters, the nominal power and voltages are expected in their default unit
+(VA and V). You can also use the [Pint](https://pint.readthedocs.io/en/stable/) library to express
+the values in different units. For instance, if you want to get transformer parameters with a
+nominal power of 3150 kVA, the following two commands return the same table:
 
 ```pycon
 >>> import roseau.load_flow as rlf
@@ -353,14 +361,15 @@ the same table:
 
 ### Getting an instance
 
-You can build a `TransformerParameters` instance from the catalogue using the class method `from_catalogue`. You must
-filter the data to get a single transformer. You can apply the same filtering technique used for the method
-`get_catalogue` to narrow down the result to a single transformer in the catalogue.
+You can build a `TransformerParameters` instance from the catalogue using the class method
+`from_catalogue`. You must filter the data to get a single transformer. You can apply the same
+filtering technique used for the method `get_catalogue` to narrow down the result to a single
+transformer in the catalogue.
 
 For instance, these parameters filter the catalogue down to a single transformer parameters:
 
 ```pycon
->>> rlf.TransformerParameters.from_catalogue(efficiency="A0Ak", vg=r"Y.*", uhv=15000)
+>>> rlf.TransformerParameters.from_catalogue(efficiency="A0Ak", vg=r"^Y.*$", uhv=15000)
 <TransformerParameters: id='SE Minera A0Ak 50kVA 15/20kV(15) 410V Yzn11', vg='Yzn11', sn=50000,
 uhv=15000, ulv=410, fn=50.0, p0=90.0, i0=0.005, psc=750.0, vsc=0.04, manufacturer='Schneider Electric',
 range='Minera', efficiency='A0Ak', cooling='ONAN', insulation='liquid-immersed'>
@@ -401,8 +410,8 @@ are 'France Transfo', 'Schneider Electric', 'Cahors', 'SCOTECH', '', 'Pauwels', 
 
 ## Lines
 
-_Roseau Load Flow_ is provided with a catalogue of line parameters. These parameters are available through the class
-`LineParameters`.
+_Roseau Load Flow_ is provided with a catalogue of line parameters. These parameters are available
+through the class `LineParameters`.
 
 ### Source of data
 
@@ -448,11 +457,14 @@ _Truncated output_
 
 The following data are available in this table:
 
-- the **name**. A name that contains the type of the line, the material of the conductor, the cross-section area, and
-  optionally the insulator. It is in the form `{line_type}_{conductor_material}_{cross_section}_{insulator}`.
+- the **name**. A name that contains the type of the line, the material of the conductor, the
+  cross-section area, and optionally the insulator. It is in the form
+  `{line_type}_{conductor_material}_{cross_section}_{insulator}`.
 - the **line type**. It can be `"OVERHEAD"`, `"UNDERGROUND"` or `"TWISTED"`.
-- the **conductor material** for the phases and for the neutral. See the {class}`~roseau.load_flow.Material` class.
-- the **insulator** for the phases and for the neutral. See the {class}`~roseau.load_flow.Insulator` class.
+- the **conductor material** for the phases and for the neutral. See the
+  {class}`~roseau.load_flow.Material` class.
+- the **insulator** for the phases and for the neutral. See the {class}`~roseau.load_flow.Insulator`
+  class.
 - the **cross-section** of the phases and neutral conductors in mm².
 
 in addition to the following calculated physical parameters:
@@ -466,8 +478,8 @@ in addition to the following calculated physical parameters:
 - the _Phase ampacity_ of the line in A.
 - the _neutral ampacity_ of the line in A.
 
-The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned table. The
-following command only returns line parameters made of Aluminum:
+The `get_catalogue` method accepts arguments (in bold above) that can be used to filter the returned
+table. The following command only returns line parameters made of Aluminum:
 
 ```pycon
 >>> rlf.LineParameters.get_catalogue(material="al")
@@ -518,13 +530,15 @@ or only lines meeting both criteria
 | U_AL_240 | underground | al             | al               |                 |                   |                       240 |                         240 |                     0.125 |                       0.125 |                0.0899296 |                  0.0899296 |              3.69374e-05 |                3.69374e-05 |                428 |                  428 |
 | T_AL_240 | twisted     | al             | al               |                 |                   |                       240 |                         240 |                     0.125 |                       0.125 |                0.0899296 |                  0.0899296 |              3.69374e-05 |                3.69374e-05 |                409 |                  409 |
 
-When filtering by the cross-section area, it is expected to provide a numeric value in mm² or to use a pint quantity.
+When filtering by the cross-section area, it is expected to provide a numeric value in mm² or to use
+a pint quantity.
 
 ### Getting an instance
 
-You can build a `LineParameters` instance from the catalogue using the class method `from_catalogue`. You must filter
-the data to get a single line. You can apply the same filtering technique used for the method `get_catalogue` to narrow
-down the result to a single line in the catalogue.
+You can build a `LineParameters` instance from the catalogue using the class method
+`from_catalogue`. You must filter the data to get a single line. You can apply the same filtering
+technique used for the method `get_catalogue` to narrow down the result to a single line in the
+catalogue.
 
 For instance, these parameters filter the results down to a single line parameters:
 
@@ -540,16 +554,16 @@ Or you can use the `name` filter directly:
 LineParameters(id='U_AL_288')
 ```
 
-As you can see, the `id` of the created instance is the same as the name in the catalogue. You can override this
-behaviour by passing the `id` parameter to `from_catalogue`:
+As you can see, the `id` of the created instance is the same as the name in the catalogue. You can
+override this behaviour by passing the `id` parameter to `from_catalogue`:
 
 ```pycon
 >>> rlf.LineParameters.from_catalogue(name="U_AL_288", id="lp-special")
 LineParameters(id='lp-special')
 ```
 
-Most line parameters created from the catalogue are 3-phase without a neutral by default. It is possible to create line
-parameters with different numbers of phases using the `nb_phases` parameter.
+Most line parameters created from the catalogue are 3-phase without a neutral by default. It is
+possible to create line parameters with different numbers of phases using the `nb_phases` parameter.
 
 ```pycon
 >>> rlf.LineParameters.from_catalogue(name="U_AL_288").z_line.shape
@@ -562,8 +576,8 @@ parameters with different numbers of phases using the `nb_phases` parameter.
 (2, 2)
 ```
 
-LV line parameters have a neutral conductor by default. These are identified by a name having the format
-`..._..._3x...+...`.
+LV line parameters have a neutral conductor by default. These are identified by a name having the
+format `..._..._3x...+...`.
 
 ```pycon
 >>> rlf.LineParameters.from_catalogue(name="U_AL_3x150+70")
@@ -575,13 +589,14 @@ LineParameters(id='U_AL_3x150+70')
 In case no or several results match the parameters, an error is raised:
 
 ```pycon
->>> rlf.LineParameters.from_catalogue(name=r"U_AL.*")
-RoseauLoadFlowException: Several line parameters matching the query (name='U_AL.*') have been found:
+>>> rlf.LineParameters.from_catalogue(name=r"^U_AL.*$")
+RoseauLoadFlowException: Several line parameters matching the query (name='^U_AL.*$') have been found:
 'U_AL_19', 'U_AL_20', 'U_AL_22', 'U_AL_25', 'U_AL_28', 'U_AL_29', 'U_AL_33', 'U_AL_34', 'U_AL_37',
 'U_AL_38', 'U_AL_40', 'U_AL_43', 'U_AL_48', 'U_AL_50', 'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60',
 'U_AL_69', 'U_AL_70', 'U_AL_74', 'U_AL_75', 'U_AL_79', 'U_AL_80', 'U_AL_90', 'U_AL_93', 'U_AL_95',
 'U_AL_100', 'U_AL_116', 'U_AL_117', 'U_AL_120', 'U_AL_147', 'U_AL_148', 'U_AL_150', 'U_AL_228',
-'U_AL_240', 'U_AL_288'. [catalogue_several_found]
+'U_AL_240', 'U_AL_288', 'U_AL_3x50+50', 'U_AL_3x95+50', 'U_AL_3x150+70', 'U_AL_3x150+150',
+'U_AL_3x240+95'. [catalogue_several_found]
 ```
 
 or if no results:

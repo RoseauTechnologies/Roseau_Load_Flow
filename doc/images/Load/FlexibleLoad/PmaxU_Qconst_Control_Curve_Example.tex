@@ -32,11 +32,13 @@
       xticklabel={%
         $\pgfmathprintnumber{\tick}$
         \pgfmathifthenelse{\tick==240}{%
-          "\\$\uup$"%
+          "\\
+          $\uup$"%
         }{""}%
         \pgfmathresult%
         \pgfmathifthenelse{\tick==250}{%
-          "\\$\umax$"%
+          "\\
+          $\umax$"%
         }{""}%
         \pgfmathresult%
       },%
@@ -50,7 +52,7 @@
       },%
       extra y tick label={%
         \pgfmathifthenelse{\tick==-2500}{%
-          "$P^{\theo}$\hspace{3mm}"%
+          "$P^\theo$\hspace{3mm}"%
         }{""}%
         \pgfmathresult%
         \pgfmathifthenelse{\tick==-5000}{%
@@ -61,7 +63,8 @@
         $\pgfmathprintnumber{\pgfmathresult}$
       },%
     ]
-    \addplot+[only marks] table[x=v, y=p, col sep=comma] {Load/FlexibleLoad/PmaxU_Qconst_Example.csv};%
+    \addplot+[only marks] table[x=v, y=p, col sep=comma]
+      {Load/FlexibleLoad/PmaxU_Qconst_Example.csv};%
     \addplot+ coordinates {(205,-5000) (240,-5000) (250,0) (255,0)};%
   \end{axis}
 \end{tikzpicture}
@@ -73,5 +76,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

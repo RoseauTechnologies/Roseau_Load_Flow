@@ -1,5 +1,4 @@
 import logging
-import warnings
 
 import pandas as pd
 
@@ -81,18 +80,16 @@ def typ_lne_to_lp(typ_lne: pd.DataFrame, line_params: dict[str, LineParameters],
         insulator = INSULATORS.get(this_typ_lne["imiso"]) if "imiso" in this_typ_lne else None
         section = this_typ_lne.get("qurs") or None  # Sometimes it is zero!! replace by None in this case
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-            lp = LineParameters(
-                id=type_id,
-                z_line=z_line,
-                y_shunt=y_shunt,
-                ampacities=ampacity,
-                line_type=line_type,
-                materials=material,
-                insulators=insulator,
-                sections=section,
-            )
+        lp = LineParameters(
+            id=type_id,
+            z_line=z_line,
+            y_shunt=y_shunt,
+            ampacities=ampacity,
+            line_type=line_type,
+            materials=material,
+            insulators=insulator,
+            sections=section,
+        )
         line_params[fid] = lp
 
 
@@ -149,9 +146,7 @@ def typ_lne_from_elm_lne_to_lp(
     z_line, y_shunt = LineParameters._sym_to_zy_simple(n=len(phases), z0=z0, y0=y0, z1=z1, y1=y1)
     LineParameters._check_z_line_matrix(id=typ_id, z_line=z_line)
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(action="ignore", message=r".* off-diagonal elements ", category=UserWarning)
-        lp = LineParameters(id=typ_id, z_line=z_line, y_shunt=y_shunt, line_type=line_type, sections=section)
+    lp = LineParameters(id=typ_id, z_line=z_line, y_shunt=y_shunt, line_type=line_type, sections=section)
 
     return lp
 

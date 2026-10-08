@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     type FeatureMap = dict[str, Any]
     type StyleDict = dict[str, Any]
-    type MapElementType = Literal["bus", BranchType]
+    type MapElementType = Literal["bus", "source", BranchType]
     type StyleColorCallback = Callable[[MapElementType, Id], str | None]
 
     class VoltageProfileNode(TypedDict):
@@ -76,6 +76,7 @@ _RESULT_COLORS: dict[ResultState, str] = {
 _MV, _LV = 60e3, 1e3
 _DEFAULT_MAP_STYLE_COLORS: dict["MapElementType", str] = {
     "bus": "#234e83",
+    "source": "#234e83",
     "line": "#234e83",
     "transformer": "#000000",
     "switch": "#888888",
@@ -350,6 +351,14 @@ _MAP_FIELDS: dict["MapElementType", dict[str, str]] = {
         "min_voltage_level": "Umin (%):",
         "max_voltage_level": "Umax (%):",
     },
+    "source": {
+        "id": "Source ID:",
+        "phases": "Phases:",
+        "bus_id": "Bus:",
+        "nominal_voltage": "Un (V):",
+        "min_voltage_level": "Umin (%):",
+        "max_voltage_level": "Umax (%):",
+    },
     "line": {
         "id": "Line ID:",
         "phases": "Phases:",
@@ -403,6 +412,14 @@ _MAP_FIELDS: dict["MapElementType", dict[str, str]] = {
 _MAP_RESULTS_FIELDS: dict["MapElementType", dict[str, str]] = {
     "bus": {
         **_MAP_FIELDS["bus"],
+        "res_separator": "--",
+        "res_voltage": "U (V):",
+        "res_voltage_level": "U (%):",
+        "res_active_power": "P (kW):",
+        "res_reactive_power": "Q (kvar):",
+    },
+    "source": {
+        **_MAP_FIELDS["source"],
         "res_separator": "--",
         "res_voltage": "U (V):",
         "res_voltage_level": "U (%):",
@@ -472,7 +489,23 @@ def _map_get_bus_style_dict(
     bus_id: Id,
     *,
     nominal_voltages: Mapping[Id, float],
-    source_buses: Container[Id],
+    color_callback: Callable[["MapElementType", Id], str],
+) -> dict[str, Any]:
+    if nominal_voltages[bus_id] < _LV:
+        diameter = 4  # LV
+    elif nominal_voltages[bus_id] < _MV:
+        diameter = 7  # MV
+    else:
+        diameter = 10  # HV
+    color = color_callback("bus", bus_id)
+    return {"radius": diameter / 2, "color": color, "fillColor": color, "fill": True, "fillOpacity": 1, "stroke": False}
+
+
+def _map_get_source_style_dict(
+    source_id: Id,
+    *,
+    bus_id: Id,
+    nominal_voltages: Mapping[Id, float],
     color_callback: Callable[["MapElementType", Id], str],
 ) -> dict[str, str]:
     vn = nominal_voltages[bus_id]
@@ -482,13 +515,8 @@ def _map_get_bus_style_dict(
         radius = 7  # MV
     else:
         radius = 10  # HV
-    # Make source buses larger and square to distinguish them from other buses
-    if bus_id in source_buses:
-        radius += 3
-        border_radius = 0  # Source bus: square
-    else:
-        border_radius = radius / 2
-    color = color_callback("bus", bus_id)
+    radius += 3  # Make sources larger to distinguish them from other buses
+    color = color_callback("source", source_id)
     markup = f"""\
     <div style="position: absolute;
                 left: 0;
@@ -496,7 +524,6 @@ def _map_get_bus_style_dict(
                 transform: translate(-50%, -50%);
                 width: {radius}px;
                 height: {radius}px;
-                border-radius: {border_radius}px;
                 background-color: {color};
                 ">
     </div>
@@ -615,7 +642,13 @@ def _plot_interactive_map_elements(  # noqa: C901
             return _map_get_bus_style_dict(
                 bus_id=e_id,
                 nominal_voltages=nominal_voltages,
-                source_buses=source_buses,
+                color_callback=style_color_callback,
+            )
+        elif e_type == "source":
+            return _map_get_source_style_dict(
+                source_id=e_id,
+                bus_id=feature["properties"]["bus_id"],
+                nominal_voltages=nominal_voltages,
                 color_callback=style_color_callback,
             )
         elif e_type == "line":
@@ -665,7 +698,13 @@ def _plot_interactive_map_elements(  # noqa: C901
             return _map_get_bus_style_dict(
                 bus_id=e_id,
                 nominal_voltages=nominal_voltages,
-                source_buses=source_buses,
+                color_callback=lambda e_type, e_id: highlight_color,
+            )
+        elif e_type == "source":
+            return _map_get_source_style_dict(
+                source_id=e_id,
+                bus_id=feature["properties"]["bus_id"],
+                nominal_voltages=nominal_voltages,
                 color_callback=lambda e_type, e_id: highlight_color,
             )
         elif e_type == "line":
@@ -696,11 +735,14 @@ def _plot_interactive_map_elements(  # noqa: C901
     source_buses = {src.bus.id for src in network.sources.values()}
     nominal_voltages = network._get_nominal_voltages()
 
-    # Filter out buses that are represented by the transformers/regulators on the map
-    buses_to_skip = {bus.id for tr in network.transformers.values() for bus in (tr.bus_hv, tr.bus_lv)} | {
+    # Filter out buses that are represented by the transformers/regulators/sources on the map
+    tr_reg_buses = {bus.id for tr in network.transformers.values() for bus in (tr.bus_hv, tr.bus_lv)} | {
         bus.id for reg in network.regulators.values() for bus in (reg.bus1, reg.bus2)
     }
-    dataframes["bus"] = dataframes["bus"].loc[~dataframes["bus"]["id"].isin(buses_to_skip)]
+    dataframes["bus"] = dataframes["bus"].loc[~dataframes["bus"]["id"].isin(tr_reg_buses | source_buses)]
+    # Sources whose bus coincides with a transformer/regulator terminal are already represented by
+    # the (enlarged) transformer/regulator marker, so they don't get their own marker.
+    dataframes["source"] = dataframes["source"].loc[~dataframes["source"]["bus_id"].isin(tr_reg_buses)]
 
     tooltips: dict[MapElementType, folium.GeoJsonTooltip | None] = {}
     if add_tooltips:
@@ -728,6 +770,7 @@ def _plot_interactive_map_elements(  # noqa: C901
         popups = dict.fromkeys(fields.keys(), None)
     names = {
         "bus": "Buses",
+        "source": "Sources",
         "line": "Lines",
         "transformer": "Transformers",
         "switch": "Switches",
@@ -737,11 +780,14 @@ def _plot_interactive_map_elements(  # noqa: C901
     for e_type, frame in dataframes.items():
         if frame.empty:
             continue
-        marker = (
-            folium.Marker(icon=folium.DivIcon(icon_size=(0, 0), icon_anchor=(0, 0)))
-            if e_type not in ("line", "switch")
-            else None
-        )
+        if e_type == "bus":
+            # `CircleMarker` is a `Path` (vector layer), so it respects `prefer_canvas` (unlike
+            # `Marker`, which is always a real DOM element) and natively supports `setStyle`.
+            marker = folium.CircleMarker(radius=5, fill=True)
+        elif e_type in ("line", "switch"):
+            marker = None
+        else:  # source, transformer, regulator: rare, specially-styled point features
+            marker = folium.Marker(icon=folium.DivIcon(icon_size=(0, 0), icon_anchor=(0, 0)))
         name = names[e_type]
         layers[name] = folium.GeoJson(
             data=frame.assign(element_type=e_type),
@@ -767,6 +813,7 @@ def _plot_interactive_map_internal(
     add_tooltips: bool,
     add_popups: bool,
     add_search: bool,
+    add_control: bool,
     fit_bounds: bool,
 ) -> "folium.Map":
     import folium
@@ -790,13 +837,13 @@ def _plot_interactive_map_internal(
 
     if "zoom_control" not in map_kws and add_search:
         map_kws["zoom_control"] = "topright"
-    map_kws.setdefault("tiles", "CartoDB Positron")
 
     m = folium.Map(**map_kws)
     # `folium`/`Leaflet` only support `setStyle` (used to implement highlighting) on vector layers
-    # (e.g. `Path`), not on `Marker`s. Since buses and transformers are rendered as `Marker`s with a
-    # `DivIcon`, we need to teach `L.Marker` how to apply a style produced by `highlight_function`
-    # (an `{"html": ...}` dict) by rebuilding its icon.
+    # (e.g. `Path`), not on `Marker`s. Sources, transformers and regulators are rendered as
+    # `Marker`s with a `DivIcon` (to support their multi-color/shape styling), so we need to teach
+    # `L.Marker` how to apply a style produced by `highlight_function` (an `{"html": ...}` dict) by
+    # rebuilding its icon.
     root = m.get_root()
     assert isinstance(root, folium.Figure)
     folium.Element(
@@ -819,7 +866,8 @@ def _plot_interactive_map_internal(
         add_popups=add_popups,
     ).items():
         layer.add_to(FeatureGroupSubGroup(network_layer, name).add_to(m))
-    folium.LayerControl(collapsed=False, draggable=True, position="bottomright").add_to(m)
+    if add_control:
+        folium.LayerControl(collapsed=False, draggable=True, position="bottomright").add_to(m)
     if add_search:
         Search(network_layer, search_label="id", placeholder="Search network elements...").add_to(m)
     if fit_bounds:
@@ -857,6 +905,33 @@ def _get_buses_data_for_map_plot(network: ElectricalNetwork, with_results: bool)
         buses_data["res_active_power"].append(_pp_num(_real(bus_agg_powers)))
         buses_data["res_reactive_power"].append(_pp_num(_imag(bus_agg_powers)))
     return gpd.GeoDataFrame(buses_data, crs=network.crs)
+
+
+def _get_sources_data_for_map_plot(
+    network: ElectricalNetwork, with_results: bool, buses_frame: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    sources_data: dict[str, list[Any]] = {
+        field: [] for field in (_MAP_RESULTS_FIELDS if with_results else _MAP_FIELDS)["source"]
+    }
+    sources_data["geometry"] = []
+    buses_frame = buses_frame.set_index("id")
+    for src in network.sources.values():
+        bus_id = src.bus.id
+        sources_data["id"].append(src.id)
+        sources_data["phases"].append(src.phases)
+        sources_data["bus_id"].append(bus_id)
+        sources_data["nominal_voltage"].append(buses_frame.at[bus_id, "nominal_voltage"])
+        sources_data["min_voltage_level"].append(buses_frame.at[bus_id, "min_voltage_level"])
+        sources_data["max_voltage_level"].append(buses_frame.at[bus_id, "max_voltage_level"])
+        sources_data["geometry"].append(src.bus.geometry)
+        if not with_results:
+            continue
+        sources_data["res_separator"].append("")  # Results separator
+        sources_data["res_voltage"].append(buses_frame.at[bus_id, "res_voltage"])
+        sources_data["res_voltage_level"].append(buses_frame.at[bus_id, "res_voltage_level"])
+        sources_data["res_active_power"].append(buses_frame.at[bus_id, "res_active_power"])
+        sources_data["res_reactive_power"].append(buses_frame.at[bus_id, "res_reactive_power"])
+    return gpd.GeoDataFrame(sources_data, crs=network.crs)
 
 
 def _get_lines_data_for_map_plot(network: ElectricalNetwork, with_results: bool) -> gpd.GeoDataFrame:
@@ -966,6 +1041,7 @@ def plot_interactive_map(
     add_tooltips: bool = True,
     add_popups: bool = True,
     add_search: bool = True,
+    add_control: bool = True,
     fit_bounds: bool = True,
 ) -> "folium.Map":
     """Plot an electrical network on an interactive map.
@@ -973,21 +1049,21 @@ def plot_interactive_map(
     This function uses the `folium` library to create an interactive map of the electrical network.
 
     Make sure you have defined the geometry of the buses and lines in the network before using this
-    function. You can do this by setting the `geometry` attribute of the buses and lines.
-    Transformers use the geometry of their HV buses.
+    function. You can do this by setting the `geometry` attribute of the buses and lines. Sources
+    use the geometry of their buses and transformers use the geometry of their HV buses.
 
     Args:
         network:
-            The electrical network to plot. Buses, lines and transformers are plotted. Buses of
-            source elements are represented with bigger square markers.
+            The electrical network to plot. Buses, sources, lines and transformers are plotted.
+            Sources are represented with bigger square markers.
 
         style_color:
             A string to use as the default color of all elements, or a callback function in the form
             ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
-            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``. Return ``None`` from
-            the callable to use the default color for that element instead. Defaults to
-            :roseau-primary:`■ #234e83` for buses and lines, :color-gray:`■ #888888` for switches,
-            and :color-black:`■ #000000` for transformers.
+            is one of ``"bus"``, ``"source"``, ``"line"``, ``"transformer"``, ``"switch"``. Return
+            ``None`` from the callable to use the default color for that element instead. Defaults to
+            :roseau-primary:`■ #234e83` for buses, sources and lines, :color-gray:`■ #888888` for
+            switches, and :color-black:`■ #000000` for transformers.
 
         highlight_color:
             The color of the default style when an element is highlighted. Defaults to
@@ -1005,8 +1081,6 @@ def plot_interactive_map(
             Additional keyword arguments to pass to the :class:`folium.Map` constructor. The
             following keywords are passed by default:
 
-            - ``tiles="CartoDB Positron"``: A light background map that does not obscure network
-              elements.
             - ``location``: The centroid of the network geometry if ``fit_bounds`` is false. No
               default value is set otherwise.
             - ``zoom_start``: Calculated based on its bounding box if ``fit_bounds`` is false. No
@@ -1024,6 +1098,9 @@ def plot_interactive_map(
             If ``True`` (default), a search bar will be added to the map to search for network
             elements by their ID.
 
+        add_control:
+            If ``True`` (default), layer control will be added to the map.
+
         fit_bounds:
             If ``True`` (default), the map view will be adjusted to fit all network elements. If
             ``False``, the initial view is determined by the `location` and `zoom_start` parameters
@@ -1038,12 +1115,20 @@ def plot_interactive_map(
             "Only multi-phase networks can be plotted. Did you mean to use rlfs.plotting.plot_interactive_map?"
         )
     buses_gdf = _get_buses_data_for_map_plot(network, with_results=False)
+    sources_gdf = _get_sources_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
     lines_gdf = _get_lines_data_for_map_plot(network, with_results=False)
     transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
     switches_gdf = _get_switches_data_for_map_plot(network, with_results=False)
     m = _plot_interactive_map_internal(
         network=network,
-        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
+        dataframes={
+            # Order matters: buses/sources are drawn after lines so they render on top of them.
+            "line": lines_gdf,
+            "bus": buses_gdf,
+            "source": sources_gdf,
+            "transformer": transformers_gdf,
+            "switch": switches_gdf,
+        },
         fields=_MAP_FIELDS,
         style_color_callback=_make_style_color_callback(style_color, lambda et, eid: _DEFAULT_MAP_STYLE_COLORS[et]),
         highlight_color=highlight_color,
@@ -1053,6 +1138,7 @@ def plot_interactive_map(
         add_tooltips=add_tooltips,
         add_popups=add_popups,
         add_search=add_search,
+        add_control=add_control,
         fit_bounds=fit_bounds,
     )
     return m
@@ -1063,6 +1149,8 @@ def _default_map_results_style_color(
 ) -> str:
     if et == "bus":
         return _RESULT_COLORS[network.buses[eid]._res_state_getter()]
+    elif et == "source":
+        return _RESULT_COLORS[network.sources[eid].bus._res_state_getter()]
     elif et == "line":
         return _RESULT_COLORS[network.lines[eid]._res_state_getter()]
     elif et == "transformer":
@@ -1086,6 +1174,7 @@ def plot_results_interactive_map(
     add_tooltips: bool = True,
     add_popups: bool = True,
     add_search: bool = True,
+    add_control: bool = True,
     fit_bounds: bool = True,
 ) -> "folium.Map":
     """Plot an electrical network on an interactive map with the load flow results.
@@ -1095,23 +1184,23 @@ def plot_results_interactive_map(
     their loadings.
 
     Make sure you have defined the geometry of the buses and lines in the network before using this
-    function. You can do this by setting the `geometry` attribute of the buses and lines.
-    Transformers use the geometry of their HV buses. Also, ensure that the network has valid results
-    by running a load flow calculation before plotting.
+    function. You can do this by setting the `geometry` attribute of the buses and lines. Sources
+    use the geometry of their buses and transformers use the geometry of their HV buses. Also,
+    ensure that the network has valid results by running a load flow calculation before plotting.
 
     Args:
         network:
-            The electrical network to plot. Buses, lines and transformers are plotted. Buses of
-            source elements are represented with bigger square markers.
+            The electrical network to plot. Buses, sources, lines and transformers are plotted.
+            Sources are represented with bigger square markers.
 
         style_color:
             A string to use as the default color of all elements, or a callback function in the form
             ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
-            is one of ``"bus"``, ``"line"``, ``"transformer"``, ``"switch"``. Return ``None`` from
-            the callable to use the default color for that element instead. The default colors depend
-            on the element type and its results:
+            is one of ``"bus"``, ``"source"``, ``"line"``, ``"transformer"``, ``"switch"``. Return
+            ``None`` from the callable to use the default color for that element instead. The default
+            colors depend on the element type and its results:
 
-            For buses, the default color is determined by their voltage levels:
+            For buses and sources, the default color is determined by their voltage levels:
 
             - blue: `U` below `Umin`
             - cyan: `U` close to `Umin`; specifically, `Umin ≤ U < 0.75 * Umin + 0.25`
@@ -1142,8 +1231,6 @@ def plot_results_interactive_map(
             Additional keyword arguments to pass to the :class:`folium.Map` constructor. The
             following keywords are passed by default:
 
-            - ``tiles="CartoDB Positron"``: A light background map that does not obscure network
-              elements.
             - ``location``: The centroid of the network geometry if ``fit_bounds`` is false. No
               default value is set otherwise.
             - ``zoom_start``: Calculated based on its bounding box if ``fit_bounds`` is false. No
@@ -1161,6 +1248,9 @@ def plot_results_interactive_map(
             If ``True`` (default), a search bar will be added to the map to search for network
             elements by their ID.
 
+        add_control:
+            If ``True`` (default), layer control will be added to the map.
+
         fit_bounds:
             If ``True`` (default), the map view will be adjusted to fit all network elements. If
             ``False``, the initial view is determined by the `location` and `zoom_start` parameters
@@ -1176,12 +1266,20 @@ def plot_results_interactive_map(
         )
     network._check_valid_results()
     buses_gdf = _get_buses_data_for_map_plot(network, with_results=True)
+    sources_gdf = _get_sources_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
     lines_gdf = _get_lines_data_for_map_plot(network, with_results=True)
     transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
     switches_gdf = _get_switches_data_for_map_plot(network, with_results=True)
     m = _plot_interactive_map_internal(
         network=network,
-        dataframes={"bus": buses_gdf, "line": lines_gdf, "transformer": transformers_gdf, "switch": switches_gdf},
+        dataframes={
+            # Order matters: buses/sources are drawn after lines so they render on top of them.
+            "line": lines_gdf,
+            "bus": buses_gdf,
+            "source": sources_gdf,
+            "transformer": transformers_gdf,
+            "switch": switches_gdf,
+        },
         fields=_MAP_RESULTS_FIELDS,
         style_color_callback=_make_style_color_callback(
             style_color, partial(_default_map_results_style_color, network=network)
@@ -1193,6 +1291,7 @@ def plot_results_interactive_map(
         add_tooltips=add_tooltips,
         add_popups=add_popups,
         add_search=add_search,
+        add_control=add_control,
         fit_bounds=fit_bounds,
     )
     return m
@@ -1490,21 +1589,6 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             label = f"{self.mode.capitalize()} {label}"
         return label
 
-    def _edge_segs(self, edge: "VoltageProfileEdge") -> tuple[tuple[float, float], tuple[float, float]]:
-        """Get the segments for an edge in the form ((x1, y1), (x2, y2))."""
-        return (
-            (self.buses[edge["from_bus"]]["distance"], self.buses[edge["from_bus"]]["voltage"]),
-            (self.buses[edge["to_bus"]]["distance"], self.buses[edge["to_bus"]]["voltage"]),
-        )
-
-    def _edge_xs(self, edge: "VoltageProfileEdge") -> tuple[float, float]:
-        """Get the x coordinates for an edge in the form (x1, x2)."""
-        return (self.buses[edge["from_bus"]]["distance"], self.buses[edge["to_bus"]]["distance"])
-
-    def _edge_ys(self, edge: "VoltageProfileEdge") -> tuple[float, float]:
-        """Get the y coordinates for an edge in the form (y1, y2)."""
-        return (self.buses[edge["from_bus"]]["voltage"], self.buses[edge["to_bus"]]["voltage"])
-
     # Public API
     # ----------
     def plot_matplotlib(self, *, ax: "Axes | None" = None) -> "Axes":
@@ -1529,9 +1613,13 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if ax is None:
             ax = plt.gca()
 
+        def get_segments(edge: "VoltageProfileEdge") -> tuple[tuple[float, float], tuple[float, float]]:
+            fb, tb = self.buses[edge["from_bus"]], self.buses[edge["to_bus"]]
+            return (fb["distance"], fb["voltage"]), (tb["distance"], tb["voltage"])
+
         ax.add_collection(
             LineCollection(
-                segments=[self._edge_segs(ln) for ln in self.lines.values()],
+                segments=[get_segments(ln) for ln in self.lines.values()],
                 colors=[self.colors[ln["state"]] for ln in self.lines.values()],
                 zorder=2,
             )
@@ -1540,7 +1628,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if self.transformers:
             ax.add_collection(
                 LineCollection(
-                    segments=[self._edge_segs(tr) for tr in self.transformers.values()],
+                    segments=[get_segments(tr) for tr in self.transformers.values()],
                     colors=[self.colors[tr["state"]] for tr in self.transformers.values()],
                     linewidths=3,
                     zorder=3,
@@ -1551,7 +1639,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if self.regulators:
             ax.add_collection(
                 LineCollection(
-                    segments=[self._edge_segs(reg) for reg in self.regulators.values()],
+                    segments=[get_segments(reg) for reg in self.regulators.values()],
                     colors=[self.colors[reg["state"]] for reg in self.regulators.values()],
                     linewidths=4,
                     zorder=3,
@@ -1561,7 +1649,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if self.switches:
             ax.add_collection(
                 LineCollection(
-                    segments=[self._edge_segs(sw) for sw in self.switches.values()],
+                    segments=[get_segments(sw) for sw in self.switches.values()],
                     colors=[self.colors[sw["state"]] for sw in self.switches.values()],
                     linestyles="dashed",
                     linewidths=3,
@@ -1595,8 +1683,17 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         ax.grid(alpha=0.25)
         return ax
 
-    def plot_plotly(self) -> "go.Figure":
+    def plot_plotly(self, *, renderer: Literal["svg", "webgl"] = "svg") -> "go.Figure":
         """Plot the network voltage profile using Plotly.
+
+        Args:
+            renderer:
+                `"svg"` (default) draws vector `go.Scatter` traces. `"webgl"` draws `go.Scattergl`
+                traces instead, rendered on the GPU, which stays responsive on large networks
+                (thousands of buses/lines) when panning/zooming. Prefer SVG for static exports as
+                WebGL rasterizes the plot instead of using vector paths and for plotting small to
+                medium sized networks because browsers only support a limited number of simultaneous
+                WebGL contexts per page.
 
         Returns:
             A Plotly Figure with the voltage profile plot.
@@ -1607,12 +1704,15 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             e.add_note("plotly is required for plotting the voltage profile using plot_plotly.")
             raise
 
-        traces: list[go.Scatter] = []
+        # Note that for parallel transformers/lines/etc, only the last one might be shown in hover
+        # https://github.com/plotly/plotly.py/issues/2476
+
+        scatter_cls = go.Scattergl if renderer == "webgl" else go.Scatter
         is_multi_phase = self.network.is_multi_phase
 
         # Buses
         voltage_key = "voltages" if self.network.is_multi_phase else "voltage"
-        buses_trace = go.Scatter(
+        buses_trace = scatter_cls(
             x=[bus["distance"] for bus in self.buses.values()],
             y=[bus["voltage"] for bus in self.buses.values()],
             mode="markers",
@@ -1646,20 +1746,36 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 + "<b>Phases:               </b> %{customdata[6]}<br>" * is_multi_phase
                 + "</span><extra></extra>"
             ),
-            zorder=3,
         )
-        traces.append(buses_trace)
+        bus_scatter_traces = [buses_trace]
+
+        # Cannot hover on `mode="lines"` traces (https://github.com/plotly/plotly.js/issues/1960),
+        # so a single midpoint per transformer/regulator/line/switch is collected here and turned
+        # into one combined invisible hover-marker trace below.
+        hover_trace: dict[str, list[Any]] = {"x": [], "y": [], "color": [], "html": []}
+
+        def add_hover_point(state: ResultState, x: float, y: float, html: str) -> None:
+            hover_trace["x"].append(x)
+            hover_trace["y"].append(y)
+            hover_trace["color"].append(self.colors[state])
+            hover_trace["html"].append(html)
+
+        def get_xs(edge: "VoltageProfileEdge") -> tuple[float, float]:
+            return self.buses[edge["from_bus"]]["distance"], self.buses[edge["to_bus"]]["distance"]
+
+        def get_ys(edge: "VoltageProfileEdge") -> tuple[float, float]:
+            return self.buses[edge["from_bus"]]["voltage"], self.buses[edge["to_bus"]]["voltage"]
 
         # Transformers
+        transformer_scatter_traces: list[go.Scatter | go.Scattergl] = []
         if self.transformers:
             # Black borders for transformers
-            traces.append(
-                go.Scatter(
-                    x=[x for tr in self.transformers.values() for x in (*self._edge_xs(tr), None)],
-                    y=[y for tr in self.transformers.values() for y in (*self._edge_ys(tr), None)],
+            transformer_scatter_traces.append(
+                scatter_cls(
+                    x=[x for tr in self.transformers.values() for x in (*get_xs(tr), None)],
+                    y=[y for tr in self.transformers.values() for y in (*get_ys(tr), None)],
                     mode="lines",
                     line={"color": "black", "width": 6},
-                    zorder=2,
                     hoverinfo="skip",
                 )
             )
@@ -1667,215 +1783,165 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
             tr_traces: dict[ResultState, dict[str, list[float | None]]] = {
                 state: {"x": [], "y": []} for state in ("normal", "high", "very-high")
             }
-            for tr in self.transformers.values():
-                tr_traces[tr["state"]]["x"].extend((*self._edge_xs(tr), None))
-                tr_traces[tr["state"]]["y"].extend((*self._edge_ys(tr), None))
-            traces.extend(
-                go.Scatter(
+            for tr_id, tr in self.transformers.items():
+                tr_traces[tr["state"]]["x"].extend((*get_xs(tr), None))
+                tr_traces[tr["state"]]["y"].extend((*get_ys(tr), None))
+                tr_info = self._get_extra_transformer_info(tr_id)
+                tr_html = (
+                    '<span style="font-family: monospace">'
+                    + f"<b>Transformer:      </b> {_pp_eid(tr_id, indent='                   ')}<br>"
+                    + f"<b>Loading (%):      </b> {tr['loading']:.5g}<br>"
+                    + f"<b>Loading limit (%):</b> {tr['max_loading']:.5g}<br>"
+                    + f"<b>Parameters:       </b> {tr_info['parameters_id']}<br>"
+                    + f"<b>Vector Group:     </b> {tr_info['vg']}<br>"
+                    + f"<b>Sn (kVA):         </b> {tr_info['sn']:.5g}<br>"
+                    + f"<b>Ur [ʜv,ʟv] (V):   </b> {tr_info['rated_voltages']}<br>"
+                    + f"<b>Tap Position (%): </b> {tr_info['tap']:.5g}<br>"
+                    + f"<b>Phases [ʜv,ʟv]:   </b> {tr_info['phases']}<br>" * is_multi_phase
+                    + "</span>"
+                )
+                add_hover_point(tr["state"], sum(get_xs(tr)) / 2, sum(get_ys(tr)) / 2, tr_html)
+            transformer_scatter_traces.extend(
+                scatter_cls(
                     x=t["x"],
                     y=t["y"],
                     mode="lines",
                     line={"color": self.colors[s], "width": 3},
-                    zorder=2,
                     hoverinfo="skip",
                 )
                 for s, t in tr_traces.items()
                 if t["x"]  # skip empty colors
             )
-            # Cannot hover on line traces, add invisible midpoint markers to show hover info
-            # https://github.com/plotly/plotly.js/issues/1960
-            traces.append(
-                go.Scatter(
-                    x=[sum(self._edge_xs(tr)) / 2 for tr in self.transformers.values()],
-                    y=[sum(self._edge_ys(tr)) / 2 for tr in self.transformers.values()],
-                    mode="markers",
-                    marker={"opacity": 0, "color": [self.colors[tr["state"]] for tr in self.transformers.values()]},
-                    customdata=[
-                        # indent has the size of the longest legend item: "Loading limit (%): "
-                        (
-                            _pp_eid(tr_id, indent="                   "),
-                            tr["loading"],
-                            tr["max_loading"],
-                            *self._get_extra_transformer_info(tr_id).values(),
-                        )
-                        for tr_id, tr in self.transformers.items()
-                    ],
-                    hovertemplate=(
-                        # For parallel transformers, only the last one might be shown in hover
-                        # https://github.com/plotly/plotly.py/issues/2476
-                        '<span style="font-family: monospace">'
-                        + "<b>Transformer:      </b> %{customdata[0]}<br>"
-                        + "<b>Loading (%):      </b> %{customdata[1]:.5g}<br>"
-                        + "<b>Loading limit (%):</b> %{customdata[2]:.5g}<br>"
-                        + "<b>Parameters:       </b> %{customdata[3]}<br>"
-                        + "<b>Vector Group:     </b> %{customdata[4]}<br>"
-                        + "<b>Sn (kVA):         </b> %{customdata[5]:.5g}<br>"
-                        + "<b>Ur [ʜv,ʟv] (V):   </b> %{customdata[6]}<br>"
-                        + "<b>Tap Position (%): </b> %{customdata[7]:.5g}<br>"
-                        + "<b>Phases [ʜv,ʟv]:   </b> %{customdata[8]}<br>" * is_multi_phase
-                        + "</span><extra></extra>"
-                    ),
-                )
-            )
 
         # Regulators
+        regulator_scatter_traces: list[go.Scatter | go.Scattergl] = []
         if self.regulators:
             assert not self.network.is_multi_phase, "Regulators are only supported in single-phase networks."
             # Traces for regulators (grouped by color for better performance)
             reg_traces: dict[ResultState, dict[str, list[float | None]]] = {
                 state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
             }
-            for reg in self.regulators.values():
-                reg_traces[reg["state"]]["x"].extend((*self._edge_xs(reg), None))
-                reg_traces[reg["state"]]["y"].extend((*self._edge_ys(reg), None))
-            traces.extend(
-                go.Scatter(
+            for reg_id, reg in self.regulators.items():
+                reg_traces[reg["state"]]["x"].extend((*get_xs(reg), None))
+                reg_traces[reg["state"]]["y"].extend((*get_ys(reg), None))
+                reg_info = self._get_extra_regulator_info(reg_id)
+                reg_html = (
+                    '<span style="font-family: monospace">'
+                    + f"<b>Regulator:    </b> {_pp_eid(reg_id, indent='               ')}<br>"
+                    + f"<b>Loading (%):  </b> {reg['loading']:.5g}<br>"
+                    + f"<b>Parameters:   </b> {reg_info['parameters_id']}<br>"
+                    + f"<b>Sn (kVA):     </b> {reg_info['sn']:.5g}<br>"
+                    + f"<b>Un (V):       </b> {reg_info['un']:.5g}<br>"
+                    + f"<b>Uref (%):     </b> {reg_info['u_ref']:.5g}<br>"
+                    + f"<b>Tap ratio (%):</b> {reg_info['tap']:.5g}<br>"
+                    + "</span>"
+                )
+                add_hover_point(reg["state"], sum(get_xs(reg)) / 2, sum(get_ys(reg)) / 2, reg_html)
+            regulator_scatter_traces.extend(
+                scatter_cls(
                     x=t["x"],
                     y=t["y"],
                     mode="lines",
                     line={"color": self.colors[s], "width": 4},
-                    zorder=2,
                     hoverinfo="skip",
                 )
                 for s, t in reg_traces.items()
                 if t["x"]  # skip empty colors
-            )
-            # Cannot hover on line traces, add invisible midpoint markers to show hover info
-            # https://github.com/plotly/plotly.js/issues/1960
-            traces.append(
-                go.Scatter(
-                    x=[sum(self._edge_xs(reg)) / 2 for reg in self.regulators.values()],
-                    y=[sum(self._edge_ys(reg)) / 2 for reg in self.regulators.values()],
-                    mode="markers",
-                    marker={"opacity": 0, "color": [self.colors[reg["state"]] for reg in self.regulators.values()]},
-                    customdata=[
-                        # indent has the size of the longest legend item: "Tap ratio (%): "
-                        (
-                            _pp_eid(reg_id, indent="               "),
-                            reg["loading"],
-                            *self._get_extra_regulator_info(reg_id).values(),
-                        )
-                        for reg_id, reg in self.regulators.items()
-                    ],
-                    hovertemplate=(
-                        # For parallel regulators, only the last one might be shown in hover
-                        # https://github.com/plotly/plotly.py/issues/2476
-                        '<span style="font-family: monospace">'
-                        + "<b>Regulator:    </b> %{customdata[0]}<br>"
-                        + "<b>Loading (%):  </b> %{customdata[1]:.5g}<br>"
-                        + "<b>Parameters:   </b> %{customdata[2]}<br>"
-                        + "<b>Sn (kVA):     </b> %{customdata[3]:.5g}<br>"
-                        + "<b>Un (V):       </b> %{customdata[4]:.5g}<br>"
-                        + "<b>Uref (%):     </b> %{customdata[5]:.5g}<br>"
-                        + "<b>Tap ratio (%):</b> %{customdata[6]:.5g}<br>"
-                        + "</span><extra></extra>"
-                    ),
-                )
             )
 
         # Lines
         lines_traces: dict[ResultState, dict[str, list[float | None]]] = {
             state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
         }
-        loading_key = "loadings" if self.network.is_multi_phase else "loading"
-        for line in self.lines.values():
-            lines_traces[line["state"]]["x"].extend((*self._edge_xs(line), None))
-            lines_traces[line["state"]]["y"].extend((*self._edge_ys(line), None))
+        loading_key = "loadings" if is_multi_phase else "loading"
+        for ln_id, ln in self.lines.items():
+            lines_traces[ln["state"]]["x"].extend((*get_xs(ln), None))
+            lines_traces[ln["state"]]["y"].extend((*get_ys(ln), None))
+            ln_info = self._get_extra_line_info(ln_id)
+            ln_html = (
+                '<span style="font-family: monospace">'
+                + f"<b>Line:             </b> {_pp_eid(ln_id, indent='                   ')}<br>"
+                + f"<b>Loading (%):      </b> {_pp_num(ln[loading_key])}<br>"
+                + f"<b>Loading limit (%):</b> {_pp_num(ln['max_loading'])}<br>"
+                + f"<b>Length (km):      </b> {ln_info['length']:.5g}<br>"
+                + f"<b>Parameters:       </b> {ln_info['parameters_id']}<br>"
+                + f"<b>Line type:        </b> {ln_info['line_type']}<br>"
+                + f"<b>Material:         </b> {ln_info['material']}<br>"
+                + f"<b>Section (mm²):    </b> {ln_info['section']}<br>"
+                + f"<b>Ampacity (A):     </b> {ln_info['ampacity']}<br>"
+                + f"<b>Phases:           </b> {ln_info['phases']}<br>" * is_multi_phase
+                + "</span>"
+            )
+            add_hover_point(ln["state"], sum(get_xs(ln)) / 2, sum(get_ys(ln)) / 2, ln_html)
         # Traces for lines (grouped by color for better performance)
-        traces.extend(
-            go.Scatter(
+        line_scatter_traces = [
+            scatter_cls(
                 x=t["x"],
                 y=t["y"],
                 mode="lines",
                 line={"color": self.colors[s], "width": 1.5},
-                zorder=1,
                 hoverinfo="skip",
             )
             for s, t in lines_traces.items()
             if t["x"]  # skip empty colors
-        )
-        # Cannot hover on line traces, add invisible midpoint markers to show hover info
-        # https://github.com/plotly/plotly.js/issues/1960
-        traces.append(
-            go.Scatter(
-                x=[sum(self._edge_xs(line)) / 2 for line in self.lines.values()],
-                y=[sum(self._edge_ys(line)) / 2 for line in self.lines.values()],
-                mode="markers",
-                marker={"opacity": 0, "color": [self.colors[ln["state"]] for ln in self.lines.values()]},
-                customdata=[
-                    # indent has the size of the longest legend item: "Loading limit (%): "
-                    (
-                        _pp_eid(ln_id, indent="                   "),
-                        _pp_num(ln[loading_key]),
-                        _pp_num(ln["max_loading"]),
-                        *self._get_extra_line_info(ln_id).values(),
-                    )
-                    for ln_id, ln in self.lines.items()
-                ],
-                hovertemplate=(
-                    '<span style="font-family: monospace">'
-                    + "<b>Line:             </b> %{customdata[0]}<br>"
-                    + "<b>Loading (%):      </b> %{customdata[1]}<br>"
-                    + "<b>Loading limit (%):</b> %{customdata[2]:.5g}<br>"
-                    + "<b>Length (km):      </b> %{customdata[3]:.5g}<br>"
-                    + "<b>Parameters:       </b> %{customdata[4]}<br>"
-                    + "<b>Line type:        </b> %{customdata[5]}<br>"
-                    + "<b>Material:         </b> %{customdata[6]}<br>"
-                    + "<b>Section (mm²):    </b> %{customdata[7]}<br>"
-                    + "<b>Ampacity (A):     </b> %{customdata[8]}<br>"
-                    + "<b>Phases:           </b> %{customdata[9]}<br>" * is_multi_phase
-                    + "</span><extra></extra>"
-                ),
-            )
-        )
+        ]
 
         # Switches
+        switch_scatter_traces: list[go.Scatter | go.Scattergl] = []
         if self.switches:
             sw_traces: dict[ResultState, dict[str, list[float | None]]] = {
                 state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
             }
-            for sw in self.switches.values():
-                sw_traces[sw["state"]]["x"].extend((*self._edge_xs(sw), None))
-                sw_traces[sw["state"]]["y"].extend((*self._edge_ys(sw), None))
+            for sw_id, sw in self.switches.items():
+                sw_traces[sw["state"]]["x"].extend((*get_xs(sw), None))
+                sw_traces[sw["state"]]["y"].extend((*get_ys(sw), None))
+                sw_info = self._get_extra_switch_info(sw_id)
+                sw_html = (
+                    '<span style="font-family: monospace">'
+                    + f"<b>Switch: </b> {_pp_eid(sw_id, indent='        ')}<br>"
+                    + f"<b>Status: </b> {sw_info['status']}<br>"
+                    + f"<b>Phases: </b> {sw_info['phases']}<br>" * is_multi_phase
+                    + "</span>"
+                )
+                add_hover_point(sw["state"], sum(get_xs(sw)) / 2, sum(get_ys(sw)) / 2, sw_html)
             # Traces for switches (grouped by color for better performance)
-            traces.extend(
-                go.Scatter(
+            switch_scatter_traces.extend(
+                scatter_cls(
                     x=t["x"],
                     y=t["y"],
                     mode="lines",
                     line={"color": self.colors[s], "width": 5, "dash": "dash"},
-                    zorder=2,
                     hoverinfo="skip",
                 )
                 for s, t in sw_traces.items()
                 if t["x"]  # skip empty colors
             )
-            # Cannot hover on line traces, add invisible midpoint markers to show hover info
-            # https://github.com/plotly/plotly.js/issues/1960
-            traces.append(
-                go.Scatter(
-                    x=[sum(self._edge_xs(sw)) / 2 for sw in self.switches.values()],
-                    y=[sum(self._edge_ys(sw)) / 2 for sw in self.switches.values()],
+
+        # One combined invisible hover-marker trace for transformers/regulators/lines/switches,
+        # instead of one such trace per element type.
+        hover_scatter_traces: list[go.Scatter | go.Scattergl] = []
+        if hover_trace["x"]:
+            hover_scatter_traces.append(
+                scatter_cls(
+                    x=hover_trace["x"],
+                    y=hover_trace["y"],
                     mode="markers",
-                    marker={"opacity": 0, "color": [self.colors[sw["state"]] for sw in self.switches.values()]},
-                    # indent has the size of the longest legend item: "Switch: "
-                    customdata=[
-                        (
-                            _pp_eid(sw_id, indent="        "),
-                            *self._get_extra_switch_info(sw_id).values(),
-                        )
-                        for sw_id in self.switches
-                    ],
-                    hovertemplate=(
-                        '<span style="font-family: monospace">'
-                        + "<b>Switch: </b> %{customdata[0]}<br>"
-                        + "<b>Status: </b> %{customdata[1]}<br>"
-                        + "<b>Phases: </b> %{customdata[2]}<br>" * is_multi_phase
-                        + "</span><extra></extra>"
-                    ),
+                    marker={"opacity": 0, "color": hover_trace["color"]},
+                    customdata=[(html,) for html in hover_trace["html"]],
+                    hovertemplate="%{customdata[0]}<extra></extra>",
                 )
             )
 
+        # Stacking (bottom to top): lines, then switches/transformers/regulators, then buses in
+        # order because `Scattergl` does not support `zorder`
+        traces = [
+            *line_scatter_traces,
+            *switch_scatter_traces,
+            *transformer_scatter_traces,
+            *regulator_scatter_traces,
+            *hover_scatter_traces,
+            *bus_scatter_traces,
+        ]
         return go.Figure(
             data=traces,
             layout=go.Layout(

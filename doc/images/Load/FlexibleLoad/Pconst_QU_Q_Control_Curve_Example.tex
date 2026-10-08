@@ -31,26 +31,30 @@
       xticklabel={%
         $\pgfmathprintnumber{\tick}$
         \pgfmathifthenelse{\tick==210}{%
-          "\\$\umin$"%
+          "\\
+          $\umin$"%
         }{""}%
         \pgfmathresult%
         \pgfmathifthenelse{\tick==220}{%
-          "\\$\udown$"%
+          "\\
+          $\udown$"%
         }{""}%
         \pgfmathresult%
         \pgfmathifthenelse{\tick==240}{%
-          "\\$\uup$"%
+          "\\
+          $\uup$"%
         }{""}%
         \pgfmathresult%
         \pgfmathifthenelse{\tick==250}{%
-          "\\$\umax$"%
+          "\\
+          $\umax$"%
         }{""}%
         \pgfmathresult%
       },%
       yticklabel style={align=center},%
       yticklabel={%
         \pgfmathifthenelse{\tick==0}{%
-          "$Q^{\theo}$\hspace{3mm}"%
+          "$Q^\theo$\hspace{3mm}"%
         }{""}%
         \pgfmathresult%
         \pgfmathifthenelse{\tick==5}{%
@@ -64,7 +68,8 @@
         $\pgfmathprintnumber{\tick}$
       },%
     ]
-    \addplot+[only marks] table[x=v, y=q, col sep=comma] {Load/FlexibleLoad/Pconst_QU_Q_Example.csv};%
+    \addplot+[only marks] table[x=v, y=q, col sep=comma]
+      {Load/FlexibleLoad/Pconst_QU_Q_Example.csv};%
     \addplot+ coordinates {(205,-5000) (210,-5000) (220,0) (240,0) (250,5000) (255,5000)};%
   \end{axis}
 \end{tikzpicture}
@@ -76,5 +81,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

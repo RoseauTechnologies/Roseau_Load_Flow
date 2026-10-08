@@ -4,10 +4,16 @@ rules:
       policies:
         # Trust some actions providers enough to allow pin with reference
         actions/*: ref-pin
-        pre-commit/action: ref-pin
+        j178/prek-action: ref-pin
         astral-sh/*: ref-pin
+        pypa/*: ref-pin
   cache-poisoning:
     ignore:
       # ignore ci.yml and pre-commit.yml as there is no release in these workflows
       - ci.yml
       - pre-commit.yml
+  dangerous-triggers:
+    ignore:
+      # workflow_run is gated on event == 'push' of a tag: the checked out code (head_sha) can only
+      # come from this repository, a workflow_run from a fork PR can never satisfy the release jobs.
+      - release.yml

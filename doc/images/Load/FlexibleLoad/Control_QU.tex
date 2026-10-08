@@ -42,7 +42,7 @@
   % Style
   %
   \tikzset{lisse/.style={line width=0.3mm, domain=\xminnormvaleur:\xmaxnormvaleur, samples=75,
-      mark=none}}%
+    mark=none}}%
   \tikzset{non lisse/.style={line width=0.3mm, mark=*}}%
 
   \begin{axis}[%
@@ -50,7 +50,7 @@
       width=0.9\textwidth,%
       enlarge y limits,%
       grid=major,%
-      xlabel={$|V_{p_1}-V_{p_2}|$},%
+      xlabel={$|V_{p_1} - V_{p_2}|$},%
       xtick={\uminnormvaleur,\umidminnormvaleur,\udownnormvaleur,\unomnormvaleur,\uupnormvaleur,\umidmaxnormvaleur,\umaxnormvaleur},%
       xticklabels={%
         $\uminnorm$,,$\udownnorm$,$\unomnorm$,$\uupnorm$,,$\umaxnorm$%
@@ -80,7 +80,8 @@
     ]%%%%%%% initialize YlOrRd-5%
 
     % Fonction linéaire par morceaux
-    \addplot[non lisse, red] coordinates {%
+    \addplot[non lisse, red] coordinates
+      {%
         (\xminnormvaleur,-1)%
         (\uminnormvaleur,-1)%
         (\udownnormvaleur,\qthnormvaleur)%
@@ -92,14 +93,17 @@
 
     % Soft clipping functions
     \pgfplotsset{cycle list shift=-1}% Reset cycle to 0
-    \foreach \alphavaleur in {50,100,200,300,400} {%
-        \addplot+[lisse] expression {%
-            \qthnormvaleur + ( 1.0/(\alphavaleur*(\uminnormvaleur-\udownnormvaleur)) *
-            ln((1+exp(\alphavaleur*(x-\udownnormvaleur)))/(1+exp(\alphavaleur*(x-\uminnormvaleur))))-1.0
-            )*(1+\qthnormvaleur) + ( 1.0/(\alphavaleur*(\umaxnormvaleur-\uupnormvaleur)) *
-            ln((1+exp(\alphavaleur*(x-\uupnormvaleur)))/(1+exp(\alphavaleur*(x-\umaxnormvaleur))))
-            )*(1-\qthnormvaleur) };%
-        \addlegendentryexpanded{Soft clipping ($\alpha=\num{\alphavaleur}$)};%
+    \foreach \alphavaleur in {50,100,200,300,400}
+      {%
+        \addplot+[lisse] expression
+        {%
+          \qthnormvaleur + ( 1.0/(\alphavaleur*(\uminnormvaleur-\udownnormvaleur)) *
+          ln((1+exp(\alphavaleur*(x-\udownnormvaleur)))/(1+exp(\alphavaleur*(x-\uminnormvaleur))))-1.0
+          )*(1+\qthnormvaleur) + ( 1.0/(\alphavaleur*(\umaxnormvaleur-\uupnormvaleur)) *
+          ln((1+exp(\alphavaleur*(x-\uupnormvaleur)))/(1+exp(\alphavaleur*(x-\umaxnormvaleur))))
+          )*(1-\qthnormvaleur)
+        };%
+        \addlegendentryexpanded{Soft clipping ($\alpha = \num{\alphavaleur}$)};%
       };%
   \end{axis}
 \end{tikzpicture}
@@ -111,5 +115,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

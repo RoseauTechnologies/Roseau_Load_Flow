@@ -13,8 +13,7 @@
     pin style/.style={pin distance=1mm},%
   }%
 
-  \begin{axis}
-    [%
+  \begin{axis}[%
       xlabel={Active power (W)},%
       x label style={at={(axis description cs:0.5,-0.1)},anchor=north},%
       ylabel={Reactive power (VAr)},%
@@ -43,7 +42,8 @@
       xticklabel={%
         $\pgfmathprintnumber{\tick}$
         \pgfmathifthenelse{\tick==-4}{%
-          "\\$P^{\theo}$"%
+          "\\
+          $P^\theo$"%
         }{""}%
         \pgfmathresult%
       },%
@@ -51,22 +51,27 @@
         \pgfmathparse{\tick/1000}%
         $\pgfmathprintnumber{\pgfmathresult}$
         \pgfmathifthenelse{\tick==-4000}{%
-          "\\$P^{\theo}$"%
+          "\\
+          $P^\theo$"%
         }{""}%
         \pgfmathresult%
       },%
       yticklabel style={align=center},%
       yticklabel={%
         \pgfmathifthenelse{\tick==0}{%
-          "$Q^{\theo}$\hspace{3mm}"%
+          "$Q^\theo$\hspace{3mm}"%
         }{""}%
         \pgfmathresult%
         \pgfmathifthenelse{\tick==-5}{%
+          % badness-lint off redundant-script-braces
           "$-S^{\max}$\hspace{3mm}"%
+          % badness-lint on redundant-script-braces
         }{""}%
         \pgfmathresult%
         \pgfmathifthenelse{\tick==5}{%
+          % badness-lint off redundant-script-braces
           "$S^{\max}$\hspace{3mm}"%
+          % badness-lint on redundant-script-braces
         }{""}%
         \pgfmathresult%
         $\pgfmathprintnumber{\tick}$
@@ -90,14 +95,14 @@
       coordinate style/.condition={\thisrow{v}==245}{pin={[pin style] right:\mylabel}},%
       coordinate style/.condition={\thisrow{v}==250}{pin={[pin style] above:\mylabel}},%
       coordinate style/.condition={\thisrow{v}==255}{pin={[pin style] below right:\mylabel}},%
-      visualization depends on={\thisrow{v} \as \myvalue},% Required to use the "v" column for two usages
+      visualization depends on={\thisrow{v} \as
+        \myvalue},% Required to use the "v" column for two usages
       visualization depends on={%
         value $\qty[parse-numbers=false]{\pgfmathprintnumber{\thisrow{v}}}{V}$\as\mylabel%
       },%
     ]
-    \addplot[point meta={\thisrow{v}}] table[x=p, y=q, col sep=comma] {%
-        Load/FlexibleLoad/PmaxU_QU_Simultaneous_2_Example.csv%
-      };%
+    \addplot[point meta={\thisrow{v}}] table[x=p, y=q, col sep=comma]
+      {Load/FlexibleLoad/PmaxU_QU_Simultaneous_2_Example.csv};%
     \draw[black] (axis cs:0,0) circle[radius=5000];%
   \end{axis}
 \end{tikzpicture}
@@ -109,5 +114,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

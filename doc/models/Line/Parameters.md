@@ -2,13 +2,13 @@
 myst:
   html_meta:
     description lang=en: |
-      Parameters of line models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by
-      Roseau Technologies.
+      Parameters of line models in Roseau Load Flow - Three-phase unbalanced load flow solver in a
+      Python API by Roseau Technologies.
     keywords lang=en: simulation, distribution grid, switch, lines, model
     # spellchecker:off
     description lang=fr: |
-      Les paramètres des modèles de ligne dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et
-      déséquilibré dans une API Python par Roseau Technologies.
+      Les paramètres des modèles de ligne dans Roseau Load Flow - Solveur d'écoulement de charge
+      triphasé et déséquilibré dans une API Python par Roseau Technologies.
     keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
 # spellchecker:on
 ---
@@ -17,13 +17,15 @@ myst:
 
 # Parameters
 
-As described [in the previous page](models-line_parameters), a line parameters object contains the impedance and shunt
-admittance matrices representing the line model. Sometimes you do not have these matrices available, but you have other
-data such as symmetric components or geometric configurations and material types.
+As described [in the previous page](models-line_parameters), a line parameters object contains the
+impedance and shunt admittance matrices representing the line model. Sometimes you do not have these
+matrices available, but you have other data such as symmetric components or geometric configurations
+and material types.
 
-This page describes how to build the impedance and shunt admittance matrices and thus the line parameters object using
-these alternative data. This is achieved via the alternative constructors of the `LineParameters` class. Note that only
-3-phase lines are supported by the alternative constructors.
+This page describes how to build the impedance and shunt admittance matrices and thus the line
+parameters object using these alternative data. This is achieved via the alternative constructors of
+the `LineParameters` class. Note that only 3-phase lines are supported by the alternative
+constructors.
 
 (models-line_parameters-alternative_constructors-symmetric)=
 
@@ -31,16 +33,16 @@ these alternative data. This is achieved via the alternative constructors of the
 
 ### Definition
 
-Line parameters can be built from a symmetric model of the line using the `LineParameters.from_sym` class method. This
-method takes the following data:
+Line parameters can be built from a symmetric model of the line using the `LineParameters.from_sym`
+class method. This method takes the following data:
 
 - The zero sequence of the impedance (in $\Omega$/km), noted $\underline{Z_0}$ and `z0` in the code.
 - The direct sequence of the impedance (in $\Omega$/km), noted $\underline{Z_1}$ and `z1` in the code.
 - The zero sequence of the admittance (in S/km), noted $\underline{Y_0}$ and `y0` in the code.
 - The direct sequence of the admittance (in S/km), noted $\underline{Y_1}$ and `y1` in the code.
 
-The symmetric components are then used to build the series impedance matrix $\underline{Z}$ and the shunt admittance
-matrix $\underline{Y}$ using the following equations:
+The symmetric components are then used to build the series impedance matrix $\underline{Z}$ and the
+shunt admittance matrix $\underline{Y}$ using the following equations:
 
 ```{math}
 \begin{aligned}
@@ -58,9 +60,9 @@ matrix $\underline{Y}$ using the following equations:
 \end{aligned}
 ```
 
-with $\underline{Z_{\mathrm{s}}}$ the series impedance, $\underline{Z_{\mathrm{m}}}$ the mutual impedance,
-$\underline{Y_{\mathrm{s}}}$ the series shunt admittance and $\underline{Y_{\mathrm{m}}}$ the mutual shunt admittance
-defined as:
+with $\underline{Z_{\mathrm{s}}}$ the series impedance, $\underline{Z_{\mathrm{m}}}$ the mutual
+impedance, $\underline{Y_{\mathrm{s}}}$ the series shunt admittance and $\underline{Y_{\mathrm{m}}}$
+the mutual shunt admittance defined as:
 
 ```{math}
 \begin{aligned}
@@ -74,11 +76,13 @@ defined as:
 For lines with a neutral, this method also takes the following optional extra parameters:
 
 - The neutral impedance (in $\Omega$/km), noted $\underline{Z_{\mathrm{n}}}$ and `zn` in the code.
-- The phase-to-neutral reactance (in $\Omega$/km), noted $\left(\underline{X_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},
-  \mathrm{b},\mathrm{c}\}}$. As these are supposed to be the same, this unique value is noted `xpn` in the code.
+- The phase-to-neutral reactance (in $\Omega$/km), noted
+  $\left(\underline{X_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a}, \mathrm{b},\mathrm{c}\}}$. As these
+  are supposed to be the same, this unique value is noted `xpn` in the code.
 - The neutral susceptance (in S/km), noted $\underline{B_{\mathrm{n}}}$ and `bn` in the code.
-- The phase-to-neutral susceptance (in S/km), noted $\left(\underline{B_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},
-  \mathrm{b},\mathrm{c}\}}$. As these are supposed to be the same, this unique value is noted `bpn` in the code.
+- The phase-to-neutral susceptance (in S/km), noted
+  $\left(\underline{B_{p\mathrm{n}}}\right)_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}$. As these
+  are supposed to be the same, this unique value is noted `bpn` in the code.
 
 ```{note}
 If any of those parameters is omitted or if $\underline{Z_{\mathrm{n}}}$ and
@@ -91,23 +95,31 @@ In this case, the following matrices are built:
 ```{math}
 \begin{aligned}
     \underline{Z} &= \begin{pmatrix}
-        \underline{Z_{\mathrm{s}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{an}}}\\
-        \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{s}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{p\mathrm{bn}}}\\
-        \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{s}}} & \underline{Z_{\mathrm{cn}}}\\
-        \underline{Z_{\mathrm{an}}} & \underline{Z_{\mathrm{bn}}} & \underline{Z_{\mathrm{cn}}} & \underline{Z_{\mathrm{n}}}\\
+        \underline{Z_{\mathrm{s}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{m}}}
+          & \underline{Z_{\mathrm{an}}}\\
+        \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{s}}} & \underline{Z_{\mathrm{m}}}
+          & \underline{Z_{p\mathrm{bn}}}\\
+        \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{m}}} & \underline{Z_{\mathrm{s}}}
+          & \underline{Z_{\mathrm{cn}}}\\
+        \underline{Z_{\mathrm{an}}} & \underline{Z_{\mathrm{bn}}} & \underline{Z_{\mathrm{cn}}}
+          & \underline{Z_{\mathrm{n}}}\\
     \end{pmatrix}\\
     \underline{Y} &=
     \begin{pmatrix}
-        \underline{Y_{\mathrm{s}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{an}}} \\
-        \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{s}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{bn}}} \\
-        \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{s}}} & \underline{Y_{\mathrm{cn}}} \\
-        \underline{Y_{\mathrm{an}}} & \underline{Y_{\mathrm{bn}}} & \underline{Y_{\mathrm{cn}}} & \underline{Y_{\mathrm{n}}} \\
+        \underline{Y_{\mathrm{s}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{m}}}
+          & \underline{Y_{\mathrm{an}}} \\
+        \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{s}}} & \underline{Y_{\mathrm{m}}}
+          & \underline{Y_{\mathrm{bn}}} \\
+        \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{m}}} & \underline{Y_{\mathrm{s}}}
+          & \underline{Y_{\mathrm{cn}}} \\
+        \underline{Y_{\mathrm{an}}} & \underline{Y_{\mathrm{bn}}} & \underline{Y_{\mathrm{cn}}}
+          & \underline{Y_{\mathrm{n}}} \\
     \end{pmatrix}
 \end{aligned}
 ```
 
-with the same $\underline{Z_{\mathrm{s}}}$, $\underline{Z_{\mathrm{m}}}$, $\underline{Y_{\mathrm{s}}}$ and
-$\underline{Y_{\mathrm{m}}}$ as before and:
+with the same $\underline{Z_{\mathrm{s}}}$, $\underline{Z_{\mathrm{m}}}$,
+$\underline{Y_{\mathrm{s}}}$ and $\underline{Y_{\mathrm{m}}}$ as before and:
 
 ```{math}
 \begin{aligned}
@@ -117,8 +129,26 @@ $\underline{Y_{\mathrm{m}}}$ as before and:
 \end{aligned}
 ```
 
-respectively the phase-to-neutral series impedance (in $\Omega$/km), the neutral shunt admittance (in S/km) and the
-phase-to-neutral shunt admittance (in S/km).
+respectively the phase-to-neutral series impedance (in $\Omega$/km), the neutral shunt admittance
+(in S/km) and the phase-to-neutral shunt admittance (in S/km).
+
+```{note}
+$\underline{Z_{\mathrm{s}}}$ and $\underline{Z_{\mathrm{m}}}$ are not only the phase conductors' own
+impedance: whenever $\underline{Z_0} \neq \underline{Z_1}$, part of them reflects the impedance of
+whatever shared, non-ideal return path (lossy earth, a bonded cable sheath, etc.) was present when
+the sequence data was computed or measured. This is expected, not a modelling error, and is why
+$\underline{Z_{\mathrm{m}}}$ commonly has a non-zero real part.
+
+The neutral conductor is the exception: when it is modelled explicitly (`zn` and `xpn` given), its
+own impedance and its coupling to the phases are meant to be captured separately by
+$\underline{Z_{\mathrm{n}}}$ and $\underline{Z_{p\mathrm{n}}}$, not folded into
+$\underline{Z_{\mathrm{s}}}$/$\underline{Z_{\mathrm{m}}}$. If the provided $\underline{Z_0}$ already
+accounts for a return path that the explicit neutral should represent instead (e.g. sequence data
+reported for the neutral-eliminated equivalent of the line), using it as-is together with `zn`/`xpn`
+double-counts that impedance. You can check for this by eliminating the neutral back with Kron's
+reduction (`LineParameters.to_sym(eliminate_neutral=True)`) and comparing the result to the original
+$\underline{Z_0}$.
+```
 
 ````{note}
 If the computed impedance matrix is non-invertible, the `from_sym` class method builds impedance
@@ -132,8 +162,9 @@ and shunt admittance matrices using the following definitions:
     \underline{Y_{\mathrm{m}}} &= 0 \\
 \end{aligned}
 ```
-It means that we try to define $\underline{Z_0}=\underline{Z_1}$ and $\underline{Y_0}=\underline{Y_1}$. If this
-"degraded" model also leads to a non-invertible impedance matrix, an error is raised.
+It means that we try to define $\underline{Z_0}=\underline{Z_1}$ and
+$\underline{Y_0}=\underline{Y_1}$. If this "degraded" model also leads to a non-invertible impedance
+matrix, an error is raised.
 ````
 
 ### Examples
@@ -166,8 +197,9 @@ array(
 ... line_parameters = rlf.LineParameters.from_sym(
 ...     "NKBA NOR  25.00 kV", z0=0.0j, z1=1.0 + 1.0j, y0=0.0j, y1=1e-06j
 ... )
-The symmetric model data provided for line type 'NKBA NOR  25.00 kV' produces invalid line impedance matrix... It is
-often the case with line models coming from PowerFactory. Trying to handle the data in a 'degraded' line model.
+The symmetric model data provided for line type 'NKBA NOR  25.00 kV' produces invalid line impedance
+matrix... It is often the case with line models coming from PowerFactory. Trying to handle the data
+in a 'degraded' line model.
 
 >>> line_parameters.z_line
 array(
@@ -218,17 +250,18 @@ array(
 
 ### Definition
 
-The `LineParameters` class has a class method called `from_geometry` which builds impedance and shunt admittance
-matrices from dimensions and materials used for the insulator and the conductors. Two geometric configurations are
-proposed: the first one is for a twisted line and the second is for an underground line. Both of them include a neutral
-wire.
+The `LineParameters` class has a class method called `from_geometry` which builds impedance and
+shunt admittance matrices from dimensions and materials used for the insulator and the conductors.
+Two geometric configurations are proposed: the first one is for a twisted line and the second is for
+an underground line. Both of them include a neutral wire.
 
 This class method accepts the following arguments:
 
 - the line type to choose between the twisted and the underground options.
 - the conductor type which defines the material of the conductors.
 - the insulator type which is the material used as insulator.
-- the section of the phase wires (in mm²). The sections of the wires of the three phases are considered equal.
+- the section of the phase wires (in mm²). The sections of the wires of the three phases are
+  considered equal.
 - the section of the neutral wire (in mm²).
 - the height of the line above or below the ground (in meters).
 - the external diameter of the wire (in meters).
@@ -238,13 +271,14 @@ This class method accepts the following arguments:
 The resistances of the conductors are computed using the following formula:
 
 ```{math}
-R_{p}=\frac{\rho}{S_{p}}\quad\forall p\in\{\mathrm{a},\mathrm{b},\mathrm{c},\mathrm{n}\} \qquad(\text{in }
-\Omega\text{/km})
+R_{p}=\frac{\rho}{S_{p}}\quad\forall p\in\{\mathrm{a},\mathrm{b},\mathrm{c},\mathrm{n}\} \qquad
+(\text{in }\Omega\text{/km})
 ```
 
 where:
 
-- $\left(S_p\right)_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}$ are the (equal) sections of the phase conductors;
+- $\left(S_p\right)_{p\in\{\mathrm{a},\mathrm{b},\mathrm{c}\}}$ are the (equal) sections of the
+  phase conductors;
 - $S_{\mathrm{n}}$ the section of the neutral conductor;
 - $\rho$ the resistivity of the conductor material (the same for the phases and for the neutral).
 
@@ -292,7 +326,8 @@ where:
 
 The vacuum magnetic permeability is defined in the `constants` module {data}`roseau.load_flow.constants.MU_0`.
 
-The geometric mean radius is defined for all $i\in \{\mathrm{a}, \mathrm{b}, \mathrm{c}, \mathrm{n}\}$ as
+The geometric mean radius is defined for all $i\in \{\mathrm{a},\mathrm{b},\mathrm{c},\mathrm{n}\}$
+as
 
 ```{math}
 GMR_i=R_i\exp\left(-\dfrac{1}{4}\right)\quad \text{(in m)}
@@ -304,13 +339,15 @@ When the geometric mean radius is computed, the radius must be taken in meters!
 
 #### Capacitance
 
-In order to compute the capacitances of the line, the $(\lambda_{ij})_{(i,j)\in\{\mathrm{a},\mathrm{b},\mathrm{c},
-\mathrm{n}\}^2}$ matrix of potential coefficients is built. Those coefficients were first introduced by Maxwell in 1873
+In order to compute the capacitances of the line, the
+$(\lambda_{ij})_{(i,j)\in \{\mathrm{a},\mathrm{b},\mathrm{c},\mathrm{n}\}^2}$ matrix of potential
+coefficients is built. Those coefficients were first introduced by Maxwell in 1873
 ({cite:p}`Maxwell_1873` page 89).
 
 ```{math}
 \begin{aligned}
-    \lambda_{ij}&= \dfrac{1}{2\pi\varepsilon}\ln\left(\dfrac{D'_{ij}}{D_{ij}}\right) \quad\text{if } i\neq j\\
+    \lambda_{ij}&= \dfrac{1}{2\pi\varepsilon}\ln\left(\dfrac{D'_{ij}}{D_{ij}}\right) \quad\text{if }
+    i\neq j\\
     \lambda_{ii}&= \dfrac{1}{2\pi\varepsilon}\ln\left(\dfrac{D'_{i}}{R_i}\right) \quad\text{otherwise}\\
 \end{aligned}
 ```
@@ -321,10 +358,11 @@ where:
 - $D_{ij}$ the distance between the center of the conductor $i$ and the conductor $j$;
 - $R_i$ the radius of the conductor $i$;
 - $D'_i$ the distance between the conductor $i$ and its image with respect to the ground;
-- $D'_{ij}$ the distance between the conductor $i$ and the image of the conductor $j$ with respect to the ground.
+- $D'_{ij}$ the distance between the conductor $i$ and the image of the conductor $j$ with respect
+  to the ground.
 
-The method of images ({cite:p}`wiki:Method_Of_Image_Charges`) is depicted in the following figure. It indicates how to
-compute the distances based on the position of wires.
+The method of images ({cite:p}`wiki:Method_Of_Image_Charges`) is depicted in the following figure.
+It indicates how to compute the distances based on the position of wires.
 
 ````{tab} Planar ground
 ```{image} /_static/Line/Image_Method_Plane.svg
@@ -342,9 +380,10 @@ compute the distances based on the position of wires.
 ```
 ````
 
-The permittivity of the insulator $\varepsilon$ (in F/m) is defined as $\varepsilon_0\varepsilon_{\mathrm{r}}$ with
-$\varepsilon_0$ the permittivity of the vacuum (in F/m) and $\varepsilon_{\mathrm{r}}$ the relative permittivity of the
-insulator (no unit). These values are defined in the `constants` module {data}`roseau.load_flow.constants.EPSILON_0` and
+The permittivity of the insulator $\varepsilon$ (in F/m) is defined as
+$\varepsilon_0\varepsilon_{\mathrm{r}}$ with $\varepsilon_0$ the permittivity of the vacuum (in F/m)
+and $\varepsilon_{\mathrm{r}}$ the relative permittivity of the insulator (no unit). These values
+are defined in the `constants` module {data}`roseau.load_flow.constants.EPSILON_0` and
 {data}`roseau.load_flow.constants.EPSILON_R`.
 
 The capacitance matrix $C$ is then defined by:
@@ -428,10 +467,10 @@ align: center
 ---
 ```
 
-In this configuration, the phase conductors are around the neutral conductor, separated by $\dfrac{2\pi}{3}$ angles and
-located at the distance $\dfrac{d_{\mathrm{ext}}}{4}$ from the center of the neutral conductor. Phases and neutral are
-separated by the insulator and air. The height distance $h$ is the distance between the center of the neutral conductor
-and the ground.
+In this configuration, the phase conductors are around the neutral conductor, separated by
+$\dfrac{2\pi}{3}$ angles and located at the distance $\dfrac{d_{\mathrm{ext}}}{4}$ from the center
+of the neutral conductor. Phases and neutral are separated by the insulator and air. The height
+distance $h$ is the distance between the center of the neutral conductor and the ground.
 
 From these figures, the following geometric positions can be deduced:
 
@@ -448,8 +487,19 @@ From these figures, the following geometric positions can be deduced:
 \end{aligned}
 ```
 
-The position $(x_{\mathrm{a}}, y_{\mathrm{a}})$ are the position of the point $A$, $(x_{\mathrm{b}}, y_{\mathrm{b}})$
-the point $B$, etc. The prime positions are the positions of the images of the conductor with respect to the ground.
+The position $(x_{\mathrm{a}}, y_{\mathrm{a}})$ are the position of the point $A$,
+$(x_{\mathrm{b}}, y_{\mathrm{b}})$ the point $B$, etc. The prime positions are the positions of the
+images of the conductor with respect to the ground.
+
+A twisted (aerial bundled) cable physically rotates its phase conductors around the neutral along
+its length, so points $A$, $B$ and $C$ above are only one cross-section snapshot; the phases spend
+an equal length of cable at the two other positions reached by rotating by $\dfrac{2\pi}{3}$ and
+$\dfrac{4\pi}{3}$ radians. The inductance matrix $L$ and the potential coefficients matrix $\lambda$
+are therefore each computed once per rotation and averaged, which is equivalent to using the
+geometric mean distance between conductors (as is classically done for transposed overhead lines).
+This makes the phase-to-phase and phase-to-neutral mutual terms equal, matching the balancing effect
+of the twist. $R$ is unaffected (it does not depend on geometry), and $C$ is obtained by inverting
+the averaged $\lambda$ matrix as before.
 
 The formulas of the previous sections are used to get the impedance and shunt admittances matrices.
 
@@ -465,23 +515,23 @@ The formulas of the previous sections are used to get the impedance and shunt ad
 ...     section=150,  # mm²
 ...     section_neutral=70,  # mm²
 ...     height=10,  # m
-...     external_diameter=rlf.Q_(4, "cm"),
+...     external_diameter=rlf.Q_(5, "cm"),
 ... )
 
 >>> line_parameters.z_line
 array(
-    [[0.188     +0.32828403j, 0.        +0.25483745j, 0.        +0.25483745j, 0.        +0.28935138j],
-     [0.        +0.25483745j, 0.188     +0.32828403j, 0.        +0.25483745j, 0.        +0.28935138j],
-     [0.        +0.25483745j, 0.        +0.25483745j, 0.188     +0.32828403j, 0.        +0.28935138j],
-     [0.        +0.28935138j, 0.        +0.28935138j, 0.        +0.28935138j, 0.40285714+0.35222736j]]
+    [[0.18842667+0.32828403j, 0.        +0.24081693j, 0.        +0.24081693j, 0.        +0.27533085j],
+     [0.        +0.24081693j, 0.18842667+0.32828403j, 0.        +0.24081693j, 0.        +0.27533085j],
+     [0.        +0.24081693j, 0.        +0.24081693j, 0.18842667+0.32828403j, 0.        +0.27533085j],
+     [0.        +0.27533085j, 0.        +0.27533085j, 0.        +0.27533085j, 0.40377143+0.35222736j]]
 ) <Unit('ohm / kilometer')>
 
 >>> line_parameters.y_shunt.to("uS/km")
 array(
-    [[0.09883654 +48.82465468j, 0.          -1.92652134j, 0.          -1.92555213j, 0.         -12.02706891j],
-     [0.          -1.92652134j, 0.09883654 +48.82465468j, 0.          -1.92555213j, 0.         -12.02706891j],
-     [0.          -1.92555213j, 0.          -1.92555213j, 0.09884227 +48.82653968j, 0.         -12.02801059j],
-     [0.         -12.02706891j, 0.         -12.02706891j, 0.         -12.02801059j, 0.21303236+107.09293474j]]
+    [[0.10014898+37.06479711j, 0.         -2.29347609j, 0.         -2.29347609j, 0.         -7.44059991j],
+     [0.         -2.29347609j, 0.10014898+37.06479711j, 0.         -2.29347609j, 0.         -7.44059991j],
+     [0.         -2.29347609j, 0.         -2.29347609j, 0.10014898+37.06479711j, 0.         -7.44059991j],
+     [0.         -7.44059991j, 0.         -7.44059991j, 0.         -7.44059991j, 0.17653382+66.45525429j]]
 ) <Unit('microsiemens / kilometer')>)
 ```
 
@@ -507,9 +557,10 @@ align: center
 ---
 ```
 
-In this configuration, the conductors are separated by $\dfrac{\pi}{2}$ angles and located at the distance
-$\dfrac{d_{\mathrm{ext}}}{4}$ from the center of the wire. Phases and neutral are separated by the insulator. The height
-distance $h$ is the distance between the center of the wire and the ground.
+In this configuration, the conductors are separated by $\dfrac{\pi}{2}$ angles and located at the
+distance $\dfrac{d_{\mathrm{ext}}}{4}$ from the center of the wire. Phases and neutral are separated
+by the insulator. The height distance $h$ is the distance between the center of the wire and the
+ground.
 
 From these figures, the following geometric positions can be deduced:
 
@@ -529,13 +580,15 @@ From these figures, the following geometric positions can be deduced:
 \end{aligned}
 ```
 
-The position $(x_{\mathrm{a}}, y_{\mathrm{a}})$ are the position of the point $A$, $(x_{\mathrm{b}}, y_{\mathrm{b}})$
-the point $B$, etc. The prime positions are the positions of the images of the conductor with respect to the ground.
+The position $(x_{\mathrm{a}}, y_{\mathrm{a}})$ are the position of the point $A$,
+$(x_{\mathrm{b}}, y_{\mathrm{b}})$ the point $B$, etc. The prime positions are the positions of the
+images of the conductor with respect to the ground.
 
 The formulas of the previous sections are used to get the impedance and shunt admittances matrices.
 
 ```{note}
-Please note that for underground lines, the provided height $h$ must be negative as shown in the example below.
+Please note that for underground lines, the provided height $h$ must be negative as shown in the
+example below.
 ```
 
 ```pycon
@@ -572,8 +625,8 @@ array(
 
 ## Import from OpenDSS
 
-Line parameters can also be created using an OpenDSS line code parameters using the `LineParameters.from_open_dss` class
-method. For more information and usage examples, see the
+Line parameters can also be created using an OpenDSS line code parameters using the
+`LineParameters.from_open_dss` class method. For more information and usage examples, see the
 {meth}`method's documentation <roseau.load_flow.LineParameters.from_open_dss>`.
 
 ## Bibliography

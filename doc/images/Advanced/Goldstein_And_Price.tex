@@ -10,7 +10,8 @@
     tight background,%
     background rectangle/.style={fill=white},%
     % q and q' functions
-    declare function = { q(\x) = (\x - 1) * (\x - 1) + 0.1; qp(\x) = 2 * \x - 2; } ]
+    declare function = { q(\x) = (\x - 1) * (\x - 1) + 0.1; qp(\x) = 2 * \x - 2; }
+  ]
   %
   % Common parameters
   %
@@ -34,7 +35,7 @@
   % Style
   %
   \tikzset{lisse/.style={line width=0.3mm, domain=\xminnormvaleur:\xmaxnormvaleur, samples=75,
-      mark=none}}%
+    mark=none}}%
 
   \begin{axis}[%
       height=7cm,%
@@ -76,11 +77,13 @@
     \addplot[black, thin] expression {q(0) + qp(0) * \mtwo * x};%
 
     % a and b
-    \addplot[dotted, black, mark=none] coordinates {%
+    \addplot[dotted, black, mark=none] coordinates
+      {%
         (\a,0)%
         (\a,\qa)%
       };%
-    \addplot[dotted, black, mark=none] coordinates {%
+    \addplot[dotted, black, mark=none] coordinates
+      {%
         (\b,0)%
         (\b,\qb)%
       };%
@@ -98,5 +101,5 @@
 % ispell-local-dictionary: "british"
 % coding: utf-8
 % LaTeX-indent-level: 2
-% fill-column: 120
+% fill-column: 100
 % End:

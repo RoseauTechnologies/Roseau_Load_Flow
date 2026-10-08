@@ -17,17 +17,15 @@ def test_line_parameters():
     bus2 = Bus(id="junction2", phases="abcn")
     ground = Ground("ground")
 
-    # Real element off the diagonal (Z)
+    # Real element off the diagonal (Z): allowed, e.g. represents a shared earth/neutral return
     z_line = np.ones(shape=(4, 4), dtype=complex)
     y_shunt = np.eye(4, dtype=complex)
-    with pytest.warns(UserWarning, match=r"z_line .* has off-diagonal elements with a non-zero"):
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+    LineParameters("test", z_line=z_line, y_shunt=y_shunt)
 
-    # Real element off the diagonal (Y)
+    # Real element off the diagonal (Y): allowed
     z_line = np.eye(3, dtype=complex)
     y_shunt = np.ones(shape=(3, 3), dtype=complex)
-    with pytest.warns(UserWarning, match=r"y_shunt .* has off-diagonal elements with a non-zero"):
-        LineParameters("test", z_line=z_line, y_shunt=y_shunt)
+    LineParameters("test", z_line=z_line, y_shunt=y_shunt)
 
     # Negative real values (Z)
     z_line = 2 * np.eye(4, dtype=complex)
@@ -360,6 +358,53 @@ def test_from_geometry():
     npt.assert_allclose(y_shunt, y_shunt_expected)
 
 
+def test_from_geometry_twisted_symmetric():
+    # twisted lines (aerial bundled cables) should have the same mutual impedance and admittance
+    # between any two phases, and between any phase and the neutral, because the twist balances the
+    # conductors along the length of the cable.
+    lp = LineParameters.from_geometry(
+        "twisted_symmetric",
+        line_type=LineType.TWISTED,
+        material=Material.AL,
+        insulator=Insulator.PEX,
+        section=150,
+        section_neutral=70,
+        height=10,
+        external_diameter=0.05,
+    )
+    z_line, y_shunt = lp.z_line.m, lp.y_shunt.m
+
+    # Phase-to-phase mutual terms are all equal, phase-to-neutral mutual terms are all equal
+    for m in (z_line, y_shunt):
+        npt.assert_allclose(m[0, 1], m[0, 2])
+        npt.assert_allclose(m[0, 1], m[1, 2])
+        npt.assert_allclose(m[0, 3], m[1, 3])
+        npt.assert_allclose(m[0, 3], m[2, 3])
+
+    # Diagonal terms are all equal for the phases (the neutral has a different section)
+    for m in (z_line, y_shunt):
+        npt.assert_allclose(m[0, 0], m[1, 1])
+        npt.assert_allclose(m[0, 0], m[2, 2])
+
+    # Overhead lines are not affected by the twisted-line averaging: unlike twisted lines, their
+    # shunt admittance mutual terms are not all equal (the inductance mutual terms happen to be
+    # equal too, but only because overhead and twisted lines currently share the same fixed
+    # cross-section geometry; see the TODO in `_get_geometric_configuration`).
+    _, y_shunt_overhead, *_ = LineParameters._from_geometry(
+        "test",
+        line_type=LineType.OVERHEAD,
+        material=Material.AL,
+        material_neutral=None,
+        insulator=Insulator.PEX,
+        insulator_neutral=None,
+        section=150,
+        section_neutral=70,
+        height=10,
+        external_diameter=0.04,
+    )
+    assert not np.isclose(y_shunt_overhead[0, 1], y_shunt_overhead[0, 2], rtol=1e-6, atol=0)
+
+
 def test_from_geometry_checks():
     # Wrong height
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -384,6 +429,23 @@ def test_from_geometry_checks():
     assert e.value.msg == (
         "Conductors too big for 'twisted' line parameter of id 'test'. Inequality "
         "`neutral_radius + phase_radius <= external_diameter / 4` is not satisfied."
+    )
+    # Phase conductors alone are too big, even though the neutral is tiny enough to pass the check
+    # above: the phase conductors would physically overlap each other
+    with pytest.raises(RoseauLoadFlowException) as e:
+        LineParameters.from_geometry(
+            "test",
+            line_type="T",
+            material="AL",
+            section=1809.557,  # phase_radius = 0.024 m
+            section_neutral=0.01,  # negligible neutral radius
+            height=15,
+            external_diameter=0.1,  # phase-phase no-overlap distance = 0.1*sqrt(3)/4 = 0.0433 m < 2*0.024
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_LINE_MODEL
+    assert e.value.msg == (
+        "Conductors too big for 'twisted' line parameter of id 'test'. Inequality "
+        "`phase_radius*2 <= external_diameter * sqrt(3) / 4` is not satisfied."
     )
     with pytest.raises(RoseauLoadFlowException) as e:
         LineParameters.from_geometry(
@@ -653,9 +715,9 @@ def test_from_catalogue():
 
     # Several line parameters
     with pytest.raises(RoseauLoadFlowException) as e:
-        LineParameters.from_catalogue(name=r"U_AL_.*")
+        LineParameters.from_catalogue(name=r"^U_AL_.*$")
     assert e.value.msg == (
-        "Several line parameters matching the query (name='U_AL_.*') have been found: "
+        "Several line parameters matching the query (name='^U_AL_.*$') have been found: "
         "'U_AL_19', 'U_AL_20', 'U_AL_22', 'U_AL_25', 'U_AL_28', 'U_AL_29', 'U_AL_33', "
         "'U_AL_34', 'U_AL_37', 'U_AL_38', 'U_AL_40', 'U_AL_43', 'U_AL_48', 'U_AL_50', "
         "'U_AL_54', 'U_AL_55', 'U_AL_59', 'U_AL_60', 'U_AL_69', 'U_AL_70', 'U_AL_74', "
@@ -695,7 +757,7 @@ def test_get_catalogue():
 
     # Filter on a single attribute
     for field_name, value, expected_size in (
-        ("name", r"U_AL_150.*", 1),
+        ("name", r"^U_AL_150.*$", 1),
         ("line_type", "OvErHeAd", 122),
         ("material", "Cu", 121),
         ("material_neutral", "Cu", 121),
@@ -710,7 +772,7 @@ def test_get_catalogue():
 
     # Filter on two attributes
     for field_name, value, expected_size in (
-        ("name", r"U_AL_150.*", 1),
+        ("name", r"^U_AL_150.*$", 1),
         ("line_type", "OvErHeAd", 40),
         ("section", 150, 7),
         ("section_neutral", 150, 4),

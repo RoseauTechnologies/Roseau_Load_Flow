@@ -2,15 +2,16 @@
 myst:
   html_meta:
     description lang=en: |
-      Quickly create a new electrical model by assembling sources, constant or flexible loads and lines, or load one
-      of the many existing models.
+      Quickly create a new electrical model by assembling sources, constant or flexible loads and
+      lines, or load one of the many existing models.
     keywords lang=en: Roseau, Load flow, python, power flow, distribution grid, three-phase, model
     # spellchecker:off
     description lang=fr: |
-      Créez rapidement un nouveau modèle électrique en assemblant des sources, des charges et des lignes, ou
-      chargez un des nombreux modèles existants.
+      Créez rapidement un nouveau modèle électrique en assemblant des sources, des charges et des
+      lignes, ou chargez un des nombreux modèles existants.
     keywords lang=fr: |
-      Roseau, load flow, python, écoulement de charge, écoulement de puissance, réseau de distribution, modèle
+      Roseau, load flow, python, écoulement de charge, écoulement de puissance, réseau de
+      distribution, modèle
     # spellchecker:on
 ---
 
@@ -51,7 +52,8 @@ At this point, all the elements are connected, but none belong to a network:
 None
 ```
 
-Then, creating an electrical network populates all the `network` fields of elements belonging to this network:
+Then, creating an electrical network populates all the `network` fields of elements belonging to
+this network:
 
 ```pycon
 >>> en = rlf.ElectricalNetwork.from_element(source_bus)
@@ -63,7 +65,8 @@ Obviously, an element can only belong to a single network:
 
 ```pycon
 >>> rlf.ElectricalNetwork.from_element(load)
-roseau.load_flow.exceptions.RoseauLoadFlowException: The Bus 'lb' is already assigned to another network. [several_networks]
+roseau.load_flow.exceptions.RoseauLoadFlowException: The Bus 'lb' is already assigned to another
+network. [several_networks]
 ```
 
 The load flow can be solved:
@@ -85,7 +88,8 @@ The `disconnect` method is only available for loads and for voltage sources.
 >>> load.disconnect()
 ```
 
-Now, the load no longer belongs to the network `en`. Symmetrically, the network doesn't have this load anymore:
+Now, the load no longer belongs to the network `en`. Symmetrically, the network doesn't have this
+load anymore:
 
 ```pycon
 >>> load.network
@@ -98,7 +102,8 @@ When accessing a result, a warning is emitted because the results are now outdat
 
 ```pycon
 >>> line.res_powers
-UserWarning: The results of this element may be outdated. Please re-run a load flow to ensure the validity of results.
+UserWarning: The results of this element may be outdated. Please re-run a load flow to ensure the
+validity of results.
 (array([10406.073858+0.00000000e+00j, 10406.073858+3.79778686e-12j,
         10406.073858-3.79778686e-12j,     0.      -0.00000000e+00j]) <Unit('volt_ampere')>,
  array([-9.99999996e+03+0.00000000e+00j, -9.99999996e+03-4.11872388e-12j,
@@ -112,7 +117,8 @@ anymore. Accessing `res_` properties may raise errors.
 
 ## Connecting an element
 
-Let's extend the network with a new line and add a load at its end. First, we create a new bus and the new load.
+Let's extend the network with a new line and add a load at its end. First, we create a new bus and
+the new load.
 
 ```pycon
 >>> new_bus = rlf.Bus(id="new_bus", phases="abcn")
@@ -128,8 +134,8 @@ None
 None
 ```
 
-Creating a line connecting the `load_bus` (belonging to the network `en`) and our new bus `new_bus` (which doesn't
-belong to a network) will propagate the network to the new elements.
+Creating a line connecting the `load_bus` (belonging to the network `en`) and our new bus `new_bus`
+(which doesn't belong to a network) will propagate the network to the new elements.
 
 ```pycon
 >>> lp_u_al_240 = rlf.LineParameters.from_catalogue("U_AL_240", nb_phases=4)
@@ -174,9 +180,10 @@ array([216.36821144]) <Unit('volt')>
 
 ## Modifying an element
 
-Some properties of an element cannot be modified once the element is created. For example the phases of an element, the
-buses of a branch / load / source, the winding of a transformer, and the shunt connection of a line cannot be modified.
-Some other properties can be modified, like the voltage of a voltage source.
+Some properties of an element cannot be modified once the element is created. For example the phases
+of an element, the buses of a branch / load / source, the winding of a transformer, and the shunt
+connection of a line cannot be modified. Some other properties can be modified, like the voltage of
+a voltage source.
 
 ### Modifying a voltage source
 
@@ -192,8 +199,8 @@ array([ 254.03411844  +0.j, -127.01705922-220.j, -127.01705922+220.j]) <Unit('vo
 
 ### Modifying a load
 
-Similarly, you can change the powers of a "constant power load", the currents of a "constant current load", and the
-impedances of a "constant impedance load".
+Similarly, you can change the powers of a "constant power load", the currents of a "constant current
+load", and the impedances of a "constant impedance load".
 
 ```pycon
 >>> new_load.powers
@@ -205,9 +212,9 @@ array([3000.+1000.j]) <Unit('volt_ampere')>
 
 ### Modifying a branch
 
-You can change a branch parameters by setting a new `parameters` attribute. Note that the new parameters have to be
-compatible with the existing branch. This means that the number of phases must match, and for a transformer, the
-windings must match.
+You can change a branch parameters by setting a new `parameters` attribute. Note that the new
+parameters have to be compatible with the existing branch. This means that the number of phases must
+match, and for a transformer, the windings must match.
 
 ```pycon
 >>> line.z_line
@@ -238,5 +245,5 @@ array([[0.5+0.1j, 0. +0.j , 0. +0.j , 0. +0.j ],
        [0. +0.j , 0. +0.j , 0. +0.j , 0.5+0.1j]]) <Unit('ohm')>
 ```
 
-Modifying the parameters of a transformer is similar, assign a new `parameters` attribute. For a transformer, you can
-also change the tap position by assigning a new `tap` attribute.
+Modifying the parameters of a transformer is similar, assign a new `parameters` attribute. For a
+transformer, you can also change the tap position by assigning a new `tap` attribute.

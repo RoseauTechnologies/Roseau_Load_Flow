@@ -1374,11 +1374,13 @@ class ElectricalNetwork(AbstractNetwork[Element]):
 
         Args:
             name:
-                The name of the network to get from the catalogue. It can be a regular expression.
+                The name of the network to get from the catalogue. Case-insensitive literal match by
+                default; wrap it in ``^...$`` for a regex, or pass a compiled pattern to set your own
+                flags.
 
             load_point_name:
                 The name of the load point to get. For each network, several load points may be
-                available. It can be a regular expression.
+                available. Matched the same way as `name`.
 
         Returns:
             The selected network

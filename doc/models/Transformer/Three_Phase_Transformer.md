@@ -2,14 +2,17 @@
 myst:
   html_meta:
     description lang=en: |
-      Three-phase transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by
-      Roseau Technologies.
-    keywords lang=en: simulation, distribution grid, switch, transformers, three-phase, 3-phase, model
+      Three-phase transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a
+      Python API by Roseau Technologies.
+    keywords lang=en: |
+      simulation, distribution grid, switch, transformers, three-phase, 3-phase, model
     # spellchecker:off
     description lang=fr: |
-      Les transformateurs triphasés dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
-      dans une API Python par Roseau Technologies.
-    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, transformateurs, triphasé, modèle
+      Les transformateurs triphasés dans Roseau Load Flow - Solveur d'écoulement de charge triphasé
+      et déséquilibré dans une API Python par Roseau Technologies.
+    keywords lang=fr: |
+      simulation, réseau, électrique, bus, roseau load flow, transformateurs, triphasé, modèle
+
 # spellchecker:on
 ---
 
@@ -17,10 +20,11 @@ myst:
 
 # Three-phase transformer
 
-Three-phase transformers are modeled with three separate single-phase non-ideal transformers. The windings of the
-individual transformers are connected with different configurations to the high voltage (HV) side and to the low voltage
-(LV) side. The non-ideal transformer losses are represented by $\underline{Z_2}$ the series impedances and
-$\underline{Y_{\mathrm{m}}}$ the magnetizing admittances.
+Three-phase transformers are modeled with three separate single-phase non-ideal transformers. The
+windings of the individual transformers are connected with different configurations to the high
+voltage (HV) side and to the low voltage (LV) side. The non-ideal transformer losses are represented
+by $\underline{Z_2}$ the series impedances and $\underline{Y_{\mathrm{m}}}$ the magnetizing
+admittances.
 
 ````{tab} European standards
 ```{image}  /_static/Transformer/European_Three_Phase_Transformer.svg
@@ -56,13 +60,14 @@ For example, the windings with a $Dyn11$ configuration are represented by the fo
 ```
 ````
 
-Notice how the neutral is accessible on the LV side of the transformer. Transformers with the neutral not brought out
-are also supported by omitting the $n$ in the vector group (e.g. $Dy11$). In this case there will be no neutral
-connection on the LV side.
+Notice how the neutral is accessible on the LV side of the transformer. Transformers with the
+neutral not brought out are also supported by omitting the $n$ in the vector group (e.g. $Dy11$). In
+this case there will be no neutral connection on the LV side.
 
 ## Winding configurations
 
-_Roseau Load Flow_ supports 2-winding transformer configurations as defined in the IEC 60076-1 standard.
+_Roseau Load Flow_ supports 2-winding transformer configurations as defined in the IEC 60076-1
+standard.
 
 The following "Common Connections" are supported:
 
@@ -84,15 +89,14 @@ align: center
 ---
 ```
 
-In addition to the IEC 60076-1 standard connections above, _Roseau Load Flow_ also supports the following "untrue" _Yy_
-connections that are not defined in IEC 60076-1. They are obtained from their corresponding "true" _Yy_ group by
-cyclically transposing the phases on the LV side:
+In addition to the IEC 60076-1 standard connections above, _Roseau Load Flow_ also supports the
+following "untrue" _Yy_ connections that are not defined in IEC 60076-1. They are obtained from
+their corresponding "true" _Yy_ group by cyclically transposing the phases on the LV side:
 
 ```{list-table}
----
-header-rows: 1
-align: center
----
+:header-rows: 1
+:align: center
+
 * - Untrue group
   - Derived from
   - LV phase transposition
@@ -110,8 +114,9 @@ align: center
   - __abc__ with __cab__
 ```
 
-Note that the neutral connection is omitted in the diagrams and table above for simplicity. All _Wye_ and _Zigzag_
-connections, whether on the HV side or on the LV side, may have a neutral connection brought out.
+Note that the neutral connection is omitted in the diagrams and table above for simplicity. All
+_Wye_ and _Zigzag_ connections, whether on the HV side or on the LV side, may have a neutral
+connection brought out.
 
 ## Equations
 
@@ -121,14 +126,18 @@ The following equations are used to model 3-phase transformers:
 \left\{
   \begin{aligned}
     K_{\mathrm{UXYZ}} \cdot \underline{U_{\mathrm{XYZ}}}
-    &= K_{\mathrm{VABC}} \cdot \underline{V_{\mathrm{ABC}}} - K_{\mathrm{N}} \cdot \underline{V_{\mathrm{N}}} \\
-    K_{\mathrm{Uxyz}} \cdot M_{\mathrm{TV}}\cdot \underline{U_{\mathrm{XYZ}}} + o_r \cdot \underline{Z_2} \cdot
+    &= K_{\mathrm{VABC}} \cdot \underline{V_{\mathrm{ABC}}} - K_{\mathrm{N}} \cdot
+      \underline{V_{\mathrm{N}}} \\
+    K_{\mathrm{Uxyz}} \cdot M_{\mathrm{TV}}\cdot \underline{U_{\mathrm{XYZ}}} + o_r \cdot
+      \underline{Z_2} \cdot
     \underline{I_{\mathrm{xyz}}}
-      &= K_{\mathrm{Vabc}} \cdot \underline{V_{\mathrm{abc}}} - K_{\mathrm{n}} \cdot \underline{V_{\mathrm{n}}} \\
+      &= K_{\mathrm{Vabc}} \cdot \underline{V_{\mathrm{abc}}} - K_{\mathrm{n}} \cdot
+        \underline{V_{\mathrm{n}}} \\
     K_{\mathrm{IABC}} \cdot \underline{I_{\mathrm{ABC}}} &= K_{\mathrm{IXYZ}} \cdot
       \left( \underline{Y_{\mathrm{m}}} \cdot \underline{U_{\mathrm{XYZ}}} + M_{\mathrm{TI}} \cdot
       \underline{I_{\mathrm{xyz}}} \right)\\
-    K_{\mathrm{Iabc}} \cdot \underline{I_{\mathrm{abc}}} &= K_{\mathrm{Ixyz}} \cdot \underline{I_{\mathrm{xyz}}} \\
+    K_{\mathrm{Iabc}} \cdot \underline{I_{\mathrm{abc}}} &= K_{\mathrm{Ixyz}} \cdot
+      \underline{I_{\mathrm{xyz}}} \\
     \underline{I_{\mathrm{N}}} &= - K_{\mathrm{N}}^\top \cdot \underline{I_{\mathrm{ABC}}} \\
     \underline{I_{\mathrm{n}}} &= - K_{\mathrm{n}}^\top \cdot \underline{I_{\mathrm{abc}}}
   \end{aligned}
@@ -137,31 +146,32 @@ The following equations are used to model 3-phase transformers:
 
 Where:
 
-- $\underline{Z_2}$ and $\underline{Y_{\mathrm{m}}}$ are the series impedance and magnetizing admittance
-- $o_r$ is the "orientation" variable, equals to $1$ for direct windings, i.e. windings with the "true" hour index in
-  the top half of the clock, and $-1$ for inverse windings, i.e. windings with the "true" hour index in the bottom half
-  of the clock.
-- $\underline{V}$, $\underline{U}$, and $\underline{I}$ are the voltage and current vectors as shown in the diagrams
-  above
+- $\underline{Z_2}$ and $\underline{Y_{\mathrm{m}}}$ are the series impedance and magnetizing
+  admittance
+- $o_r$ is the "orientation" variable, equals to $1$ for direct windings, i.e. windings with the
+  "true" hour index in the top half of the clock, and $-1$ for inverse windings, i.e. windings with
+  the "true" hour index in the bottom half of the clock.
+- $\underline{V}$, $\underline{U}$, and $\underline{I}$ are the voltage and current vectors as
+  shown in the diagrams above
 - $M$ and $K$ are the transformation and winding matrices defined below
 
 ## Matrices
 
-Let $I_3$ be the identity matrix $\begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{pmatrix}$, $S_3$ be the
-shifting matrix $\begin{pmatrix} 0 & 1 & 0 \\ 0 & 0 & 1 \\ 1 & 0 & 0 \end{pmatrix}$, and $S_3^T$ be its transpose. Also,
-let $0_3$ be the null vector $\begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix}$ and $1_3$ be the vector
-$\begin{pmatrix} 1 \\ 1 \\ 1 \end{pmatrix}$. The following matrices are used to model the winding configurations
-described above:
+Let $I_3$ be the identity matrix
+$\begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{pmatrix}$, $S_3$ be the shifting matrix
+$\begin{pmatrix} 0 & 1 & 0 \\ 0 & 0 & 1 \\ 1 & 0 & 0 \end{pmatrix}$, and $S_3^T$ be its transpose.
+Also, let $0_3$ be the null vector $\begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix}$ and $1_3$ be the
+vector $\begin{pmatrix} 1 \\ 1 \\ 1 \end{pmatrix}$. The following matrices are used to model the
+winding configurations described above:
 
 ### Transformation matrices
 
 ```{list-table}
----
-class: borderless
-header-rows: 1
-stub-columns: 2
-align: center
----
+:class: borderless
+:header-rows: 1
+:stub-columns: 2
+:align: center
+
 * - Windings
   - Clock numbers
   - $M_{\mathrm{TV}}$
@@ -186,16 +196,15 @@ align: center
 Where $k$ is the transformation ratio of the internal transformers defined as:
 
 ```{list-table}
----
-class: borderless
-header-rows: 1
-stub-columns: 1
-align: center
----
+:class: borderless
+:header-rows: 1
+:stub-columns: 1
+:align: center
+
 * - Windings
   - $k$
 * - Dy, Yz
-  - $\dfrac{U_{\mathrm{LV}}}{\sqrt{3} \cdot  U_{\mathrm{HV}}}$
+  - $\dfrac{U_{\mathrm{LV}}}{\sqrt{3} \cdot U_{\mathrm{HV}}}$
 * - Dd, Yy
   - $\dfrac{U_{\mathrm{LV}}}{U_{\mathrm{HV}}}$
 * - Yd
@@ -207,12 +216,11 @@ align: center
 ### HV winding matrices
 
 ```{list-table}
----
-class: borderless
-header-rows: 1
-stub-columns: 2
-align: center
----
+:class: borderless
+:header-rows: 1
+:stub-columns: 2
+:align: center
+
 * - HV Winding
   - Clock numbers
   - $K_{\mathrm{VABC}}$
@@ -249,12 +257,11 @@ align: center
 ### LV winding matrices
 
 ```{list-table}
----
-class: borderless
-header-rows: 1
-stub-columns: 2
-align: center
----
+:class: borderless
+:header-rows: 1
+:stub-columns: 2
+:align: center
+
 * - LV Winding
   - Clock numbers
   - $K_{\mathrm{Vabc}}$
@@ -321,8 +328,8 @@ align: center
 
 ## Example
 
-The following example shows a 160kVA MV/LV transformer with a $Dyn11$ configuration that connects a voltage source on
-the MV network to a load on the LV network.
+The following example shows a 160kVA MV/LV transformer with a $Dyn11$ configuration that connects a
+voltage source on the MV network to a load on the LV network.
 
 ```python
 import functools as ft
