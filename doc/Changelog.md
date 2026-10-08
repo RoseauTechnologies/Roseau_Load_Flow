@@ -21,6 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Version 0.16.0
 
+- Add support for Python 3.15 and the free-threaded Python 3.15t.
 - {gh-pr}`503` Catalogue string filters now have clearer matching rules: any string is a
   case-insensitive literal match, unless wrapped in `^...$`, in which case it is a case-insensitive
   regex; a compiled `re.Pattern` is used as-is (its flags respected). Invalid patterns no longer
