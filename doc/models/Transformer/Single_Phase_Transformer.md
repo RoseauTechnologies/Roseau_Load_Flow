@@ -2,14 +2,16 @@
 myst:
   html_meta:
     description lang=en: |
-      Single-phase transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by
-      Roseau Technologies.
+      Single-phase transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a
+      Python API by  Roseau Technologies.
     keywords lang=en: simulation, distribution grid, switch, transformers, single-phase, model
     # spellchecker:off
     description lang=fr: |
-      Les transformateurs monophasés dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
-      dans une API Python par Roseau Technologies.
-    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, transformateurs, monophasé, modèle
+      Les transformateurs monophasés dans Roseau Load Flow - Solveur d'écoulement de charge
+      triphasé et déséquilibré dans une API Python par Roseau Technologies.
+    keywords lang=fr: |
+      simulation, réseau, électrique, bus, roseau load flow, transformateurs, monophasé, modèle
+
 # spellchecker:on
 ---
 
@@ -33,12 +35,13 @@ Single-phase transformers are modelled as follows:
 ```
 ````
 
-Non-ideal transformer models are used in _Roseau Load Flow_. The series impedances $\underline{Z_2}$ and the magnetizing
-admittances $\underline{Y_{\mathrm{m}}}$ are included in the model.
+Non-ideal transformer models are used in _Roseau Load Flow_. The series impedances $\underline{Z_2}$
+and the magnetizing admittances $\underline{Y_{\mathrm{m}}}$ are included in the model.
 
 ```{note}
-Figures and equations on this page are related to a transformer connected between the phases $\mathrm{a}$ and $\mathrm
-{n}$. Nevertheless, single-phase transformers can be connected between any two phases.
+Figures and equations on this page are related to a transformer connected between the phases
+$\mathrm{a}$ and $\mathrm {n}$. Nevertheless, single-phase transformers can be connected between any
+two phases.
 ```
 
 ## Equations
@@ -50,21 +53,21 @@ The following equations are used:
   \begin{aligned}
     k \cdot \underline{U_{1,\mathrm{a}}} &= \underline{U_{2,\mathrm{a}}} - \underline{Z_2} \cdot \underline{I_{2,
     \mathrm{a}}} \\
-    \underline{I_{1,\mathrm{a}}} - \underline{Y_{\mathrm{m}}} \cdot \underline{U_{1,\mathrm{a}}} &= -k \cdot
-    \underline{I_{2,\mathrm{a}}} \\
+    \underline{I_{1,\mathrm{a}}} - \underline{Y_{\mathrm{m}}} \cdot \underline{U_{1,\mathrm{a}}} &=
+      -k \cdot \underline{I_{2,\mathrm{a}}} \\
     \underline{I_{1,\mathrm{a}}} &= -\underline{I_{1,\mathrm{n}}} \\
     \underline{I_{2,\mathrm{a}}} &= -\underline{I_{2,\mathrm{n}}} \\
   \end{aligned}
 \right.
 ```
 
-Where $\underline{Z_2}$ is the series impedance, $\underline{Y_{\mathrm{m}}}$ is the magnetizing admittance of the
-transformer, and $k$ the transformation ratio.
+Where $\underline{Z_2}$ is the series impedance, $\underline{Y_{\mathrm{m}}}$ is the magnetizing
+admittance of the transformer, and $k$ the transformation ratio.
 
 ## Example
 
-The following examples shows a single-phase load connected via an isolating single-phase transformer to a three-phase
-voltage source.
+The following examples shows a single-phase load connected via an isolating single-phase transformer
+to a three-phase voltage source.
 
 ```python
 import functools as ft

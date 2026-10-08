@@ -2,21 +2,23 @@
 myst:
   html_meta:
     description lang=en: |
-      Center-tapped transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by
-      Roseau Technologies.
+      Center-tapped transformers in Roseau Load Flow - Three-phase unbalanced load flow solver in a
+      Python API by Roseau Technologies.
     keywords lang=en: simulation, distribution grid, switch, transformers, Center-tapped, model
     # spellchecker:off
     description lang=fr: |
-      Transformateur à prise centrale dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré
-      dans une API Python par Roseau Technologies.
-    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, transformateurs, prise centrale, modèle
+      Transformateur à prise centrale dans Roseau Load Flow - Solveur d'écoulement de charge
+      triphasé et déséquilibré dans une API Python par Roseau Technologies.
+    keywords lang=fr: |
+      simulation, réseau, électrique, bus, roseau load flow, transformateurs, prise centrale, modèle
+
 # spellchecker:on
 ---
 
 # Center-tapped transformer
 
-Center-tapped transformers allow splitting a two-phase connection on their HV side into a two-phase connection with a
-neutral point in the middle on their LV side. It is modelled as follows:
+Center-tapped transformers allow splitting a two-phase connection on their HV side into a two-phase
+connection with a neutral point in the middle on their LV side. It is modelled as follows:
 
 ````{tab} European standards
 ```{image}  /_static/Transformer/European_Center_Tapped_Transformer.svg
@@ -34,13 +36,13 @@ neutral point in the middle on their LV side. It is modelled as follows:
 ```
 ````
 
-Non-ideal models are used in _Roseau Load Flow_. The series impedances $\underline{Z_2}$ and the magnetizing admittances
-$\underline{Y_{\mathrm{m}}}$ are included in the model.
+Non-ideal models are used in _Roseau Load Flow_. The series impedances $\underline{Z_2}$ and the
+magnetizing admittances $\underline{Y_{\mathrm{m}}}$ are included in the model.
 
 ```{note}
-Figures and equations on this page are related to a transformer connected between the phases $\mathrm{a}$ and $\mathrm
-{b}$. Nevertheless, center-tapped transformers can be connected between any two phases **as long as the center phase
-at the secondary is always $\mathrm{n}$**.
+Figures and equations on this page are related to a transformer connected between the phases
+$\mathrm{a}$ and $\mathrm {b}$. Nevertheless, center-tapped transformers can be connected between
+any two phases **as long as the center phase at the secondary is always $\mathrm{n}$**.
 ```
 
 ## Equations
@@ -56,19 +58,22 @@ The following equations are used:
     \underline{I_{1,\mathrm{a}}} - Y_{\mathrm{m}} \cdot \underline{U_{1,\mathrm{ab}}} &=
     -k \cdot \frac{\underline{I_{2,\mathrm{a}}} + \underline{I_{2,\mathrm{b}}}}{2} \\
     \underline{I_{1,\mathrm{a}}} &= -\underline{I_{1,\mathrm{n}}} \\
-    \underline{I_{2,\mathrm{a}}} + \underline{I_{2,\mathrm{b}}} + \underline{I_{2,\mathrm{n}}} &= 0 \\
+    \underline{I_{2,\mathrm{a}}} + \underline{I_{2,\mathrm{b}}} + \underline{I_{2,\mathrm{n}}} &=
+      0 \\
   \end{aligned}
 \right.
 ```
 
-Where $\underline{Z_2}$ is the series impedance, $\underline{Y_{\mathrm{m}}}$ is the magnetizing admittance of the
-transformer, $k$ the transformation ratio, and:
+Where $\underline{Z_2}$ is the series impedance, $\underline{Y_{\mathrm{m}}}$ is the magnetizing
+admittance of the transformer, $k$ the transformation ratio, and:
 
 ```{math}
 \left\{
   \begin{aligned}
-    \underline{U_{2,\mathrm{a}}^0} &= \underline{U_{2,\mathrm{a}}} - \frac{Z_2}{2} \underline{I_{2,\mathrm{a}}} \\
-    \underline{U_{2,\mathrm{b}}^0} &= \underline{U_{2,\mathrm{b}}} - \frac{Z_2}{2} \underline{I_{2,\mathrm{b}}}
+    \underline{U_{2,\mathrm{a}}^0} &= \underline{U_{2,\mathrm{a}}}
+      - \frac{Z_2}{2} \underline{I_{2,\mathrm{a}}} \\
+    \underline{U_{2,\mathrm{b}}^0} &= \underline{U_{2,\mathrm{b}}}
+      - \frac{Z_2}{2} \underline{I_{2,\mathrm{b}}}
   \end{aligned}
 \right.
 ```

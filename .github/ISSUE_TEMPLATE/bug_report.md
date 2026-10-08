@@ -32,7 +32,7 @@ import roseau.load_flow as rlf
 rlf.show_versions()
 ```
 
-```
+```text
 # Paste here the output of the function `show_versions`
 
 ```

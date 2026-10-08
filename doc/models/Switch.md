@@ -2,12 +2,13 @@
 myst:
   html_meta:
     description lang=en: |
-      Switches in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
+      Switches in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by
+      Roseau Technologies.
     keywords lang=en: simulation, distribution grid, switch, switches, model
     # spellchecker:off
     description lang=fr: |
-      Les interrupteurs dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une API
-      Python par Roseau Technologies.
+      Les interrupteurs dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et
+      déséquilibré dans une API Python par Roseau Technologies.
     keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, interrupteurs, modèle
     # spellchecker:on
 ---
@@ -67,8 +68,8 @@ These are the old accessors to the results of the sides of the switch. They may 
 future. The new interface is to use `<side>.res_*` presented below.
 ```
 
-The following results are available on each side of the switch accessible with `<side>.` prefix where `<side>` is either
-`side1` or `side2`:
+The following results are available on each side of the switch accessible with `<side>.` prefix
+where `<side>` is either `side1` or `side2`:
 
 | Result Accessor         | Default Unit | Type          | Description                                                                                                   |
 | ----------------------- | ------------ | ------------- | ------------------------------------------------------------------------------------------------------------- |

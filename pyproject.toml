@@ -20,6 +20,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Free Threading :: 2 - Beta",
   "Topic :: Scientific/Engineering :: Physics",
 ]
@@ -31,7 +32,7 @@ dependencies = [
   "pint>=0.24.0",
   "platformdirs>=4.0.0",
   "pyproj>=3.3.0",
-  "roseau-load-flow-engine==0.19.2a3",
+  "roseau-load-flow-engine==0.20.0",
   "shapely>=2.0.0",
   "typing-extensions>=4.6.2",
 ]
@@ -70,7 +71,7 @@ doc = [
 ]
 
 [build-system]
-requires = ["uv_build>=0.12.0,<0.13"]
+requires = ["uv_build>=0.12.23,<0.13"]
 build-backend = "uv_build"
 
 # Coverage
@@ -84,11 +85,6 @@ fail_under = 93
 
 [tool.coverage.html]
 directory = "htmlcov"
-
-# MD format
-[tool.mdformat]
-wrap = 120
-number = true
 
 # Pytest
 [tool.pytest]
@@ -135,14 +131,42 @@ mccabe.max-complexity = 15
 [tool.ruff.format]
 docstring-code-format = true
 
+# Rumdl
+[tool.rumdl.global]
+line-length = 100
+flavor = "gfm"
+disable = ["MD036"]  # Emphasis used instead of a heading
+
+[tool.rumdl.per-file-flavor]
+"doc/**/*.md" = "myst"
+".github/workflows/**/*.md" = "gh-aw"
+
+[tool.rumdl.per-file-ignores]
+"LICENSE.md" = ["MD041"]
+# MD014: keep `$` prompts in console blocks
+# MD057: links to MyST targets `(label)=` are not detected
+# MD069: breaks the `* - ` rows of `list-table` directives
+"doc/**/*.md" = ["MD014", "MD041", "MD057", "MD069"]
+
+[tool.rumdl.MD013]
+code-blocks = false
+
+[tool.rumdl.MD033]
+allowed-elements = ["a", "div", "iframe", "img"]
+
 # Tombi
 [tool.tombi]
 files.exclude = ["uv.lock"]
-schema.strict = false
+format.rules.line-width = 100
 
 [[tool.tombi.schemas]]
 root = "tool.typos"
 path = "https://raw.githubusercontent.com/crate-ci/typos/refs/heads/master/config.schema.json"
+include = ["pyproject.toml"]
+
+[[tool.tombi.schemas]]
+root = "tool.rumdl"
+path = "https://raw.githubusercontent.com/rvben/rumdl/main/rumdl.schema.json"
 include = ["pyproject.toml"]
 
 # Typos

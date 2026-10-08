@@ -2,12 +2,13 @@
 myst:
   html_meta:
     description lang=en: |
-      Line models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau Technologies.
+      Line models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by
+      Roseau Technologies.
     keywords lang=en: simulation, distribution grid, power line, electric line, lines, model
     # spellchecker:off
     description lang=fr: |
-      Les modèles de ligne dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et déséquilibré dans une
-      API Python par Roseau Technologies.
+      Les modèles de ligne dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et
+      déséquilibré dans une API Python par Roseau Technologies.
     keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
 # spellchecker:on
 ---
@@ -16,18 +17,19 @@ myst:
 
 ## Definition
 
-Lines are modeled using passive components lumped in a PI section. The lumped parameters are defined using the series
-impedance matrix $\underline{Z}$ and the shunt admittance matrix $\underline{Y}$.
+Lines are modeled using passive components lumped in a PI section. The lumped parameters are defined
+using the series impedance matrix $\underline{Z}$ and the shunt admittance matrix $\underline{Y}$.
 
 ## Matrices definition
 
-Before diving into the different line models, lets define the series impedance matrix $\underline{Z}$, and the shunt
-admittance matrix $\underline{Y}$ used to model the lines.
+Before diving into the different line models, lets define the series impedance matrix
+$\underline{Z}$, and the shunt admittance matrix $\underline{Y}$ used to model the lines.
 
 ### Series impedance matrix
 
-The series impedance matrix $\underline{Z}$, in $\Omega$, consists of the series resistance of the conductors
-($R\in{\mathbb{R}^+}^4$), the self-inductances ($L\in\mathbb{R}^4$) and the mutual inductances ($M\in\mathbb{R}^{12}$).
+The series impedance matrix $\underline{Z}$, in $\Omega$, consists of the series resistance of the
+conductors ($R\in{\mathbb{R}^+}^4$), the self-inductances ($L\in\mathbb{R}^4$) and the mutual
+inductances ($M\in\mathbb{R}^{12}$).
 
 ```{math}
 \begin{aligned}
@@ -64,8 +66,8 @@ The admittance matrix $\underline{y}$ shouldn't be confused with the shunt admit
 $\underline{Y}$ defined below.
 ```
 
-$\underline{y}$ represents the admittances between each node, while $\underline{Y}$ is used to compute the currents and
-voltages.
+$\underline{y}$ represents the admittances between each node, while $\underline{Y}$ is used to
+compute the currents and voltages.
 
 ```{math}
 \begin{aligned}
@@ -95,8 +97,8 @@ voltages.
 \end{aligned}
 ```
 
-with $G\in\mathbb{R}^4$ the conductance of the line, $B\in\mathbb{R}^4$ the susceptance of the line and
-$C\in\mathbb{R}^{16}$ the transverse susceptances of the line.
+with $G\in\mathbb{R}^4$ the conductance of the line, $B\in\mathbb{R}^4$ the susceptance of the line
+and $C\in\mathbb{R}^{16}$ the transverse susceptances of the line.
 
 (models-line-shunt-admittance-matrix)=
 
@@ -125,9 +127,10 @@ The shunt admittance matrix $\underline{Y}$ is defined from the admittance matri
 
 ## Line parameters
 
-The parameters of the lines are defined using the `LineParameters` class. It takes the series impedance matrix
-$\underline{Z}$ and optionally, the shunt admittance matrix $\underline{Y}$. The first one must be given in $\Omega$/km
-(or an equivalent unit) and the second must be given in $S/km$ (or an equivalent unit).
+The parameters of the lines are defined using the `LineParameters` class. It takes the series
+impedance matrix $\underline{Z}$ and optionally, the shunt admittance matrix $\underline{Y}$. The
+first one must be given in $\Omega$/km (or an equivalent unit) and the second must be given in
+$S/km$ (or an equivalent unit).
 
 ```python
 import numpy as np
@@ -169,12 +172,13 @@ shunt_line_parameters = rlf.LineParameters(
 ```
 
 ```{tip}
-The `Line` instance itself has the `z_line` and `y_shunt` properties. They retrieve the line impedance in $\Omega$
-and the line shunt admittance in Siemens (taking into account the length of the line).
+The `Line` instance itself has the `z_line` and `y_shunt` properties. They retrieve the line
+impedance in $\Omega$ and the line shunt admittance in Siemens (taking into account the length of
+the line).
 ```
 
-There are several alternative constructors for `LineParameters` objects. The description of them can be found in the
-dedicated [Line parameters page](Parameters.md).
+There are several alternative constructors for `LineParameters` objects. The description of them can
+be found in the dedicated [Line parameters page](Parameters.md).
 
 ## Available Results
 
@@ -206,8 +210,8 @@ the line. These are the old accessors to the results of the sides of the line. T
 in the future. The new interface is to use `<side>.res_*` presented below.
 ```
 
-Additionally, the following results are available on each side of the line accessible with `<side>.` prefix where
-`<side>` is either `side1` or `side2`:
+Additionally, the following results are available on each side of the line accessible with `<side>.`
+prefix where `<side>` is either `side1` or `side2`:
 
 | Result Accessor         | Default Unit | Type          | Description                                                                                                 |
 | ----------------------- | ------------ | ------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -246,8 +250,8 @@ And the following results are available for _three-phase_ lines:
 
 ## Available models
 
-The following line models are available in _Roseau Load Flow_. Please also have a look at the parameters page to define
-the parameters of lines.
+The following line models are available in _Roseau Load Flow_. Please also have a look at the
+parameters page to define the parameters of lines.
 
 ```{toctree}
 ---

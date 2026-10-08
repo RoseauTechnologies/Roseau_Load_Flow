@@ -2,14 +2,16 @@
 myst:
   html_meta:
     description lang=en: |
-      Power load models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
-      Technologies.
+      Power load models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python
+      API by Roseau Technologies.
     keywords lang=en: simulation, distribution grid, switch, power load, model
     # spellchecker:off
     description lang=fr: |
-      Les modèles de charge de puissance dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et
-      déséquilibré dans une API Python par Roseau Technologies.
-    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, charges, modèle, puissance
+      Les modèles de charge de puissance dans Roseau Load Flow - Solveur d'écoulement de charge
+      triphasé et déséquilibré dans une API Python par Roseau Technologies.
+    keywords lang=fr: |
+      simulation, réseau, électrique, bus, roseau load flow, charges, modèle, puissance
+
 # spellchecker:on
 ---
 
@@ -33,8 +35,8 @@ The equations are the following for star loads given the constant powers {math}`
 \right.
 ```
 
-And the following for delta loads given the constant powers {math}`s_{\mathrm{ab}}`, {math}`s_{\mathrm{bc}}` and
-{math}`s_{\mathrm{ca}}`:
+And the following for delta loads given the constant powers {math}`s_{\mathrm{ab}}`,
+{math}`s_{\mathrm{bc}}` and {math}`s_{\mathrm{ca}}`:
 
 ```{math}
 \left\{
@@ -51,7 +53,8 @@ And the following for delta loads given the constant powers {math}`s_{\mathrm{ab
 
 ## Available Results
 
-The results for constant-power loads are described [here](./index.md#available-results).
+The results for constant-power loads are described in the
+[available results](./index.md#available-results) section.
 
 ## Usage
 

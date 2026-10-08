@@ -2,21 +2,23 @@
 myst:
   html_meta:
     description lang=en: |
-      Impedance load models in Roseau Load Flow - Three-phase unbalanced load flow solver in a Python API by Roseau
-      Technologies.
+      Impedance load models in Roseau Load Flow - Three-phase unbalanced load flow solver in a
+      Python API by Roseau Technologies.
     keywords lang=en: simulation, distribution grid, switch, load, model, impedance
     # spellchecker:off
     description lang=fr: |
-      Les modèles de charge d'impédance dans Roseau Load Flow - Solveur d'écoulement de charge triphasé et
-      déséquilibré dans une API Python par Roseau Technologies.
-    keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, charges, modèle, impédance
+      Les modèles de charge d'impédance dans Roseau Load Flow - Solveur d'écoulement de charge
+      triphasé et déséquilibré dans une API Python par Roseau Technologies.
+    keywords lang=fr: |
+      simulation, réseau, électrique, bus, roseau load flow, charges, modèle, impédance
+
 # spellchecker:on
 ---
 
 # Impedance loads (Z)
 
-They represent loads for which the impedance is considered constant, i.e. the power is proportional to the square of the
-voltage.
+They represent loads for which the impedance is considered constant, i.e. the power is proportional
+to the square of the voltage.
 
 _ZIP_ equation: $S = 0 \times V^0 + 0 \times V^1 + z \times V^2 \implies S \propto V^2$
 
@@ -34,22 +36,26 @@ The equations are the following for star loads given the constant impedances {ma
 \right.
 ```
 
-And the following for delta loads given the constant impedances {math}`z_{\mathrm{ab}}`, {math}`z_{\mathrm{bc}}` and
-{math}`z_{\mathrm{ca}}`:
+And the following for delta loads given the constant impedances {math}`z_{\mathrm{ab}}`,
+{math}`z_{\mathrm{bc}}` and {math}`z_{\mathrm{ca}}`:
 
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{I_{\mathrm{ab}}} &= \frac{\underline{V_{\mathrm{a}}}-\underline{V_{\mathrm{b}}}}{\underline{z_{\mathrm{ab}}}} \\
-        \underline{I_{\mathrm{bc}}} &= \frac{\underline{V_{\mathrm{b}}}-\underline{V_{\mathrm{c}}}}{\underline{z_{\mathrm{bc}}}} \\
-        \underline{I_{\mathrm{ca}}} &= \frac{\underline{V_{\mathrm{c}}}-\underline{V_{\mathrm{a}}}}{\underline{z_{\mathrm{ca}}}}
+        \underline{I_{\mathrm{ab}}} &= \frac{\underline{V_{\mathrm{a}}}-
+          \underline{V_{\mathrm{b}}}}{\underline{z_{\mathrm{ab}}}} \\
+        \underline{I_{\mathrm{bc}}} &= \frac{\underline{V_{\mathrm{b}}}-
+          \underline{V_{\mathrm{c}}}}{\underline{z_{\mathrm{bc}}}} \\
+        \underline{I_{\mathrm{ca}}} &= \frac{\underline{V_{\mathrm{c}}}-
+          \underline{V_{\mathrm{a}}}}{\underline{z_{\mathrm{ca}}}}
     \end{aligned}
 \right.
 ```
 
 ## Available Results
 
-The results for constant-impedance loads are described [here](./index.md#available-results).
+The results for constant-impedance loads are described in the
+[available results](./index.md#available-results) section.
 
 ## Usage
 

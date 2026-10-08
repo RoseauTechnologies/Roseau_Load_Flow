@@ -2,21 +2,21 @@
 myst:
   html_meta:
     description lang=en: |
-      Shunt line models in Roseau Load Flow - three-phase unbalanced load flow solver in a Python API by Roseau
-      Technologies.
+      Shunt line models in Roseau Load Flow - three-phase unbalanced load flow solver in a Python
+      API by Roseau Technologies.
     keywords lang=en: simulation, distribution grid, switch, lines, model
     # spellchecker:off
     description lang=fr: |
-      Les modèles de ligne Shunt dans Roseau Load Flow - solveur d'écoulement de charge triphasé et déséquilibré dans
-      une API Python par Roseau Technologies.
+      Les modèles de ligne Shunt dans Roseau Load Flow - solveur d'écoulement de charge triphasé et
+      déséquilibré dans une API Python par Roseau Technologies.
     keywords lang=fr: simulation, réseau, électrique, bus, roseau load flow, lignes, modèle
 # spellchecker:on
 ---
 
 # Shunt line
 
-The first model of line which can be used is a PI model with series impedance and shunt admittance. The corresponding
-diagram is:
+The first model of line which can be used is a PI model with series impedance and shunt admittance.
+The corresponding diagram is:
 
 ````{tab} European standards
 ```{image} /_static/Line/European_Shunt_Line.svg
@@ -41,12 +41,12 @@ The corresponding equations are:
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{V_1} &= \underline{a} \cdot \underline{V_2} - \underline{b} \cdot \underline{I_2} + \underline{g}
-        \cdot \underline{V_{\mathrm{g}}} \\
-        \underline{I_1} &= \underline{c} \cdot \underline{V_2} - \underline{d} \cdot \underline{I_2} + \underline{h}
-        \cdot \underline{V_{\mathrm{g}}} \\
-        \underline{I_{\mathrm{g}}} &= \underline{f}^\top \cdot \left(\underline{V_1} + \underline{V_2} - 2\cdot
-        \underline{V_{\mathrm{g}}}\right)
+        \underline{V_1} &= \underline{a} \cdot \underline{V_2} - \underline{b} \cdot \underline{I_2}
+        + \underline{g} \cdot \underline{V_{\mathrm{g}}} \\
+        \underline{I_1} &= \underline{c} \cdot \underline{V_2} - \underline{d} \cdot \underline{I_2}
+        + \underline{h} \cdot \underline{V_{\mathrm{g}}} \\
+        \underline{I_{\mathrm{g}}} &= \underline{f}^\top \cdot \left(\underline{V_1} +
+        \underline{V_2} - 2\cdot \underline{V_{\mathrm{g}}}\right)
     \end{aligned}
 \right.
 ```
@@ -58,12 +58,14 @@ where
     \begin{aligned}
         \underline{a} &= \mathcal{I}_4 + \dfrac{1}{2} \cdot \underline{Z} \cdot \underline{Y}  \\
         \underline{b} &= \underline{Z}  \\
-        \underline{c} &= \underline{Y} + \dfrac{1}{4}\cdot \underline{Y} \cdot \underline{Z} \cdot \underline{Y}  \\
+        \underline{c} &= \underline{Y} + \dfrac{1}{4}\cdot \underline{Y} \cdot \underline{Z} \cdot
+        \underline{Y}  \\
         \underline{d} &= \mathcal{I}_4 + \dfrac{1}{2} \cdot \underline{Y} \cdot \underline{Z}  \\
         \underline{f} &= -\dfrac{1}{2} \cdot \begin{pmatrix} \underline{y_{\mathrm{ag}}} & \underline{y_{\mathrm{bg}}
         } & \underline{y_{\mathrm{cg}}} & \underline{y_{\mathrm{ng}}} \end{pmatrix} ^\top  \\
         \underline{g} &= \underline{Z} \cdot \underline{f}  \\
-        \underline{h} &= 2 \cdot \underline{f} + \frac{1}{2}\cdot \underline{Y} \cdot \underline{Z} \cdot \underline{f}  \\
+        \underline{h} &= 2 \cdot \underline{f} + \frac{1}{2}\cdot \underline{Y} \cdot \underline{Z}
+        \cdot \underline{f}  \\
     \end{aligned}
 \right.
 ```
@@ -72,12 +74,14 @@ with $\underline{Z}$ the series impedance matrix and $\underline{Y}$ the shunt a
 
 ## Available Results
 
-The results for shunt lines are described [here](./index.md#available-results).
+The results for shunt lines are described in the
+[available results](./index.md#available-results) section.
 
 ## Usage
 
-To create a shunt line, create an instance of `LineParameter` with the `y_shunt` argument. The `ground` argument of the
-`Line` constructor is mandatory for shunt lines. Here is a line that connects a constant power load to a voltage source.
+To create a shunt line, create an instance of `LineParameter` with the `y_shunt` argument. The
+`ground` argument of the `Line` constructor is mandatory for shunt lines. Here is a line that
+connects a constant power load to a voltage source.
 
 ```python
 import functools as ft
