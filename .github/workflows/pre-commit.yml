@@ -30,4 +30,4 @@ jobs:
       - name: Git LFS
         uses: $/.github/actions/git-lfs
 
-      - uses: j178/prek-action@v3.0.0
+      - uses: j178/prek-action@v3.1.0
