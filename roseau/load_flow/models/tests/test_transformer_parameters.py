@@ -381,7 +381,7 @@ def test_catalogue_data():
     # Check that the name is unique
     assert catalogue_data["name"].is_unique, "Catalogue transformer names are not unique."
 
-    catalogue_data.set_index(keys=["name"], inplace=True)
+    catalogue_data = catalogue_data.set_index(keys=["name"])
     for idx in catalogue_data.index:
         tp = TransformerParameters.from_catalogue(name=idx)
 
