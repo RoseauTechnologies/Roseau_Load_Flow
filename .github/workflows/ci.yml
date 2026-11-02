@@ -6,13 +6,13 @@ on:
     tags:
       - "*"
     paths-ignore:
-      - "doc/**"
-      - ".vscode/**"
+      - doc/**
+      - .vscode/**
   pull_request:
     branches: [main, develop]
     paths-ignore:
-      - "doc/**"
-      - ".vscode/**"
+      - doc/**
+      - .vscode/**
 
 env:
   CI: true
@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13", "3.14", "3.14t", "3.15", "3.15t"]
+        python-version: ["3.12", "3.13", "3.14", 3.14t, "3.15", 3.15t]
 
     permissions:
       contents: read
@@ -42,7 +42,7 @@ jobs:
           sudo apt update
           sudo apt -yq --no-install-suggests --no-install-recommends install libgdal-dev
 
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           lfs: false
           persist-credentials: false
@@ -51,7 +51,7 @@ jobs:
         uses: $/.github/actions/git-lfs
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.2.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
@@ -69,7 +69,7 @@ jobs:
           ROSEAU_LOAD_FLOW_LICENSE_KEY: ${{ secrets.ROSEAU_LOAD_FLOW_LICENSE_KEY }}
 
       - name: Archive code coverage results
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ always() }}
         with:
           name: code-coverage-report-${{ runner.os }}-python-${{ matrix.python-version }}

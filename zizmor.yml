@@ -1,12 +1,4 @@
 rules:
-  unpinned-uses:
-    config:
-      policies:
-        # Trust some actions providers enough to allow pin with reference
-        actions/*: ref-pin
-        j178/prek-action: ref-pin
-        astral-sh/*: ref-pin
-        pypa/*: ref-pin
   cache-poisoning:
     ignore:
       # ignore ci.yml and pre-commit.yml as there is no release in these workflows

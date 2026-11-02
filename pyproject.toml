@@ -71,7 +71,7 @@ doc = [
 ]
 
 [build-system]
-requires = ["uv_build>=0.12.23,<0.13"]
+requires = ["uv_build>=0.13.6,<0.14"]
 build-backend = "uv_build"
 
 # Coverage
@@ -154,6 +154,65 @@ code-blocks = false
 [tool.rumdl.MD033]
 allowed-elements = ["a", "div", "iframe", "img"]
 
+# Ryl
+[tool.ryl.format]
+quote-style = "double"
+comment-spacing = 1
+
+[tool.ryl.files]
+yaml = ["*.yaml", "*.yml", ".yamllint"]  # default if [files] is omitted
+markdown = ["*.md"]  # opt-in: enables markdown linting
+
+[tool.ryl.markdown]
+front-matter = true  # lint the --- ... --- block
+fenced-blocks = true  # lint yaml / yml fenced blocks
+
+[tool.ryl.lint.rules]
+anchors = "enable"
+comments = "disable"
+comments-indentation = "disable"
+document-end = "disable"
+document-start = "disable"
+empty-values = "disable"
+float-values = "disable"
+key-duplicates = "enable"
+key-ordering = "disable"
+new-line-at-end-of-file = "enable"
+new-lines = "enable"
+octal-values = "disable"
+quoted-strings = "disable"
+trailing-spaces = "enable"
+truthy = "disable"
+
+[tool.ryl.lint.rules.braces]
+level = "warning"
+max-spaces-inside = 1
+
+[tool.ryl.lint.rules.brackets]
+level = "warning"
+max-spaces-inside = 1
+
+[tool.ryl.lint.rules.colons]
+level = "warning"
+
+[tool.ryl.lint.rules.commas]
+level = "warning"
+
+[tool.ryl.lint.rules.empty-lines]
+level = "warning"
+
+[tool.ryl.lint.rules.hyphens]
+level = "warning"
+
+[tool.ryl.lint.rules.indentation]
+level = "warning"
+indent-sequences = "consistent"
+
+[tool.ryl.lint.rules.line-length]
+max = 100
+level = "warning"
+allow-non-breakable-inline-mappings = true
+
 # Tombi
 [tool.tombi]
 files.exclude = ["uv.lock"]
@@ -167,6 +226,11 @@ include = ["pyproject.toml"]
 [[tool.tombi.schemas]]
 root = "tool.rumdl"
 path = "https://raw.githubusercontent.com/rvben/rumdl/main/rumdl.schema.json"
+include = ["pyproject.toml"]
+
+[[tool.tombi.schemas]]
+root = "tool.ryl"
+path = "https://www.schemastore.org/ryl.json"
 include = ["pyproject.toml"]
 
 # Typos
