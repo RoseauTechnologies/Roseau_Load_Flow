@@ -4,15 +4,15 @@ on:
   push:
     branches: [main, develop]
     paths-ignore:
-      - ".vscode/**"
-      - ".idea/**"
+      - .vscode/**
+      - .idea/**
     tags:
       - "*"
   pull_request:
     branches: [main, develop]
     paths-ignore:
-      - ".vscode/**"
-      - ".idea/**"
+      - .vscode/**
+      - .idea/**
 
 permissions: {}
 
@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           lfs: false
           persist-credentials: false
@@ -30,4 +30,4 @@ jobs:
       - name: Git LFS
         uses: $/.github/actions/git-lfs
 
-      - uses: j178/prek-action@v3.0.0
+      - uses: j178/prek-action@44924fe9ef4a6f88253c4b6b1bf11c689d3ce53d # v3.1.0
