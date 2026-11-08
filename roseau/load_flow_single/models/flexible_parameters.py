@@ -7,7 +7,7 @@ import numpy as np
 from roseau.load_flow import SQRT3, Projection, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow import Control as MultiControl
 from roseau.load_flow import FlexibleParameter as MultiFlexibleParameter
-from roseau.load_flow.typing import ComplexArray, ControlType, Float, ProjectionType
+from roseau.load_flow.typing import ComplexArray, ControlType, Float, JsonDict, ProjectionType
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow_engine.cy_engine import CyControl, CyFlexibleParameter
 
@@ -666,6 +666,24 @@ class FlexibleParameter(MultiFlexibleParameter):
             s_max=fp_m._s_max * 3,
             q_min=fp_m._q_min_value * 3 if fp_m._q_min_value is not None else None,
             q_max=fp_m._q_max_value * 3 if fp_m._q_max_value is not None else None,
+        )
+
+    #
+    # Json Mixin interface
+    #
+    @classmethod
+    def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> Self:
+        # Use the single-phase `Control` class: its thresholds are phase-to-phase voltages
+        control_p = Control._from_dict(data=data["control_p"], include_results=include_results)
+        control_q = Control._from_dict(data=data["control_q"], include_results=include_results)
+        projection = Projection._from_dict(data=data["projection"], include_results=include_results)
+        return cls(
+            control_p=control_p,
+            control_q=control_q,
+            projection=projection,
+            s_max=data["s_max"],
+            q_min=data.get("q_min"),
+            q_max=data.get("q_max"),
         )
 
     def _compute_powers(self, voltages: Iterable[float], power: complex) -> ComplexArray:
