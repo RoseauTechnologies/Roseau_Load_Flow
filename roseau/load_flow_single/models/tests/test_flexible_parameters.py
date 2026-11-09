@@ -526,3 +526,29 @@ def test_flexible_parameters_compute_powers():
         voltages=voltages, power=power, voltages_labels_mask=np.isin(voltages, [240 * SQRT3, 250 * SQRT3])
     )
     np.testing.assert_allclose(res_flexible_powers.m, expected_res_flexible_powers)
+
+
+@pytest.mark.no_patch_engine
+def test_flexible_parameters_dict_round_trip():
+    # The single-phase controls must be used when reading a flexible parameter from a dict
+    fp = FlexibleParameter.pq_u_production(
+        up_up=Q_(420, "V"),
+        up_max=Q_(440, "V"),
+        uq_min=Q_(360, "V"),
+        uq_down=Q_(380, "V"),
+        uq_up=Q_(416, "V"),
+        uq_max=Q_(424, "V"),
+        s_max=Q_(15, "kVA"),
+        q_min=Q_(-6, "kVAr"),
+        q_max=Q_(6, "kVAr"),
+    )
+    fp2 = FlexibleParameter.from_dict(fp.to_dict())
+    assert type(fp2.control_p) is Control
+    assert type(fp2.control_q) is Control
+    assert fp2.to_dict() == fp.to_dict()
+
+    voltages = np.arange(350, 451, dtype=float)
+    power = Q_(-10 + 0j, "kVA")
+    np.testing.assert_allclose(
+        fp2.compute_powers(voltages=voltages, power=power).m, fp.compute_powers(voltages=voltages, power=power).m
+    )
