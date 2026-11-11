@@ -45,6 +45,11 @@ Roseau Load Flow Literals
 
     The side of a transformer (``"HV"`` or ``"LV"``) or a line/switch (1 or 2).
 
+.. class:: RegulatorConnection
+
+    How the single-phase units of a voltage regulator are connected: ``"wye"``,
+    ``"delta_positive_rotation"`` or ``"delta_negative_rotation"``.
+
 Union Input Types (Wide)
 ------------------------
 
@@ -143,6 +148,7 @@ type Solver = Literal["newton", "newton_goldstein", "backward_forward"]
 type Side = Literal[1, 2, "HV", "LV"]
 type ResultState = Literal["very-low", "low", "normal", "high", "very-high", "unknown"]
 type BranchType = Literal["line", "transformer", "switch", "regulator"]
+type RegulatorConnection = Literal["wye", "delta_positive_rotation", "delta_negative_rotation"]
 
 # Input Types (Wide)
 type Int = int | np.integer
@@ -193,6 +199,7 @@ __all__ = [
     "ProjectionType",
     "Solver",
     "Side",
+    "RegulatorConnection",
     # Wide input types
     "Int",
     "Float",

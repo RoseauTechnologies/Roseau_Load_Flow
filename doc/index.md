@@ -98,6 +98,7 @@ models/Load/index
 models/Line/index
 models/Switch
 models/Transformer/index
+models/VoltageRegulator
 ```
 
 ## Advanced

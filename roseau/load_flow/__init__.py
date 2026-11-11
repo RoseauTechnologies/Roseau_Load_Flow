@@ -42,9 +42,11 @@ from roseau.load_flow.models import (
     PotentialRef,
     PowerLoad,
     Projection,
+    RegulatorParameters,
     Switch,
     Transformer,
     TransformerParameters,
+    VoltageRegulator,
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
@@ -98,6 +100,10 @@ __all__ = [
     # Transformers
     "Transformer",
     "TransformerParameters",
+    # Regulators
+    "VoltageRegulator",
+    "RegulatorParameters",
+    # Sources
     "VoltageSource",
     # Exceptions
     "RoseauLoadFlowException",

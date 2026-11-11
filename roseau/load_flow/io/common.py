@@ -1,4 +1,4 @@
-from typing import TypedDict, final
+from typing import NotRequired, TypedDict, final
 
 from roseau.load_flow.models import (
     Bus,
@@ -9,6 +9,7 @@ from roseau.load_flow.models import (
     PotentialRef,
     Switch,
     Transformer,
+    VoltageRegulator,
     VoltageSource,
 )
 from roseau.load_flow.typing import CRSLike, Id
@@ -25,6 +26,7 @@ class NetworkElements(TypedDict):
     lines: dict[Id, Line]
     transformers: dict[Id, Transformer]
     switches: dict[Id, Switch]
+    regulators: NotRequired[dict[Id, VoltageRegulator]]
     grounds: dict[Id, Ground]
     potential_refs: dict[Id, PotentialRef]
     ground_connections: dict[Id, GroundConnection]

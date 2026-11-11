@@ -1,0 +1,85 @@
+\input{Preamble}%
+
+\begin{document}
+\ctikzset{european, straight voltages, cute inductors}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
+  % Régulateur de tension triphasé en étoile : une unité par phase, de borne commune le neutre
+
+  %
+  % Définitions
+  %
+  % Une unité : autotransformateur à prise variable. Arguments : abscisse, ordonnée, étiquette.
+  % L'entrée arrive à gauche en (x-0.8,y) sur la prise, la sortie repart à droite du haut de
+  % l'enroulement en (x,y) et la borne commune est en bas de l'enroulement en (x,y-1.2).
+  \newcommand{\regulatorunit}[3]{%
+    \draw[-{Latex[length=2.5mm]}] ({#1-0.8},#2) -- ({#1-0.12},{#2-0.5});%
+    \node[below left] at ({#1-0.5},{#2-0.25}) {#3};%
+    \draw ({#1},{#2-1.2}) to[cute inductor] ({#1},#2);%
+  }%
+  \pgfmathsetmacro{\r}{0.15};% Rayon des sauts de fils
+  \pgfmathsetmacro{\xl}{0};%
+  \pgfmathsetmacro{\xa}{3};%
+  \pgfmathsetmacro{\xb}{6};%
+  \pgfmathsetmacro{\xc}{9};%
+  \pgfmathsetmacro{\xr}{12};%
+
+  \pgfmathsetmacro{\yn}{0};%
+  \pgfmathsetmacro{\yc}{2.5};%
+  \pgfmathsetmacro{\yb}{5};%
+  \pgfmathsetmacro{\ya}{7.5};%
+
+  %
+  % Dessin
+  %
+  % Tensions amont
+  \node[left] at (\xl,\ya) {$\underline{V_{1,\arm}}$};
+  \node[left] at (\xl,\yb) {$\underline{V_{1,\brm}}$};
+  \node[left] at (\xl,\yc) {$\underline{V_{1,\crm}}$};
+  \node[left] at (\xl,\yn) {$\underline{V_{1,\nrm}}$};
+
+  % Tensions aval
+  \node[right] at (\xr,\ya) {$\underline{V_{2,\arm}}$};
+  \node[right] at (\xr,\yb) {$\underline{V_{2,\brm}}$};
+  \node[right] at (\xr,\yc) {$\underline{V_{2,\crm}}$};
+  \node[right] at (\xr,\yn) {$\underline{V_{2,\nrm}}$};
+
+  % Unités
+  \regulatorunit{\xa}{\ya}{$a_\anrm$}%
+  \regulatorunit{\xb}{\yb}{$a_\bnrm$}%
+  \regulatorunit{\xc}{\yc}{$a_\cnrm$}%
+
+  % Entrées (les fils des phases b et c sautent par-dessus les bornes communes des autres unités)
+  \draw (\xl,\ya) to[short,*-,i=$\underline{I_{1,\arm}}$] (\xl+1.2,\ya) -- (\xa-0.8,\ya);%
+  \draw (\xl,\yb) to[short,*-,i=$\underline{I_{1,\brm}}$] (\xl+1.2,\yb)
+    -- (\xa-\r,\yb) arc[start angle=180, end angle=0, radius=\r] -- (\xb-0.8,\yb);%
+  \draw (\xl,\yc) to[short,*-,i=$\underline{I_{1,\crm}}$] (\xl+1.2,\yc)
+    -- (\xa-\r,\yc) arc[start angle=180, end angle=0, radius=\r]
+    -- (\xb-\r,\yc) arc[start angle=180, end angle=0, radius=\r] -- (\xc-0.8,\yc);%
+
+  % Sorties
+  \draw (\xa,\ya) -- (\xr-1.2,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xr,\ya);%
+  \draw (\xb,\yb) -- (\xr-1.2,\yb) to[short,-*,i<=$\underline{I_{2,\brm}}$] (\xr,\yb);%
+  \draw (\xc,\yc) -- (\xr-1.2,\yc) to[short,-*,i<=$\underline{I_{2,\crm}}$] (\xr,\yc);%
+
+  % Neutre, borne commune des unités, transmis d'un côté à l'autre
+  \draw (\xl,\yn) to[short,*-,i=$\underline{I_{1,\nrm}}$] (\xl+1.2,\yn)
+    -- (\xr-1.2,\yn) to[short,-*,i<=$\underline{I_{2,\nrm}}$] (\xr,\yn);%
+  \draw (\xa,\ya-1.2) to[short,-*] (\xa,\yn);%
+  \draw (\xb,\yb-1.2) to[short,-*] (\xb,\yn);%
+  \draw (\xc,\yc-1.2) to[short,-*] (\xc,\yn);%
+
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 2
+% fill-column: 100
+% End:

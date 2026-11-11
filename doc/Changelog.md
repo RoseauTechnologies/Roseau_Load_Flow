@@ -21,6 +21,19 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- Add the multi-phase voltage regulators `rlf.VoltageRegulator` and `rlf.RegulatorParameters`. A
+  voltage regulator is a bank of single-phase units (autotransformers with an on-load tap changer),
+  each with its own tap, which keeps the voltage of the load side at `u_ref` within its regulation
+  range `u_range`. The units are connected according to the new `connection` parameter of the
+  regulator parameters: `"wye"` (phases with a neutral, the neutral being carried through the
+  regulator), `"delta_positive_rotation"` or `"delta_negative_rotation"` (closed delta, phases
+  `"abc"`). The taps are available with `VoltageRegulator.res_taps` and the new
+  `ElectricalNetwork.res_regulators_taps` data frame, the other results with
+  `ElectricalNetwork.res_regulators`. Regulators are also exported to JSON (`"regulators"` and
+  `"regulators_params"` keys, written only when the network has regulators), included in
+  `ElectricalNetwork.regulators_frame` and `ElectricalNetwork.to_graph`, and converted to their
+  single-phase equivalent by `rlfs.ElectricalNetwork.from_rlf` (wye regulators only). See the
+  [Voltage Regulator](models/VoltageRegulator.md) page.
 - Fix reading single-phase flexible parameters (`rlfs.FlexibleParameter`) from a dictionary or a
   JSON file: the multi-phase `Control` class was used instead of the single-phase one, so the
   voltage thresholds were interpreted as phase-to-neutral voltages instead of phase-to-phase ones
