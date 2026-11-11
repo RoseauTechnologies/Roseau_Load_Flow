@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Final, NoReturn, Self, get_args
+from typing import TYPE_CHECKING, Final, Literal, NoReturn, Self, get_args
 
 import numpy as np
 
@@ -7,13 +7,23 @@ from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.typing import Complex, Float, Id, JsonDict, QtyOrMag, RegulatorConnection
 from roseau.load_flow.units import Q_, ureg_wraps
-from roseau.load_flow.utils import Identifiable, JsonMixin, pretty_unit
+from roseau.load_flow.utils import Identifiable, JsonMixin, pretty_unit, warn_external
 from roseau.load_flow_engine.cy_engine import CySingleVoltageRegulator, CyVoltageRegulator
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
 logger = logging.getLogger(__name__)
+
+type PowerFactoryRegulatorType = Literal["Type A", "Type B"]
+"""The type of a DIgSILENT PowerFactory step-voltage regulator (``TypVoltreg.type``)."""
+type PowerFactoryRegulatorConfiguration = Literal[
+    "Star, 3-phase", "Star, 3 x 1-phase", "Closed delta, 3 x 1-phase", "Open delta, 2 x 1-phase"
+]
+"""The configuration of a DIgSILENT PowerFactory step-voltage regulator (``TypVoltreg.config``)."""
+type PowerFactoryClosedDeltaConnection = Literal["Lagging", "Leading"]
+"""The connection of a DIgSILENT PowerFactory closed-delta step-voltage regulator
+(``TypVoltreg.cldeltacn``)."""
 
 
 class _RegulatorParametersMixin:
@@ -272,6 +282,119 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         self._connection: RegulatorConnection = connection
         self._alpha = float(alpha)
         self._elements: set = set()
+
+    @classmethod
+    @ureg_wraps(None, (None, None, "kV", "A", "percent", "percent", "W", None, None, None))
+    def from_power_factory(
+        cls,
+        id: Id,
+        *,
+        un: QtyOrMag[Float],
+        in_: QtyOrMag[Float],
+        pc_reg: QtyOrMag[Float],
+        uk: QtyOrMag[Float],
+        pcu: QtyOrMag[Float],
+        kind: PowerFactoryRegulatorType = "Type A",
+        configuration: PowerFactoryRegulatorConfiguration = "Star, 3-phase",
+        closed_delta_connection: PowerFactoryClosedDeltaConnection | None = None,
+    ) -> Self:
+        """Create regulator parameters from the data of a DIgSILENT PowerFactory step-voltage
+        regulator type (``TypVoltreg``).
+
+        PowerFactory's step-voltage regulator is an autotransformer with a tap changer covering
+        ``±pc_reg`` % and a series impedance (``uk``, ``pcu``) given in per-unit of its circuit base
+        power ``Sb``: ``Sb = √3·Un·In`` for the "Star, 3-phase" configuration, the base power
+        ``Un·In`` of a single-phase unit for the others. Its tap ratio is ``1 + n·dutap`` for a
+        Type A regulator, exactly the law of this model, and ``1 / (1 - n·dutap)`` for a Type B
+        regulator, approximated by the Type A law (identical at the neutral tap, 1.1 instead of
+        1.111 at the end of a ±10 % range). The magnetising admittance is zero.
+
+        Args:
+            id:
+                A unique ID of the regulator parameters.
+
+            un:
+                The rated voltage (kV, ``Un``): line-to-neutral for the "Star, 3 x 1-phase"
+                configuration, line-to-line otherwise.
+
+            in_:
+                The rated current (A, ``In``). It gives the rated (throughput) power of the
+                parameters ``sn = √3·Un·In`` (``Un`` line-to-line).
+
+            pc_reg:
+                The voltage regulation range (+/-, %, ``pcReg``).
+
+            uk:
+                The short-circuit voltage (%, ``uk``).
+
+            pcu:
+                The copper losses (W, ``pcu``), per single-phase unit except for the "Star,
+                3-phase" configuration.
+
+            kind:
+                The type of the regulator (``type``): ``"Type A"`` (default) or ``"Type B"``.
+
+            configuration:
+                The configuration of the regulator (``config``): ``"Star, 3-phase"`` (default) and
+                ``"Star, 3 x 1-phase"`` give ``"wye"`` parameters, ``"Closed delta, 3 x 1-phase"``
+                gives closed-delta parameters. The open delta is not supported.
+
+            closed_delta_connection:
+                The connection of a closed delta (``cldeltacn``): ``"Lagging"`` (default) gives the
+                ``"delta_positive_rotation"`` connection, ``"Leading"`` the
+                ``"delta_negative_rotation"`` one. Ignored by the star configurations.
+
+        Returns:
+            The created regulator parameters.
+        """
+        un = float(un) * 1e3  # V
+        in_ = float(in_)
+        if configuration == "Star, 3-phase":
+            un_ll, sb, connection = un, SQRT3 * un * in_, "wye"
+        elif configuration == "Star, 3 x 1-phase":
+            un_ll, sb, connection = un * SQRT3, un * in_, "wye"
+        elif configuration == "Closed delta, 3 x 1-phase":
+            if closed_delta_connection is None or closed_delta_connection == "Lagging":
+                connection = "delta_positive_rotation"
+            elif closed_delta_connection == "Leading":
+                connection = "delta_negative_rotation"
+            else:
+                msg = (
+                    f"Invalid closed delta connection {closed_delta_connection!r} for regulator "
+                    f"parameters {id!r}: expected 'Lagging' or 'Leading'."
+                )
+                logger.error(msg)
+                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION)
+            un_ll, sb = un, un * in_
+        else:
+            msg = (
+                f"The PowerFactory step-voltage regulator configuration {configuration!r} of the "
+                f"regulator parameters {id!r} is not supported."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION)
+        if kind == "Type B":
+            warn_external(
+                f"The Type B step-voltage regulator {id!r} has a tap ratio 1/(1 - n·dutap), "
+                f"approximated by the Type A ratio 1 + n·dutap."
+            )
+        elif kind != "Type A":
+            msg = f"Invalid regulator type {kind!r} for regulator parameters {id!r}: expected 'Type A' or 'Type B'."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+        sn = SQRT3 * un_ll * in_  # VA, the throughput rating
+        zb = un * un / sb  # The base impedance of each unit (Ω)
+        r = float(pcu) / sb  # p.u.
+        z = float(uk) / 100.0  # p.u.
+        if r > z:
+            msg = (
+                f"The copper losses pcu={pcu} W of the regulator parameters {id!r} exceed what their "
+                f"short-circuit voltage uk={uk} % allows."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+        z2 = complex(r, np.sqrt(z * z - r * r)) * zb
+        return cls(id, sn=sn, un=un_ll, z2=z2, ym=0.0, u_range=float(pc_reg) / 100.0, connection=connection)
 
     def __repr__(self) -> str:
         return (

@@ -6,7 +6,10 @@ HERE = Path(__file__).parent.expanduser().absolute()
 TEST_ALL_NETWORKS_DATA_FOLDER = HERE / "tests" / "data" / "networks"
 
 TEST_DGS_NETWORKS_DIR = HERE / "tests" / "data" / "dgs"
-TEST_DGS_NETWORKS = list(TEST_DGS_NETWORKS_DIR.rglob("*.json"))
+TEST_DGS_REGULATORS_NETWORKS_DIR = TEST_DGS_NETWORKS_DIR / "regulators"  # Tested separately
+TEST_DGS_NETWORKS = [
+    p for p in TEST_DGS_NETWORKS_DIR.rglob("*.json") if not p.is_relative_to(TEST_DGS_REGULATORS_NETWORKS_DIR)
+]
 TEST_DGS_NETWORKS_IDS = [x.stem for x in TEST_DGS_NETWORKS]
 TEST_DGS_SPECIAL_NETWORKS_DIR = TEST_DGS_NETWORKS_DIR / "special"
 
@@ -29,6 +32,11 @@ def dgs_networks_dir() -> Path:
 @pytest.fixture(scope="session")
 def dgs_special_networks_dir() -> Path:
     return TEST_DGS_SPECIAL_NETWORKS_DIR
+
+
+@pytest.fixture(scope="session")
+def dgs_regulators_networks_dir() -> Path:
+    return TEST_DGS_REGULATORS_NETWORKS_DIR
 
 
 @pytest.fixture(scope="session")

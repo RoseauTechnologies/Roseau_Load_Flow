@@ -146,6 +146,11 @@ The {class}`~roseau.load_flow.RegulatorParameters` define:
 - `connection`: how the units are connected, `"wye"` by default;
 - `alpha`: the steepness of the softplus functions smoothing the tap bounds, `1000` by default.
 
+The parameters can also be created from the data of a DIgSILENT PowerFactory step-voltage
+regulator type with {meth}`~roseau.load_flow.RegulatorParameters.from_power_factory`, and the
+regulators of a PowerFactory network are imported from DGS files (see the
+[Data Exchange](PowerFactory-Regulators) page).
+
 The parameters can be shared by several regulators. The target voltage `u_ref` (1.0 p.u. by default)
 is set on each {class}`~roseau.load_flow.VoltageRegulator`. The no-load tap of a unit can be computed
 and plotted with the {meth}`~roseau.load_flow.RegulatorParameters.compute_tap`,

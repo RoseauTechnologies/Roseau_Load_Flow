@@ -34,6 +34,7 @@ from roseau.load_flow_single.io.dgs.pwf import (
     create_grid,
     create_study_case,
 )
+from roseau.load_flow_single.io.dgs.regulators import voltreg_to_regulators
 from roseau.load_flow_single.io.dgs.sources import elm_xnet_to_sources, sources_to_elm_xnet
 from roseau.load_flow_single.io.dgs.switches import elm_coup_to_switches, switches_to_elm_coup
 from roseau.load_flow_single.io.dgs.transformers import (
@@ -50,6 +51,7 @@ from roseau.load_flow_single.models import (
     Switch,
     Transformer,
     TransformerParameters,
+    VoltageRegulator,
     VoltageSource,
 )
 
@@ -87,6 +89,9 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     elm_xnet = dgs_dict_to_df(data, "ElmXnet", index_col)  # External sources
     elm_tr = dgs_dict_to_df(data, "ElmTr2", index_col) if "ElmTr2" in data else None  # Transformers
     elm_coup = dgs_dict_to_df(data, "ElmCoup", index_col) if "ElmCoup" in data else None  # Switches
+    # Step-voltage regulator types and regulators
+    typ_voltreg = dgs_dict_to_df(data, "TypVoltreg", index_col) if "TypVoltreg" in data else None
+    elm_voltreg = dgs_dict_to_df(data, "ElmVoltreg", index_col) if "ElmVoltreg" in data else None
     elm_lne = dgs_dict_to_df(data, "ElmLne", index_col) if "ElmLne" in data else None  # Lines
     elm_lod_lv = dgs_dict_to_df(data, "ElmLodLV", index_col) if "ElmLodLV" in data else None  # LV loads
     elm_lod_mv = dgs_dict_to_df(data, "ElmLodmv", index_col) if "ElmLodmv" in data else None  # MV loads
@@ -111,6 +116,7 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     lines: dict[Id, Line] = {}
     transformers: dict[Id, Transformer] = {}
     switches: dict[Id, Switch] = {}
+    regulators: dict[Id, VoltageRegulator] = {}
 
     # Buses
     elm_term_to_buses(elm_term=elm_term, buses=buses, use_name_as_id=use_name_as_id)
@@ -166,6 +172,16 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     if elm_coup is not None:
         elm_coup_to_switches(elm_coup=elm_coup, switches=switches, buses=buses, sta_cubic=sta_cubic)
 
+    # Voltage regulators
+    voltreg_to_regulators(
+        typ_voltreg=typ_voltreg,
+        elm_voltreg=elm_voltreg,
+        regulators=regulators,
+        buses=buses,
+        sta_cubic=sta_cubic,
+        use_name_as_id=use_name_as_id,
+    )
+
     return {
         "buses": {bus.id: bus for bus in buses.values()},
         "lines": lines,
@@ -173,7 +189,7 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
         "switches": switches,
         "loads": loads,
         "sources": sources,
-        "regulators": {},  # TODO implement regulators
+        "regulators": regulators,
         "name": name,
         "crs": "EPSG:4326",
     }

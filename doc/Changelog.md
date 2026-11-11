@@ -34,6 +34,17 @@ og:description: See what's new in the latest release of Roseau Load Flow !
   `ElectricalNetwork.regulators_frame` and `ElectricalNetwork.to_graph`, and converted to their
   single-phase equivalent by `rlfs.ElectricalNetwork.from_rlf` (wye regulators only). See the
   [Voltage Regulator](models/VoltageRegulator.md) page.
+- Import the step-voltage regulators (`ElmVoltreg`, `TypVoltreg`) of PowerFactory DGS files as
+  multi-phase voltage regulators (star and closed-delta configurations) and as single-phase voltage
+  regulators (star configurations), and add
+  `RegulatorParameters.from_power_factory` to create regulator parameters from the data of a
+  PowerFactory step-voltage regulator type. The imported regulators match PowerFactory's load flow
+  results.
+- The DGS import now earths the star point of the external grids (`ElmXnet`) as PowerFactory does:
+  when its terminal has a neutral, an earthed star point (`cgnd`) connected to the neutral of the
+  terminal (`iintgnd`) earths this neutral, and a star point not connected to it gives the voltage
+  source its own floating neutral, earthed directly. The neutral of the source terminal of LV
+  networks is thus now earthed, which brings their voltages much closer to PowerFactory's.
 - Fix reading single-phase flexible parameters (`rlfs.FlexibleParameter`) from a dictionary or a
   JSON file: the multi-phase `Control` class was used instead of the single-phase one, so the
   voltage thresholds were interpreted as phase-to-neutral voltages instead of phase-to-phase ones

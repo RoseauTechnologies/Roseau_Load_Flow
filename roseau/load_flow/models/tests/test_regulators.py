@@ -381,3 +381,66 @@ def test_convert_to_single_phase():
     with pytest.raises(RoseauLoadFlowException) as e:
         rlfs.ElectricalNetwork.from_rlf(en)
     assert e.value.code == RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+
+
+def test_from_power_factory():
+    # The PowerFactory 2022 example: 20 kV, 300 A, ±10 %, uk = 1 %, pcu = 2 kW, whose own load flow
+    # results give Sb = 10 392.3 kVA and r1pu/x1pu = 0.000192/0.009998
+    with pytest.warns(UserWarning, match=r"approximated by the Type A ratio") as records:
+        rlf.RegulatorParameters.from_power_factory("B", un=20, in_=300, pc_reg=10, uk=1, pcu=2000, kind="Type B")
+    assert len(records) == 1
+    rp = rlf.RegulatorParameters.from_power_factory("rp", un=20, in_=300, pc_reg=10, uk=1, pcu=2000)
+    assert rp.connection == "wye"
+    assert math.isclose(rp.sn.m, 10392.3e3, rel_tol=1e-6)
+    assert rp.un.m == 20e3
+    assert math.isclose(rp.u_range, 0.1)
+    assert rp.ym.m == 0
+    z_pu = rp.z2.m / (rp.un.m**2 / rp.sn.m)
+    assert math.isclose(z_pu.real, 0.000192, abs_tol=1e-6)
+    assert math.isclose(z_pu.imag, 0.009998, abs_tol=1e-6)
+    assert math.isclose(abs(z_pu), 0.01)
+
+    # Three single-phase 11.547 kV (line-to-neutral) units of 300 A are the same regulator as a
+    # three-phase 20 kV, 300 A one, with a third of the copper losses each
+    three_phase = rlf.RegulatorParameters.from_power_factory("3ph", un=20, in_=300, pc_reg=10, uk=1, pcu=3000)
+    units = rlf.RegulatorParameters.from_power_factory(
+        "3x1ph", un=20 / math.sqrt(3), in_=300, pc_reg=10, uk=1, pcu=1000, configuration="Star, 3 x 1-phase"
+    )
+    assert math.isclose(units.sn.m, three_phase.sn.m)
+    assert math.isclose(units.un.m, three_phase.un.m)
+    assert cmath.isclose(units.z2.m, three_phase.z2.m)
+
+    # The closed-delta type of the PowerFactory 2022 validation: three 20 kV (line-to-line), 300 A
+    # units, uk = 1 %, pcu = 2 kW each, whose export gives Sb = 6000 kVA (one unit) and
+    # r1pu/x1pu = 0.000333/0.009994
+    for closed_delta_connection, expected in (
+        (None, "delta_positive_rotation"),
+        ("Lagging", "delta_positive_rotation"),
+        ("Leading", "delta_negative_rotation"),
+    ):
+        rp = rlf.RegulatorParameters.from_power_factory(
+            "delta",
+            un=20,
+            in_=300,
+            pc_reg=10,
+            uk=1,
+            pcu=2000,
+            configuration="Closed delta, 3 x 1-phase",
+            closed_delta_connection=closed_delta_connection,
+        )
+        assert rp.connection == expected
+        assert rp.un.m == 20e3
+        z_pu = rp.z2.m / (20e3**2 / 6e6)  # The impedance base is a single unit's
+        assert math.isclose(z_pu.real, 0.000333, abs_tol=1e-6)
+        assert math.isclose(z_pu.imag, 0.009994, abs_tol=1e-6)
+
+    # Errors
+    with pytest.raises(RoseauLoadFlowException) as e:
+        rlf.RegulatorParameters.from_power_factory(
+            "rp", un=20, in_=300, pc_reg=10, uk=1, pcu=2000, configuration="Open delta, 2 x 1-phase"
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION
+    with pytest.raises(RoseauLoadFlowException) as e:
+        rlf.RegulatorParameters.from_power_factory("rp", un=20, in_=300, pc_reg=10, uk=1, pcu=1e6)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE
+    assert "exceed" in e.value.msg

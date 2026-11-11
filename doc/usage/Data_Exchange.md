@@ -37,6 +37,8 @@ The following components are currently supported:
 | ElmTr2     | 2-Winding Transformer      | Transformer              |
 | TypTr2     | 2-Winding Transformer Type | TransformerParameters    |
 | ElmCoup    | Switch                     | Switch                   |
+| ElmVoltreg | Step-Voltage Regulator     | VoltageRegulator         |
+| TypVoltreg | Step-Voltage Regulator Type | RegulatorParameters     |
 | ElmLne     | Line/Cable                 | Line                     |
 | TypLne     | Line/Cable Type            | LineParameters           |
 | ElmLodLV   | Load, low voltage          | PowerLoad (P>=0)         |
@@ -113,6 +115,11 @@ Please note that there are some limitations in the supported features:
 - **Ignored elements**: elements that are not mentioned in the table above are ignored;
 - **Ignored attributes**: functionality that is not yet available in `roseau-load-flow` is ignored.
   This includes the state of the switches (switches are considered to be always closed);
+- **Earthing of the external grids**: when its terminal has a neutral, the star point of an
+  external grid is earthed (`cgnd`) through the neutral of its terminal if it is connected to it
+  (`iintgnd`), as in PowerFactory. Otherwise, the voltage source has its own floating neutral,
+  earthed directly if its star point is earthed;
+- **Step-voltage regulators**: see [below](PowerFactory-Regulators).
 
 ### Lines and Transformers
 
@@ -215,6 +222,54 @@ The data on these two screenshots translate to:
 ...     pfe=rlf.Q_(1.05, "kW"),  # Magnetizing Impedance - No Load Losses, "Load Flow"
 ... )
 ```
+
+(PowerFactory-Regulators)=
+
+#### Voltage regulators
+
+PowerFactory's step-voltage regulators (`ElmVoltreg`) and their types (`TypVoltreg`) are imported as
+{class}`~roseau.load_flow.VoltageRegulator` and {class}`~roseau.load_flow.RegulatorParameters`
+objects:
+
+- the "Star, 3-phase" and "Star, 3 x 1-phase" configurations give `"wye"` regulators with the
+  phases `"abcn"`, which need a neutral on both of their terminals. The star point of the regulator
+  is earthed (`cgnd`) through its source-side neutral. The single tap controller of the "Star,
+  3-phase" configuration is read as three independent units, with a warning;
+- the "Closed delta, 3 x 1-phase" configuration gives closed-delta regulators with the phases
+  `"abc"`: the lagging connection gives `"delta_positive_rotation"` regulators, the leading
+  connection `"delta_negative_rotation"` ones;
+- every unit regulates its own voltage at the voltage setpoint (`usetp`), its tap being continuous.
+  Ganged taps, discrete tap changers, line drop compensation and reverse power operation are not
+  modelled (a warning is emitted). The open-delta configuration and the regulators without
+  automatic tap changing are not supported (an error is raised);
+- a Type B regulator is approximated with the tap ratio law of a Type A regulator, with a warning.
+
+To create regulator parameters from a PowerFactory Step-Voltage Regulator Type (`TypVoltreg`)
+object, use the
+{meth}`RegulatorParameters.from_power_factory() <roseau.load_flow.RegulatorParameters.from_power_factory>`
+method:
+
+```pycon
+>>> rp = rlf.RegulatorParameters.from_power_factory(
+...     id="Step-Voltage Regulator Type",
+...     un=rlf.Q_(20, "kV"),  # Rated Voltage
+...     in_=rlf.Q_(300, "A"),  # Rated Current
+...     pc_reg=rlf.Q_(10, "%"),  # Voltage Regulation Range (+/-)
+...     uk=rlf.Q_(1, "%"),  # Short-Circuit Voltage
+...     pcu=rlf.Q_(2, "kW"),  # Copper Losses (of each unit)
+...     configuration="Closed delta, 3 x 1-phase",  # Configuration
+...     closed_delta_connection="Lagging",  # Closed Delta Connection
+... )
+```
+
+The voltages and taps of the imported regulators match PowerFactory's load flow results, within
+PowerFactory's own regulation tolerance.
+
+Single-phase networks ({class}`roseau.load_flow_single.ElectricalNetwork`) also import the
+step-voltage regulators of the star configurations as
+{class}`roseau.load_flow_single.VoltageRegulator` objects, regulating the voltage of their load
+side at the voltage setpoint. The closed-delta configuration, which has no single-phase
+equivalent, is not supported.
 
 ## OpenDSS
 
