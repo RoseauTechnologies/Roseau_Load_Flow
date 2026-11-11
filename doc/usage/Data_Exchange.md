@@ -271,6 +271,17 @@ step-voltage regulators of the star configurations as
 side at the voltage setpoint. The closed-delta configuration, which has no single-phase
 equivalent, is not supported.
 
+The voltage regulators of single-phase networks are also exported to DGS
+({meth}`roseau.load_flow_single.ElectricalNetwork.to_dgs_file`) as "Star, 3-phase" Type A
+step-voltage regulators with a continuous tap changer controlling the positive-sequence voltage. The
+magnetising admittance and the `alpha` parameter, which PowerFactory does not model, are stored in
+the description of the regulator types to be read back by `roseau-load-flow`.
+
+```{note}
+To export step-voltage regulators from PowerFactory, the "Export Definition Folder" used for the DGS
+export must contain the `ElmVoltreg` and `TypVoltreg` classes.
+```
+
 ## OpenDSS
 
 `roseau-load-flow` supports creating lines and transformers from OpenDSS data.

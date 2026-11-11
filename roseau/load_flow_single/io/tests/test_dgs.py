@@ -210,3 +210,73 @@ def test_dgs_unsupported_regulators(dgs_regulators_networks_dir):
         _read_regulator_network(dgs_regulators_networks_dir, "Regulator_103_Type_A", ElmVoltreg__ntrcn=0)
     assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NOT_SUPPORTED
     assert "no automatic tap changing" in e.value.msg
+
+
+def _create_regulator_network(ym: complex = 0j) -> rlfs.ElectricalNetwork:
+    levels = {"min_voltage_level": 0.95, "max_voltage_level": 1.05}
+    bus0 = rlfs.Bus("Source Bus", nominal_voltage=20e3, geometry=shapely.Point(5.74, 45.18), **levels)
+    bus1 = rlfs.Bus("Bus 1", nominal_voltage=20e3, geometry=shapely.Point(5.75, 45.19), **levels)
+    bus2 = rlfs.Bus("Bus 2", nominal_voltage=20e3, geometry=shapely.Point(5.76, 45.20), **levels)
+    rlfs.VoltageSource("Grid", bus=bus0, voltage=20e3)
+    lp = rlfs.LineParameters("LP", z_line=0.3 + 0.35j)
+    rlfs.Line("Line", bus1=bus0, bus2=bus1, parameters=lp, length=10)
+    rp = rlfs.RegulatorParameters("RP", sn=8e6, un=20e3, z2=0.05 + 0.5j, ym=ym, u_range=0.1, alpha=500.0)
+    rlfs.VoltageRegulator(
+        "Regulator",
+        bus1=bus1,
+        bus2=bus2,
+        parameters=rp,
+        u_ref=1.02,
+        max_loading=0.9,
+        geometry=shapely.Point(5.755, 45.195),
+    )
+    rlfs.PowerLoad("Load", bus=bus2, power=4e6 + 1e6j)
+    return rlfs.ElectricalNetwork.from_element(bus0, name="Regulator Net", crs="EPSG:4326")
+
+
+def test_to_from_dgs_roundtrip_with_regulator():
+    en = _create_regulator_network()
+    data = en.to_dgs_dict()
+    (typ,) = (dict(zip(data["TypVoltreg"]["Attributes"], v, strict=True)) for v in data["TypVoltreg"]["Values"])
+    assert typ["config"] == 1  # Star, 3-phase
+    assert typ["type"] == 0  # Type A
+    np.testing.assert_allclose(typ["Sb"], 8e3)
+    np.testing.assert_allclose(typ["pcReg"], 10)
+    (elm,) = (dict(zip(data["ElmVoltreg"]["Attributes"], v, strict=True)) for v in data["ElmVoltreg"]["Values"])
+    assert elm["usetp"] == 1.02
+    assert elm["maxload"] == 90.0
+    assert (elm["GPSlon"], elm["GPSlat"]) == (5.755, 45.195)
+
+    en2 = rlfs.ElectricalNetwork.from_dgs_dict(data, use_name_as_id=True)
+    assert_json_close(en2.to_dict(), en.to_dict())
+    rp, rp2 = en.regulators["Regulator"].parameters, en2.regulators["Regulator"].parameters
+    assert rp2.alpha == 500.0  # Kept in the description of the type
+    np.testing.assert_allclose(rp2.z2.m, rp.z2.m)
+
+    # The magnetising admittance is kept too, with a warning
+    en = _create_regulator_network(ym=1e-6j)
+    with pytest.warns(UserWarning, match=r"magnetising admittance"):
+        data = en.to_dgs_dict()
+    en2 = rlfs.ElectricalNetwork.from_dgs_dict(data, use_name_as_id=True)
+    assert en2.regulators["Regulator"].parameters.ym.m == 1e-6j
+
+
+def test_to_dgs_without_regulators():
+    """The tables of the regulators are only written when the network has regulators."""
+    bus = rlfs.Bus("Bus", nominal_voltage=400)
+    rlfs.VoltageSource("Grid", bus=bus, voltage=400)
+    en = rlfs.ElectricalNetwork.from_element(bus)
+    data = en.to_dgs_dict()
+    assert "TypVoltreg" not in data
+    assert "ElmVoltreg" not in data
+
+
+@pytest.mark.no_patch_engine
+def test_to_from_dgs_regulator_results():
+    en = _create_regulator_network()
+    en.solve_load_flow()
+    en2 = rlfs.ElectricalNetwork.from_dgs_dict(en.to_dgs_dict(), use_name_as_id=True)
+    en2.solve_load_flow()
+    np.testing.assert_allclose(en2.regulators["Regulator"].res_tap, en.regulators["Regulator"].res_tap, rtol=1e-8)
+    np.testing.assert_allclose(en2.buses["Bus 2"].res_voltage.m, en.buses["Bus 2"].res_voltage.m, rtol=1e-8)
+    np.testing.assert_allclose(abs(en.buses["Bus 2"].res_voltage.m), 1.02 * 20e3, rtol=1e-6)

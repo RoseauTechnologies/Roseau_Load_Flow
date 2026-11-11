@@ -40,6 +40,8 @@ og:description: See what's new in the latest release of Roseau Load Flow !
   `RegulatorParameters.from_power_factory` to create regulator parameters from the data of a
   PowerFactory step-voltage regulator type. The imported regulators match PowerFactory's load flow
   results.
+- Export the voltage regulators of single-phase networks to DGS files (`TypVoltreg` and
+  `ElmVoltreg` tables, only written when the network has regulators).
 - The DGS import now earths the star point of the external grids (`ElmXnet`) as PowerFactory does:
   when its terminal has a neutral, an earthed star point (`cgnd`) connected to the neutral of the
   terminal (`iintgnd`) earths this neutral, and a star point not connected to it gives the voltage

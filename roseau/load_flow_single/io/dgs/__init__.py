@@ -34,7 +34,11 @@ from roseau.load_flow_single.io.dgs.pwf import (
     create_grid,
     create_study_case,
 )
-from roseau.load_flow_single.io.dgs.regulators import voltreg_to_regulators
+from roseau.load_flow_single.io.dgs.regulators import (
+    regulators_to_elm_voltreg,
+    rp_to_typ_voltreg,
+    voltreg_to_regulators,
+)
 from roseau.load_flow_single.io.dgs.sources import elm_xnet_to_sources, sources_to_elm_xnet
 from roseau.load_flow_single.io.dgs.switches import elm_coup_to_switches, switches_to_elm_coup
 from roseau.load_flow_single.io.dgs.transformers import (
@@ -48,6 +52,7 @@ from roseau.load_flow_single.models import (
     Line,
     LineParameters,
     Load,
+    RegulatorParameters,
     Switch,
     Transformer,
     TransformerParameters,
@@ -239,6 +244,11 @@ def network_to_dgs(en: "ElectricalNetwork") -> JsonDict:
         tr_params.append(tr.parameters)
     typ_lne = lp_to_typ_lne(ln_params, ln_params_uns, fid_counter)
     typ_tr2 = tp_to_typ_tr2(tr_params, fid_counter)
+    rg_params: list[RegulatorParameters] = []
+    for rg in en.regulators.values():
+        if rg.parameters not in rg_params:
+            rg_params.append(rg.parameters)
+    typ_voltreg = rp_to_typ_voltreg(rg_params, fid_counter)
 
     # Elements and their static cubics (order matters)
     sta_cubic: DGSData = {"Attributes": STA_CUBIC_ATTRIBUTES[:], "Values": []}
@@ -263,6 +273,13 @@ def network_to_dgs(en: "ElectricalNetwork") -> JsonDict:
         )
         for sw in en.switches.values()
     }
+    voltreg_sta_cubic = {
+        rg.id: (
+            add_sta_cubic_value(term_fid_by_id[rg.bus1.id], 0, "abc", fid_counter, sta_cubic),
+            add_sta_cubic_value(term_fid_by_id[rg.bus2.id], 1, "abc", fid_counter, sta_cubic),
+        )
+        for rg in en.regulators.values()
+    }
     xnet_sta_cubic = {
         src.id: add_sta_cubic_value(term_fid_by_id[src.bus.id], 0, "abc", fid_counter, sta_cubic)
         for src in en.sources.values()
@@ -279,6 +296,9 @@ def network_to_dgs(en: "ElectricalNetwork") -> JsonDict:
         en.transformers.values(), typ_tr2, fid_counter=fid_counter, sta_cubic=tr2_sta_cubic, fold_id=net_fid
     )
     elm_coup = switches_to_elm_coup(en.switches.values(), fid_counter=fid_counter, sta_cubic=coup_sta_cubic)
+    elm_voltreg = regulators_to_elm_voltreg(
+        en.regulators.values(), typ_voltreg, fid_counter=fid_counter, sta_cubic=voltreg_sta_cubic, fold_id=net_fid
+    )
     elm_xnet = sources_to_elm_xnet(
         en.sources.values(), fid_counter=fid_counter, sta_cubic=xnet_sta_cubic, fold_id=net_fid
     )
@@ -291,6 +311,8 @@ def network_to_dgs(en: "ElectricalNetwork") -> JsonDict:
             f"geometries to GPS coordinates and set en.crs to 'EPSG:4326' before exporting to DGS."
         )
 
+    # The regulator tables are only written when the network has regulators
+    has_regulators = bool(en.regulators)
     return {
         "General": general,
         "IntCase": int_case,
@@ -298,11 +320,13 @@ def network_to_dgs(en: "ElectricalNetwork") -> JsonDict:
         "ElmNet": elm_net,
         "TypLne": typ_lne,
         "TypTr2": typ_tr2,
+        **({"TypVoltreg": typ_voltreg} if has_regulators else {}),
         "ElmTerm": elm_term,
         "StaCubic": sta_cubic,
         "ElmLne": elm_lne,
         "ElmCoup": elm_coup,
         "ElmTr2": elm_tr2,
+        **({"ElmVoltreg": elm_voltreg} if has_regulators else {}),
         "ElmXnet": elm_xnet,
         "ElmLod": elm_lod,
     }
