@@ -29,6 +29,14 @@ valid: it is temporarily replaced by the trial license, with a warning. Please r
 environment or code.
 ```
 
+- Add the multi-phase voltage regulators `rlf.VoltageRegulator` and `rlf.RegulatorParameters`: a
+  bank of single-phase autotransformers with on-load tap changers that keep the voltage of the load
+  side at `u_ref`. The units are connected in wye or in closed delta (`connection` parameter). The
+  taps are available with `ElectricalNetwork.res_regulators_taps` and the other results with
+  `ElectricalNetwork.res_regulators`. The step-voltage regulators of PowerFactory DGS files are also
+  imported, and `RegulatorParameters.from_power_factory` creates regulator parameters from a
+  PowerFactory step-voltage regulator type. See the [Voltage Regulator](models/VoltageRegulator.md)
+  page.
 - {gh-pr}`519` Add the `License.offline` property, `True` for licenses verified offline such as the
   free trial license, and the `PUBLIC_LICENSE_KEY` constant, the key of the free trial license.
 - {gh-pr}`520` The DGS import now earths the star point of the external grids (`ElmXnet`) as

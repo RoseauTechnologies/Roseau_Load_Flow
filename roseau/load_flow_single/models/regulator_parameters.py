@@ -1,21 +1,17 @@
 import logging
-from typing import TYPE_CHECKING, Final, NoReturn, Self
-
-import numpy as np
+from typing import Final, NoReturn, Self
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.models.regulator_parameters import _RegulatorParametersMixin
 from roseau.load_flow.typing import Complex, Float, Id, JsonDict, QtyOrMag
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import Identifiable, JsonMixin, pretty_unit
 from roseau.load_flow_engine.cy_engine import CySingleVoltageRegulator
 
-if TYPE_CHECKING:
-    from matplotlib.axes import Axes
-
 logger = logging.getLogger(__name__)
 
 
-class RegulatorParameters(Identifiable, JsonMixin):
+class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
     """Parameters that define the electrical model of a single-phase voltage regulator.
 
     A voltage regulator is modelled as an autotransformer whose tap ratio ``a`` keeps the load-side
@@ -135,136 +131,12 @@ class RegulatorParameters(Identifiable, JsonMixin):
             phi=0.0,  # phase shift: hardcoded until connection type is exposed on the Python API
         )
 
+    def _create_cy_tap_calculator(self, u_ref: float) -> CySingleVoltageRegulator:
+        return self._create_cy_element(u_ref=u_ref)
+
     def _rating_pretty(self) -> str:
         """Return a pretty string representation of the regulator rating."""
         return f"{pretty_unit(self._sn, 'VA')} - {pretty_unit(self._un, 'V')}"
-
-    def _compute_tap(self, u_in: Float, cy_element: "CySingleVoltageRegulator") -> float:
-        return cy_element.compute_tap(float(u_in) / SQRT3)
-
-    def compute_tap(self, u_ref: Float, u_in: Float) -> float:
-        """Compute the no-load tap ratio for the given source-side voltage magnitude (V).
-
-        This is the steady-state tap of an ideal regulator (no series impedance, no load).
-
-        Args:
-            u_ref:
-                Target voltage on the load side (p.u.).
-
-            u_in:
-                Source-side voltage magnitude (V).
-
-        Returns:
-            The tap ratio (a) as a fraction, e.g. 1.05 means +5 % boost, 0.95 means -5 % buck.
-            Bounded to (1 - u_range, 1 + u_range).
-        """
-        cy_element = self._create_cy_element(u_ref=float(u_ref))
-        return self._compute_tap(u_in=u_in, cy_element=cy_element)
-
-    def plot_tap(self, u_ref: Float, voltages: np.ndarray, *, ax: "Axes | None" = None) -> "Axes":
-        """Plot the no-load tap position (%) as a function of source-side voltage.
-
-        Args:
-            u_ref:
-                Target voltage on the load side (p.u.).
-
-            voltages:
-                Array of source-side voltage magnitudes to evaluate (V).
-
-            ax:
-                Axes to draw on. Uses the current axes if not provided.
-
-        Returns:
-            The axes with the plot.
-        """
-        import matplotlib.pyplot as plt
-
-        if ax is None:
-            ax = plt.gca()
-
-        u_ref = float(u_ref)
-        scale, unit = (1e-3, "kV") if self._un > 1000 else (1.0, "V")
-        u_ref_v = u_ref * self._un * scale  # convert p.u. → V for the voltage axis
-
-        voltages = np.asarray(voltages, dtype=float)
-        cy_element = self._create_cy_element(u_ref=u_ref)
-        taps = np.array([self._compute_tap(u_in=u, cy_element=cy_element) for u in voltages])
-        taps_pct = (taps - 1.0) * 100.0
-
-        ax.scatter(voltages * scale, taps_pct, color="steelblue", marker=".", s=20, label="Tap (%)")
-        ax.axvline(
-            x=u_ref_v,
-            color="green",
-            linestyle="--",
-            linewidth=1,
-            label=f"$u_{{ref}}$ = {u_ref_v:.3g} {unit}",
-        )
-        ax.axhline(y=0.0, color="gray", linestyle=":", linewidth=1, label="Neutral (0 %)")
-        ax.axhline(
-            y=self._u_range * 100.0,
-            color="red",
-            linestyle=":",
-            linewidth=1,
-            label=f"Max boost (+{self._u_range * 100:.0f} %)",
-        )
-        ax.axhline(
-            y=-self._u_range * 100.0,
-            color="orange",
-            linestyle=":",
-            linewidth=1,
-            label=f"Max buck ({-self._u_range * 100:.0f} %)",
-        )
-        ax.grid(visible=True)
-        ax.set_xlabel(f"Source-side voltage ({unit})")
-        ax.set_ylabel("Tap position (%)")
-        ax.legend()
-
-        return ax
-
-    def plot_voltage(self, u_ref: Float, voltages: np.ndarray, *, ax: "Axes | None" = None) -> "Axes":
-        """Plot the regulated load-side voltage as a function of source-side voltage.
-
-        For each source-side voltage ``u_in``, the no-load tap ``a`` is computed and the output
-        voltage is ``u_out = a · u_in``. This gives the exact no-load regulation curve.
-
-        Args:
-            u_ref:
-                Target voltage on the load side (p.u.).
-
-            voltages:
-                Array of source-side voltage magnitudes to evaluate (V). Should span the range
-                of interest around ``u_ref * un``, e.g. ``np.linspace(0.8, 1.2, 100) * un``.
-
-            ax:
-                Axes to draw on. Uses the current axes if not provided.
-
-        Returns:
-            The axes with the plot.
-        """
-        import matplotlib.pyplot as plt
-
-        if ax is None:
-            ax = plt.gca()
-
-        u_ref = float(u_ref)
-        scale, unit = (1e-3, "kV") if self._un > 1000 else (1.0, "V")
-        u_ref_v = u_ref * self._un * scale  # convert p.u. → V for the voltage axis
-
-        u_in = np.asarray(voltages, dtype=float)
-        cy_element = self._create_cy_element(u_ref=u_ref)
-        taps = np.array([self._compute_tap(u_in=u, cy_element=cy_element) for u in u_in])
-        u_in = u_in * scale
-        u_out = taps * u_in  # output voltage produced by this source voltage (exact at no-load)
-
-        ax.plot(u_in, u_out, color="steelblue", marker=".", label="Output voltage")
-        ax.plot(u_in, u_in, color="gray", marker=".", label="No regulation ($a = 1$)")
-        ax.axhline(y=u_ref_v, color="green", linestyle="--", linewidth=1, label=f"$u_{{ref}}$ = {u_ref_v:.3g} {unit}")
-        ax.grid(visible=True)
-        ax.set_xlabel(f"Source-side voltage ({unit})")
-        ax.set_ylabel(f"Load-side voltage ({unit})")
-        ax.legend()
-
-        return ax
 
     def _to_dict(self, include_results: bool) -> JsonDict:
         return {

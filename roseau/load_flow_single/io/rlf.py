@@ -17,9 +17,11 @@ from roseau.load_flow_single.models import (
     LineParameters,
     Load,
     PowerLoad,
+    RegulatorParameters,
     Switch,
     Transformer,
     TransformerParameters,
+    VoltageRegulator,
     VoltageSource,
 )
 
@@ -253,6 +255,41 @@ def network_from_rlf(  # noqa: C901
         )
         switches[sw_s.id] = sw_s
 
+    # Convert regulators (wye only, the single-phase equivalent of a closed delta does not exist)
+    rg_params_s: dict[Id, RegulatorParameters] = {}
+    regulators: dict[Id, VoltageRegulator] = {}
+    for rg_m in en_m.regulators.values():
+        rp_m = rg_m.parameters
+        if rp_m.is_delta:
+            msg = (
+                f"Voltage regulator {rg_m.id!r} has the connection {rp_m.connection!r}, only 'wye' "
+                f"regulators are supported"
+            )
+            raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
+        if "abc" not in rg_m.phases:
+            msg = f"Voltage regulator {rg_m.id!r} is not three-phase, phases={rg_m.phases!r}"
+            raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
+        if rp_m.id not in rg_params_s:
+            rg_params_s[rp_m.id] = RegulatorParameters(
+                id=rp_m.id,
+                sn=rp_m._sn,
+                un=rp_m._un,
+                z2=rp_m._z2,
+                ym=rp_m._ym,
+                u_range=rp_m._u_range,
+                alpha=rp_m._alpha,
+            )
+        rg_s = VoltageRegulator(
+            id=rg_m.id,
+            bus1=buses[rg_m.bus1.id],
+            bus2=buses[rg_m.bus2.id],
+            parameters=rg_params_s[rp_m.id],
+            u_ref=rg_m._u_ref,
+            max_loading=rg_m._max_loading,
+            geometry=rg_m.geometry,
+        )
+        regulators[rg_s.id] = rg_s
+
     # Convert sources
     sources: dict[Id, VoltageSource] = {}
     for src_m in en_m.sources.values():
@@ -319,7 +356,7 @@ def network_from_rlf(  # noqa: C901
             "lines": lines,
             "transformers": transformers,
             "switches": switches,
-            "regulators": {},
+            "regulators": regulators,
             "loads": loads,
             "sources": sources,
             "crs": en_m.crs,
