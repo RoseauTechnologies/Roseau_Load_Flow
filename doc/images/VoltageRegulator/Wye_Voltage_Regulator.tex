@@ -1,7 +1,7 @@
 \input{Preamble}%
 
 \begin{document}
-\ctikzset{european, straight voltages, cute inductors}%
+\ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm}%
 \begin{tikzpicture}[%
     show background rectangle,%
     tight background,%
@@ -13,19 +13,24 @@
   % Définitions
   %
   % Une unité : autotransformateur à prise variable. Arguments : abscisse, ordonnée, étiquette.
-  % L'entrée arrive à gauche en (x-0.8,y) sur la prise, la sortie repart à droite du haut de
-  % l'enroulement en (x,y) et la borne commune est en bas de l'enroulement en (x,y-1.2).
+  % L'enroulement va de la borne commune en (x,y-1.2) au point haut (x,y). L'entrée arrive à
+  % gauche sur la prise en (x-0.8,y). L'admittance magnétisante Ym part de l'entrée en (x-1.8,y)
+  % et rejoint le fil de la borne commune sous l'enroulement en (x,y-1.5). L'impédance série Z2
+  % va du haut de l'enroulement à la sortie de l'unité en (x+1.6,y).
   \newcommand{\regulatorunit}[3]{%
     \draw[-{Latex[length=2.5mm]}] ({#1-0.8},#2) -- ({#1-0.12},{#2-0.5});%
     \node[below left] at ({#1-0.5},{#2-0.25}) {#3};%
     \draw ({#1},{#2-1.2}) to[cute inductor] ({#1},#2);%
+    \draw ({#1-1.8},#2) to[generic, l_=$\underline{Y_{\mathrm{m}}}$, *-] ({#1-1.8},{#2-1.5})
+    to[short, -*] ({#1},{#2-1.5});%
+    \draw ({#1},#2) to[generic, l=$\underline{Z_2}$] ({#1+1.6},#2);%
   }%
   \pgfmathsetmacro{\r}{0.15};% Rayon des sauts de fils
   \pgfmathsetmacro{\xl}{0};%
-  \pgfmathsetmacro{\xa}{3};%
-  \pgfmathsetmacro{\xb}{6};%
-  \pgfmathsetmacro{\xc}{9};%
-  \pgfmathsetmacro{\xr}{12};%
+  \pgfmathsetmacro{\xa}{3.5};%
+  \pgfmathsetmacro{\xb}{7};%
+  \pgfmathsetmacro{\xc}{10.5};%
+  \pgfmathsetmacro{\xr}{13};%
 
   \pgfmathsetmacro{\yn}{0};%
   \pgfmathsetmacro{\yc}{2.5};%
@@ -61,9 +66,9 @@
     -- (\xb-\r,\yc) arc[start angle=180, end angle=0, radius=\r] -- (\xc-0.8,\yc);%
 
   % Sorties
-  \draw (\xa,\ya) -- (\xr-1.2,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xr,\ya);%
-  \draw (\xb,\yb) -- (\xr-1.2,\yb) to[short,-*,i<=$\underline{I_{2,\brm}}$] (\xr,\yb);%
-  \draw (\xc,\yc) -- (\xr-1.2,\yc) to[short,-*,i<=$\underline{I_{2,\crm}}$] (\xr,\yc);%
+  \draw (\xa+1.6,\ya) -- (\xr-1.2,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xr,\ya);%
+  \draw (\xb+1.6,\yb) -- (\xr-1.2,\yb) to[short,-*,i<=$\underline{I_{2,\brm}}$] (\xr,\yb);%
+  \draw (\xc+1.6,\yc) -- (\xr-1.2,\yc) to[short,-*,i<=$\underline{I_{2,\crm}}$] (\xr,\yc);%
 
   % Neutre, borne commune des unités, transmis d'un côté à l'autre
   \draw (\xl,\yn) to[short,*-,i=$\underline{I_{1,\nrm}}$] (\xl+1.2,\yn)
