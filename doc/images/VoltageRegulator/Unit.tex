@@ -1,0 +1,61 @@
+\input{Preamble}%
+
+\begin{document}
+\ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm, voltage shift=0.5mm}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
+  % Une unité monophasée d'un régulateur de tension : un autotransformateur à prise variable
+
+  %
+  % Définitions
+  %
+  \pgfmathsetmacro{\xl}{0};%
+  \pgfmathsetmacro{\xy}{2.25};%
+  \pgfmathsetmacro{\xt}{4.5};%
+  \pgfmathsetmacro{\xo}{5.25};%
+  \pgfmathsetmacro{\xz}{7.25};%
+  \pgfmathsetmacro{\xr}{8.75};%
+
+  \pgfmathsetmacro{\yc}{0};%
+  \pgfmathsetmacro{\yi}{2.4};%
+
+  %
+  % Dessin
+  %
+  % Bornes
+  \node[left] at (\xl,\yi) {$\underline{V_{\mathrm{in}}}$};
+  \node[left] at (\xl,\yc) {$\underline{V_{\mathrm{common}}}$};
+  \node[right] at (\xr,\yi) {$\underline{V_{\mathrm{out}}}$};
+
+  % Entrée vers la prise de l'autotransformateur
+  \draw (\xl,\yi) to[short,*-*,i=$\underline{I_{\mathrm{in}}}$] (\xy,\yi) -- (\xt-0.8,\yi);%
+  \draw[-{Latex[length=2.5mm]}] (\xt-0.8,\yi) -- (\xt-0.12,\yi-0.5);%
+  \node[below left] at (\xt-0.5,\yi-0.25) {$a$};%
+
+  % Enroulement de l'autotransformateur, de la borne commune à la sortie
+  \draw (\xt,\yc) -- (\xt,\yi-1.2) to[cute inductor] (\xt,\yi);%
+  \draw (\xt,\yi) -- (\xo,\yi) to[generic, l=$\underline{Z_2}$, -]
+    (\xz,\yi) to[short,-*,i<=$\underline{I_{\mathrm{out}}}$] (\xr,\yi);%
+
+  % Borne commune
+  \draw (\xl,\yc) to[short,*-*,i=$\underline{I_{\mathrm{common}}}$] (\xy,\yc) -- (\xz,\yc);%
+
+  % Ym et tensions
+  \draw (\xy,\yi) to[generic, l=$\underline{Y_{\mathrm{m}}}$, v<=$\underline{U_{\mathrm{in}}}$, -]
+    (\xy,\yc);%
+  \draw (\xz,\yi) to[open, v<=$\underline{U_{\mathrm{out}}}$] (\xz,\yc);%
+
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 2
+% fill-column: 100
+% End:

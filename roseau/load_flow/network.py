@@ -6,7 +6,7 @@ import logging
 import re
 from collections.abc import Generator, Iterable, Mapping
 from math import nan
-from typing import TYPE_CHECKING, Any, Final, Literal, Never, Self, final
+from typing import TYPE_CHECKING, Any, Final, Literal, Self, final
 
 import geopandas as gpd
 import numpy as np
@@ -28,6 +28,7 @@ from roseau.load_flow.models import (
     PotentialRef,
     Switch,
     Transformer,
+    VoltageRegulator,
     VoltageSource,
 )
 from roseau.load_flow.typing import ComplexArray, CRSLike, Id, JsonDict, MapOrSeq, StrPath
@@ -76,6 +77,10 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         switches:
             The switches of the network. Either a list of switches or a dictionary of switches with
             their IDs as keys.
+
+        regulators:
+            The voltage regulators of the network. Either a list of regulators or a dictionary of
+            regulators with their IDs as keys.
 
         loads:
             The loads of the network. Either a list of loads or a dictionary of loads with their IDs
@@ -138,6 +143,12 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             See Also:
                 :attr:`switches_frame` for a GeoDataFrame version of the switches.
 
+        regulators (dict[Id, roseau.load_flow.VoltageRegulator]):
+            Dictionary of voltage regulators of the network indexed by their IDs.
+
+            See Also:
+                :attr:`regulators_frame` for a GeoDataFrame version of the regulators.
+
         loads (dict[Id, roseau.load_flow.AbstractLoad]):
             Dictionary of loads of the network indexed by their IDs.
 
@@ -187,6 +198,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
         grounds: MapOrSeq[Ground],
         potential_refs: MapOrSeq[PotentialRef],
         ground_connections: MapOrSeq[GroundConnection] = (),
+        regulators: MapOrSeq[VoltageRegulator] = (),
         crs: CRSLike | None = None,
     ) -> None:
         self.buses: dict[Id, Bus] = self._elements_as_dict(buses, RoseauLoadFlowExceptionCode.BAD_BUS_ID)
@@ -195,7 +207,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             transformers, RoseauLoadFlowExceptionCode.BAD_TRANSFORMER_ID
         )
         self.switches: dict[Id, Switch] = self._elements_as_dict(switches, RoseauLoadFlowExceptionCode.BAD_SWITCH_ID)
-        self.regulators: dict[Id, Never] = {}  # TODO: not supported yet
+        self.regulators: dict[Id, VoltageRegulator] = self._elements_as_dict(
+            regulators, RoseauLoadFlowExceptionCode.BAD_REGULATOR_ID
+        )
         self.loads: dict[Id, Load] = self._elements_as_dict(loads, RoseauLoadFlowExceptionCode.BAD_LOAD_ID)
         self.sources: dict[Id, VoltageSource] = self._elements_as_dict(
             sources, RoseauLoadFlowExceptionCode.BAD_SOURCE_ID
@@ -229,6 +243,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             f" {count_repr(self.lines, 'line', 'lines')},"
             f" {count_repr(self.transformers, 'transformer', 'transformers')},"
             f" {count_repr(self.switches, 'switch', 'switches')},"
+            f" {count_repr(self.regulators, 'regulator', 'regulators')},"
             f" {count_repr(self.loads, 'load')},"
             f" {count_repr(self.sources, 'source')},"
             f" {count_repr(self.grounds, 'ground')},"
@@ -310,6 +325,31 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             data["tap"].append(transformer._tap)
             data["max_loading"].append(transformer._max_loading)
             data["geometry"].append(transformer.geometry)
+        index = pd.Index(index, name="id")
+        return gpd.GeoDataFrame(data=data, index=index, geometry="geometry", crs=self.crs)
+
+    @property
+    def regulators_frame(self) -> gpd.GeoDataFrame:
+        """The :attr:`regulators` of the network as a geo dataframe."""
+        index = []
+        data = {
+            "phases": [],
+            "bus1_id": [],
+            "bus2_id": [],
+            "parameters_id": [],
+            "u_ref": [],
+            "max_loading": [],
+            "geometry": [],
+        }
+        for regulator in self.regulators.values():
+            index.append(regulator.id)
+            data["phases"].append(regulator.phases)
+            data["bus1_id"].append(regulator.bus1.id)
+            data["bus2_id"].append(regulator.bus2.id)
+            data["parameters_id"].append(regulator.parameters.id)
+            data["u_ref"].append(regulator._u_ref)
+            data["max_loading"].append(regulator._max_loading)
+            data["geometry"].append(regulator.geometry)
         index = pd.Index(index, name="id")
         return gpd.GeoDataFrame(data=data, index=index, geometry="geometry", crs=self.crs)
 
@@ -449,6 +489,21 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 sn=transformer.parameters._sn,
                 tap=transformer._tap,
                 geom=geom_mapping(transformer.geometry),
+            )
+        for regulator in self.regulators.values():
+            graph.add_edge(
+                regulator.bus1.id,
+                regulator.bus2.id,
+                id=regulator.id,
+                type="regulator",
+                phases=regulator.phases,
+                parameters_id=regulator.parameters.id,
+                sn=regulator.parameters._sn,
+                u_ref=regulator._u_ref,
+                max_loading=regulator._max_loading,
+                u_range=regulator.parameters._u_range,
+                connection=regulator.parameters._connection,
+                geom=geom_mapping(regulator.geometry),
             )
         for switch in self.switches.values():
             if not respect_switches or switch.closed:
@@ -722,6 +777,105 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 res_dict["potential1"].append(v1)
                 res_dict["potential2"].append(v2)
         return pd.DataFrame(res_dict).astype(dtypes).set_index(["switch_id", "phase"])
+
+    @property
+    def res_regulators(self) -> pd.DataFrame:
+        """The load flow results of the network voltage regulators.
+
+        The results are returned as a dataframe with the following index:
+            - `regulator_id`: The id of the regulator.
+            - `phase`: The phase of the regulator (in ``{'a', 'b', 'c', 'n'}``).
+
+        and the following columns:
+            - `current1`: The complex current of the regulator (in Amps) for the given phase on the
+              source side.
+            - `current2`: The complex current of the regulator (in Amps) for the given phase on the
+              load side.
+            - `power1`: The complex power of the regulator (in VoltAmps) for the given phase on the
+              source side.
+            - `power2`: The complex power of the regulator (in VoltAmps) for the given phase on the
+              load side.
+            - `potential1`: The complex potential of the source side bus (in Volts) for the given
+              phase.
+            - `potential2`: The complex potential of the load side bus (in Volts) for the given
+              phase.
+            - `violated`: True, if the regulator loading exceeds the maximum loading.
+            - `loading`: The loading of the regulator (unitless).
+            - `max_loading`: The maximal loading (unitless) of the regulator.
+            - `sn`: The nominal power of the regulator (in VoltAmps).
+
+        The taps of the regulators are available in :attr:`res_regulators_taps`.
+        """
+        self._check_valid_results()
+        res_dict = {
+            "regulator_id": [],
+            "phase": [],
+            "current1": [],
+            "current2": [],
+            "power1": [],
+            "power2": [],
+            "potential1": [],
+            "potential2": [],
+            "violated": [],
+            "loading": [],
+            # Non results
+            "max_loading": [],
+            "sn": [],
+        }
+        dtypes = {c: DTYPES[c] for c in res_dict}
+        for regulator in self.regulators.values():
+            currents1 = regulator._side1._res_currents_getter(warning=False).tolist()
+            currents2 = regulator._side2._res_currents_getter(warning=False).tolist()
+            potentials1 = regulator._side1._res_potentials_getter(warning=False).tolist()
+            potentials2 = regulator._side2._res_potentials_getter(warning=False).tolist()
+            powers1 = [v * i.conjugate() for v, i in zip(potentials1, currents1, strict=True)]
+            powers2 = [v * i.conjugate() for v, i in zip(potentials2, currents2, strict=True)]
+            sn = regulator.parameters._sn
+            max_loading = regulator._max_loading
+            loading = max(abs(sum(powers1)), abs(sum(powers2))) / sn
+            violated = loading > max_loading
+            for i1, i2, s1, s2, v1, v2, phase in zip(
+                currents1, currents2, powers1, powers2, potentials1, potentials2, regulator.phases, strict=True
+            ):
+                res_dict["regulator_id"].append(regulator.id)
+                res_dict["phase"].append(phase)
+                res_dict["current1"].append(i1)
+                res_dict["current2"].append(i2)
+                res_dict["power1"].append(s1)
+                res_dict["power2"].append(s2)
+                res_dict["potential1"].append(v1)
+                res_dict["potential2"].append(v2)
+                res_dict["violated"].append(violated)
+                res_dict["loading"].append(loading)
+                # Non results
+                res_dict["max_loading"].append(max_loading)
+                res_dict["sn"].append(sn)
+        return pd.DataFrame(res_dict).astype(dtypes).set_index(["regulator_id", "phase"])
+
+    @property
+    def res_regulators_taps(self) -> pd.DataFrame:
+        """The load flow results of the taps of the network voltage regulators.
+
+        The results are returned as a dataframe with the following index:
+            - `regulator_id`: The id of the regulator.
+            - `phase`: The pair of terminals the unit of the regulator is connected between (in
+              ``{'an', 'bn', 'cn'}`` for a wye regulator and ``{'ab', 'bc', 'ca'}`` for a closed
+              delta).
+
+        and the following columns:
+            - `tap`: The tap ratio applied by the unit (unitless). For example, 1.05 means that the
+              unit boosts its output voltage by 5%.
+        """
+        self._check_valid_results()
+        res_dict = {"regulator_id": [], "phase": [], "tap": []}
+        dtypes = {c: DTYPES[c] for c in res_dict} | {"phase": VoltagePhaseDtype}
+        for regulator in self.regulators.values():
+            taps = regulator._res_taps_getter(warning=False).tolist()
+            for tap, phase in zip(taps, regulator.tap_phases, strict=True):
+                res_dict["regulator_id"].append(regulator.id)
+                res_dict["phase"].append(phase)
+                res_dict["tap"].append(tap)
+        return pd.DataFrame(res_dict).astype(dtypes).set_index(["regulator_id", "phase"])
 
     @property
     def res_loads(self) -> pd.DataFrame:
@@ -1175,6 +1329,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                             else:
                                 # Traversing from LV side to HV side
                                 new_potentials = {key: p / (kd * element.tap) for key, p in potentials.items()}
+                        elif isinstance(element, VoltageRegulator) and element.bus1 in visited:
+                            # Traversing from the source side to the load side: no-load taps
+                            new_potentials = element._no_load_potentials(potentials)
                         else:
                             new_potentials = potentials
                         elements.append((e, new_potentials, element))
@@ -1321,6 +1478,9 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 transformer._results_to_dict(warning=False, full=full) for transformer in self.transformers.values()
             ],
             "switches": [switch._results_to_dict(warning=False, full=full) for switch in self.switches.values()],
+            "regulators": [
+                regulator._results_to_dict(warning=False, full=full) for regulator in self.regulators.values()
+            ],
             "loads": [load._results_to_dict(warning=False, full=full) for load in self.loads.values()],
             "sources": [source._results_to_dict(warning=False, full=full) for source in self.sources.values()],
             "grounds": [ground._results_to_dict(warning=False, full=full) for ground in self.grounds.values()],

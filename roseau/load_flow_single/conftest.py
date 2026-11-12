@@ -8,7 +8,10 @@ HERE = Path(__file__).parent.expanduser().absolute()
 TEST_ALL_NETWORKS_DATA_FOLDER = HERE / "tests" / "data" / "networks"
 
 TEST_DGS_NETWORK_DIR = HERE.parent / "load_flow" / "tests" / "data" / "dgs"
-TEST_DGS_NETWORKS = list(TEST_DGS_NETWORK_DIR.rglob("*.json"))
+TEST_DGS_REGULATORS_NETWORKS_DIR = TEST_DGS_NETWORK_DIR / "regulators"  # Tested separately
+TEST_DGS_NETWORKS = [
+    p for p in TEST_DGS_NETWORK_DIR.rglob("*.json") if not p.is_relative_to(TEST_DGS_REGULATORS_NETWORKS_DIR)
+]
 TEST_DGS_NETWORKS_IDS = [x.stem for x in TEST_DGS_NETWORKS]
 TEST_DGS_SPECIAL_NETWORKS_DIR = TEST_DGS_NETWORK_DIR / "special"
 
@@ -36,6 +39,11 @@ def network_load_data_name(request) -> str:
 @pytest.fixture(params=TEST_DGS_NETWORKS, ids=TEST_DGS_NETWORKS_IDS)
 def dgs_network_path(request) -> Path:
     return request.param
+
+
+@pytest.fixture
+def dgs_regulators_networks_dir() -> Path:
+    return TEST_DGS_REGULATORS_NETWORKS_DIR
 
 
 @pytest.fixture

@@ -21,6 +21,32 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- Add the multi-phase voltage regulators `rlf.VoltageRegulator` and `rlf.RegulatorParameters`. A
+  voltage regulator is a bank of single-phase units (autotransformers with an on-load tap changer),
+  each with its own tap, which keeps the voltage of the load side at `u_ref` within its regulation
+  range `u_range`. The units are connected according to the new `connection` parameter of the
+  regulator parameters: `"wye"` (phases with a neutral, the neutral being carried through the
+  regulator), `"delta_positive_rotation"` or `"delta_negative_rotation"` (closed delta, phases
+  `"abc"`). The taps are available with `VoltageRegulator.res_taps` and the new
+  `ElectricalNetwork.res_regulators_taps` data frame, the other results with
+  `ElectricalNetwork.res_regulators`. Regulators are also exported to JSON (`"regulators"` and
+  `"regulators_params"` keys, written only when the network has regulators), included in
+  `ElectricalNetwork.regulators_frame` and `ElectricalNetwork.to_graph`, and converted to their
+  single-phase equivalent by `rlfs.ElectricalNetwork.from_rlf` (wye regulators only). See the
+  [Voltage Regulator](models/VoltageRegulator.md) page.
+- Import the step-voltage regulators (`ElmVoltreg`, `TypVoltreg`) of PowerFactory DGS files as
+  multi-phase voltage regulators (star and closed-delta configurations) and as single-phase voltage
+  regulators (star configurations), and add
+  `RegulatorParameters.from_power_factory` to create regulator parameters from the data of a
+  PowerFactory step-voltage regulator type. The imported regulators match PowerFactory's load flow
+  results.
+- Export the voltage regulators of single-phase networks to DGS files (`TypVoltreg` and
+  `ElmVoltreg` tables, only written when the network has regulators).
+- The DGS import now earths the star point of the external grids (`ElmXnet`) as PowerFactory does:
+  when its terminal has a neutral, an earthed star point (`cgnd`) connected to the neutral of the
+  terminal (`iintgnd`) earths this neutral, and a star point not connected to it gives the voltage
+  source its own floating neutral, earthed directly. The neutral of the source terminal of LV
+  networks is thus now earthed, which brings their voltages much closer to PowerFactory's.
 - Fix reading single-phase flexible parameters (`rlfs.FlexibleParameter`) from a dictionary or a
   JSON file: the multi-phase `Control` class was used instead of the single-phase one, so the
   voltage thresholds were interpreted as phase-to-neutral voltages instead of phase-to-phase ones

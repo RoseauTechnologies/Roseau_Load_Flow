@@ -1,0 +1,88 @@
+\input{Preamble}%
+
+\begin{document}
+\ctikzset{european, straight voltages, cute inductors, bipoles/length=1cm}%
+\begin{tikzpicture}[%
+    show background rectangle,%
+    tight background,%
+    background rectangle/.style={fill=white}%
+  ]
+  % Régulateur de tension triphasé en triangle fermé (rotation positive) : la borne commune de
+  % l'unité de chaque phase est la sortie de la phase suivante (a → b → c → a)
+
+  %
+  % Définitions
+  %
+  % Une unité : autotransformateur à prise variable. Arguments : abscisse, ordonnée, étiquette.
+  % L'enroulement va de la borne commune en (x,y-1.2) au point haut (x,y). L'entrée arrive à
+  % gauche sur la prise en (x-0.8,y). L'admittance magnétisante Ym part de l'entrée en (x-1.8,y)
+  % et rejoint le fil de la borne commune sous l'enroulement en (x,y-1.3). L'impédance série Z2
+  % va du haut de l'enroulement à la sortie de l'unité en (x+1.6,y).
+  \newcommand{\regulatorunit}[3]{%
+    \draw[-{Latex[length=2.5mm]}] ({#1-0.8},#2) -- ({#1-0.12},{#2-0.5});%
+    \node[below left] at ({#1-0.5},{#2-0.25}) {#3};%
+    \draw ({#1},{#2-1.2}) to[cute inductor] ({#1},#2);%
+    \draw ({#1-1.8},#2) to[generic, l_=$\underline{Y_{\mathrm{m}}}$, *-] ({#1-1.8},{#2-1.3})
+    to[short, -*] ({#1},{#2-1.3});%
+    \draw ({#1},#2) to[generic, l=$\underline{Z_2}$] ({#1+1.6},#2);%
+  }%
+  \pgfmathsetmacro{\r}{0.15};% Rayon des sauts de fils
+  \pgfmathsetmacro{\xl}{0};%
+  \pgfmathsetmacro{\xa}{3.5};%
+  \pgfmathsetmacro{\xb}{3.5};%
+  \pgfmathsetmacro{\xc}{3.5};%
+  \pgfmathsetmacro{\xab}{5.5};% Raccordement de la borne commune de l'unité a à la sortie b
+  \pgfmathsetmacro{\xbc}{5.5};% Raccordement de la borne commune de l'unité b à la sortie c
+  \pgfmathsetmacro{\xca}{6.5};% Raccordement de la borne commune de l'unité c à la sortie a
+  \pgfmathsetmacro{\xr}{8};%
+
+  \pgfmathsetmacro{\yc}{2.5};%
+  \pgfmathsetmacro{\yb}{5};%
+  \pgfmathsetmacro{\ya}{7.5};%
+
+  %
+  % Dessin
+  %
+  % Tensions amont
+  \node[left] at (\xl,\ya) {$\underline{V_{1,\arm}}$};
+  \node[left] at (\xl,\yb) {$\underline{V_{1,\brm}}$};
+  \node[left] at (\xl,\yc) {$\underline{V_{1,\crm}}$};
+
+  % Tensions aval
+  \node[right] at (\xr,\ya) {$\underline{V_{2,\arm}}$};
+  \node[right] at (\xr,\yb) {$\underline{V_{2,\brm}}$};
+  \node[right] at (\xr,\yc) {$\underline{V_{2,\crm}}$};
+
+  % Unités, alignées verticalement
+  \regulatorunit{\xa}{\ya}{$a_\abrm$}%
+  \regulatorunit{\xb}{\yb}{$a_\bcrm$}%
+  \regulatorunit{\xc}{\yc}{$a_\carm$}%
+
+  % Entrées
+  \draw (\xl,\ya) to[short,*-,i=$\underline{I_{1,\arm}}$] (\xl+1.2,\ya) -- (\xa-0.8,\ya);%
+  \draw (\xl,\yb) to[short,*-,i=$\underline{I_{1,\brm}}$] (\xl+1.2,\yb) -- (\xb-0.8,\yb);%
+  \draw (\xl,\yc) to[short,*-,i=$\underline{I_{1,\crm}}$] (\xl+1.2,\yc) -- (\xc-0.8,\yc);%
+
+  % Sorties (les fils des phases b et c sautent par-dessus le raccordement de l'unité c)
+  \draw (\xa+1.6,\ya) -- (\xr-1.2,\ya) to[short,-*,i<=$\underline{I_{2,\arm}}$] (\xr,\ya);%
+  \draw (\xb+1.6,\yb) -- (\xca-\r,\yb) arc[start angle=180, end angle=0, radius=\r]
+    -- (\xr-1.2,\yb) to[short,-*,i<=$\underline{I_{2,\brm}}$] (\xr,\yb);%
+  \draw (\xc+1.6,\yc) -- (\xca-\r,\yc) arc[start angle=180, end angle=0, radius=\r]
+    -- (\xr-1.2,\yc) to[short,-*,i<=$\underline{I_{2,\crm}}$] (\xr,\yc);%
+
+  % Bornes communes : l'anneau des unités, raccordées aux sorties en aval des impédances Z2
+  \draw (\xa,\ya-1.2) -- (\xa,\ya-1.7) -- (\xab,\ya-1.7) to[short,-*] (\xab,\yb);%
+  \draw (\xb,\yb-1.2) -- (\xb,\yb-1.7) -- (\xbc,\yb-1.7) to[short,-*] (\xbc,\yc);%
+  \draw (\xc,\yc-1.2) -- (\xc,\yc-1.7) -- (\xca,\yc-1.7) to[short,-*] (\xca,\ya);%
+
+\end{tikzpicture}
+\end{document}
+% Local Variables:
+% mode: latex
+% TeX-engine: luatex
+% TeX-source-correlate-method-active: synctex
+% ispell-local-dictionary: "british"
+% coding: utf-8
+% LaTeX-indent-level: 2
+% fill-column: 100
+% End:

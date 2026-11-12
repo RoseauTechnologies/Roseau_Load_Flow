@@ -14,6 +14,7 @@ from roseau.load_flow.io.common import NetworkElements
 from roseau.load_flow.io.dgs.buses import elm_term_to_buses
 from roseau.load_flow.io.dgs.lines import elm_lne_to_lines, typ_lne_to_lp
 from roseau.load_flow.io.dgs.loads import elm_lod_all_to_loads
+from roseau.load_flow.io.dgs.regulators import earth_star_points, voltreg_to_regulators
 from roseau.load_flow.io.dgs.sources import elm_xnet_to_sources
 from roseau.load_flow.io.dgs.switches import elm_coup_to_switches
 from roseau.load_flow.io.dgs.transformers import elm_tr2_to_transformers, typ_tr2_to_tp
@@ -30,6 +31,7 @@ from roseau.load_flow.models import (
     Switch,
     Transformer,
     TransformerParameters,
+    VoltageRegulator,
     VoltageSource,
 )
 from roseau.load_flow.typing import Id
@@ -66,6 +68,9 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     elm_xnet = dgs_dict_to_df(data, "ElmXnet", index_col)  # External sources
     elm_tr = dgs_dict_to_df(data, "ElmTr2", index_col) if "ElmTr2" in data else None  # Transformers
     elm_coup = dgs_dict_to_df(data, "ElmCoup", index_col) if "ElmCoup" in data else None  # Switches
+    # Step-voltage regulator types and regulators
+    typ_voltreg = dgs_dict_to_df(data, "TypVoltreg", index_col) if "TypVoltreg" in data else None
+    elm_voltreg = dgs_dict_to_df(data, "ElmVoltreg", index_col) if "ElmVoltreg" in data else None
     elm_lne = dgs_dict_to_df(data, "ElmLne", index_col) if "ElmLne" in data else None  # Lines
     elm_lod_lv = dgs_dict_to_df(data, "ElmLodLV", index_col) if "ElmLodLV" in data else None  # LV loads
     elm_lod_mv = dgs_dict_to_df(data, "ElmLodmv", index_col) if "ElmLodmv" in data else None  # MV loads
@@ -90,6 +95,7 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     lines: dict[Id, Line] = {}
     transformers: dict[Id, Transformer] = {}
     switches: dict[Id, Switch] = {}
+    regulators: dict[Id, VoltageRegulator] = {}
     grounds: dict[Id, Ground] = {}
     potential_refs: dict[Id, PotentialRef] = {}
     ground_connections: dict[Id, GroundConnection] = {}
@@ -102,7 +108,14 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     elm_term_to_buses(elm_term=elm_term, buses=buses, use_name_as_id=use_name_as_id)
 
     # Sources
-    elm_xnet_to_sources(elm_xnet=elm_xnet, sources=sources, buses=buses, sta_cubic=sta_cubic)
+    separate_star_points = elm_xnet_to_sources(
+        elm_xnet=elm_xnet,
+        sources=sources,
+        buses=buses,
+        sta_cubic=sta_cubic,
+        ground=ground,
+        ground_connections=ground_connections,
+    )
 
     # Loads
     if elm_lod is not None:  # General loads
@@ -154,16 +167,30 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     if elm_coup is not None:
         elm_coup_to_switches(elm_coup=elm_coup, switches=switches, buses=buses, sta_cubic=sta_cubic)
 
+    # Voltage regulators
+    earthed_star_points = voltreg_to_regulators(
+        typ_voltreg=typ_voltreg,
+        elm_voltreg=elm_voltreg,
+        regulators=regulators,
+        buses=buses,
+        sta_cubic=sta_cubic,
+        use_name_as_id=use_name_as_id,
+    )
+
     _add_potential_refs_and_ground_connections(
         buses=buses.values(),
         lines=lines.values(),
         transformers=transformers.values(),
         switches=switches.values(),
-        sources=sources,
+        regulators=regulators.values(),
+        sources={k: v for k, v in sources.items() if k not in separate_star_points},
         potential_refs=potential_refs,
         ground_connections=ground_connections,
         ground=ground,
     )
+
+    # The earthed star points of the star regulators earth their source-side neutral
+    earth_star_points(earthed_star_points, ground=ground, ground_connections=ground_connections)
 
     if len(ground._connected_elements) > 1:  # Is the ground used? (Are there connected elements aside from pref)
         grounds[ground.id] = ground
@@ -174,6 +201,7 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
         "lines": lines,
         "transformers": transformers,
         "switches": switches,
+        "regulators": regulators,
         "loads": loads,
         "sources": sources,
         "grounds": grounds,
@@ -189,6 +217,7 @@ def _add_potential_refs_and_ground_connections(  # noqa: C901
     lines: Iterable[Line],
     transformers: Iterable[Transformer],
     switches: Iterable[Switch],
+    regulators: Iterable[VoltageRegulator],
     sources: dict[Id, VoltageSource],
     potential_refs: dict[Id, PotentialRef],
     ground_connections: dict[Id, GroundConnection],
@@ -196,7 +225,7 @@ def _add_potential_refs_and_ground_connections(  # noqa: C901
 ) -> None:
     """Add potential reference(s) to a DGS network."""
     # Note this function is adapted from the ElectricalNetwork._check_ref method
-    elements = chain(buses, lines, transformers, switches)
+    elements = chain(buses, lines, transformers, switches, regulators)
     visited_elements: set[Element] = set()
     for initial_element in elements:
         if initial_element in visited_elements:

@@ -21,6 +21,7 @@ DTYPES: Final = {
     "transformer_id": object,
     "line_id": object,
     "switch_id": object,
+    "regulator_id": object,
     "load_id": object,
     "source_id": object,
     "ground_id": object,
