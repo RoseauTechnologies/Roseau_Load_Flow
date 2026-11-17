@@ -41,43 +41,6 @@ The corresponding equations are:
 ```{math}
 \left\{
     \begin{aligned}
-        \underline{V_1} &= \underline{a} \cdot \underline{V_2} - \underline{b} \cdot \underline{I_2}
-        + \underline{g} \cdot \underline{V_{\mathrm{g}}} \\
-        \underline{I_1} &= \underline{c} \cdot \underline{V_2} - \underline{d} \cdot \underline{I_2}
-        + \underline{h} \cdot \underline{V_{\mathrm{g}}} \\
-        \underline{I_{\mathrm{g}}} &= \underline{f}^\top \cdot \left(\underline{V_1} +
-        \underline{V_2} - 2\cdot \underline{V_{\mathrm{g}}}\right)
-    \end{aligned}
-\right.
-```
-
-where
-
-```{math}
-\left\{
-    \begin{aligned}
-        \underline{a} &= \mathcal{I}_4 + \dfrac{1}{2} \cdot \underline{Z} \cdot \underline{Y}  \\
-        \underline{b} &= \underline{Z}  \\
-        \underline{c} &= \underline{Y} + \dfrac{1}{4}\cdot \underline{Y} \cdot \underline{Z} \cdot
-        \underline{Y}  \\
-        \underline{d} &= \mathcal{I}_4 + \dfrac{1}{2} \cdot \underline{Y} \cdot \underline{Z}  \\
-        \underline{f} &= -\dfrac{1}{2} \cdot \begin{pmatrix} \underline{y_{\mathrm{ag}}} & \underline{y_{\mathrm{bg}}
-        } & \underline{y_{\mathrm{cg}}} & \underline{y_{\mathrm{ng}}} \end{pmatrix} ^\top  \\
-        \underline{g} &= \underline{Z} \cdot \underline{f}  \\
-        \underline{h} &= 2 \cdot \underline{f} + \frac{1}{2}\cdot \underline{Y} \cdot \underline{Z}
-        \cdot \underline{f}  \\
-    \end{aligned}
-\right.
-```
-
-with $\underline{Z}$ the series impedance matrix and $\underline{Y}$ the shunt admittance matrix.
-
-These equations can also be written in the equivalent admittance form, where the currents are
-expressed as functions of the potentials:
-
-```{math}
-\left\{
-    \begin{aligned}
         \underline{I_1} &= \underline{Y_{\mathrm{self}}} \cdot \underline{V_1} +
         \underline{Y_{\mathrm{mutual}}} \cdot \underline{V_2} + \underline{f} \cdot
         \underline{V_{\mathrm{g}}} \\
@@ -101,8 +64,7 @@ where
 \right.
 ```
 
-Unlike the matrices $\underline{a}$ and $\underline{d}$, the self and mutual admittance matrices are
-the same on both sides of the line, as the PI model is symmetric.
+with $\underline{Z}$ the series impedance matrix and $\underline{Y}$ the shunt admittance matrix.
 
 ## Available Results
 
