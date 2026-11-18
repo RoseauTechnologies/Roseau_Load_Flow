@@ -21,12 +21,7 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
-- Fix reading single-phase flexible parameters (`rlfs.FlexibleParameter`) from a dictionary or a
-  JSON file: the multi-phase `Control` class was used instead of the single-phase one, so the
-  voltage thresholds were interpreted as phase-to-neutral voltages instead of phase-to-phase ones
-  and the controls were never activated in single-phase networks loaded with
-  `rlfs.ElectricalNetwork.from_json` or `rlfs.ElectricalNetwork.from_dict`.
-- Document the admittance form of the shunt line equations. The engine now uses directly the self
+- Simplify the shunt line model by directly using the self
   ($\underline{Z}^{-1} + \frac{1}{2} \underline{Y}$) and mutual ($-\underline{Z}^{-1}$) admittance
   matrices, which are the same on both sides of the line, reducing the number of matrices to store
   and improving the numerical accuracy.
