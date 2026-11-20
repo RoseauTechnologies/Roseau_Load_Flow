@@ -21,6 +21,15 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+```{important}
+No license key is needed anymore to solve networks containing up to 50 buses: when no license key is
+provided, the free trial license is used automatically (with a warning). It is verified offline,
+without any internet connection. The public license key previously given in the documentation is no
+longer valid: remove it from your environment or code to use the trial license.
+```
+
+- Add the `License.offline` property, `True` for licenses verified offline such as the free trial
+  license.
 - {gh-pr}`518` {gh-issue}`517` The experimental backward-forward solver now raises a
   `NO_BACKWARD_FORWARD` error for networks it cannot solve correctly instead of failing to converge
   or, worse, converging to wrong results: networks with more than one voltage source, with a

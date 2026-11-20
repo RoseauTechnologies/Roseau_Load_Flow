@@ -1,11 +1,12 @@
 import datetime as dt
+import logging
 
 import certifi
 import pytest
 from platformdirs import user_cache_dir
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.license import License, activate_license, deactivate_license
+from roseau.load_flow.license import PUBLIC_LICENSE_KEY, License, activate_license, deactivate_license
 
 
 class FakeCyLicense:
@@ -16,12 +17,14 @@ class FakeCyLicense:
         valid: bool,
         max_nb_buses: int | None,
         machine_fingerprint: str,
+        offline: bool = False,
     ):
         self.key = key
         self.expiry_datetime = expiry_datetime
         self.valid = valid
         self.max_nb_buses = max_nb_buses
         self.machine_fingerprint = machine_fingerprint
+        self.offline = offline
 
 
 def test_license():
@@ -44,6 +47,7 @@ def test_license():
     assert lic.valid == valid
     assert lic.max_nb_buses == max_nb_buses
     assert lic.machine_fingerprint == machine_fingerprint
+    assert lic.offline is False
 
     # No expiry datetime
     lic = License(
@@ -101,3 +105,56 @@ def test_deactivate_license(monkeypatch):
         deactivate_license()
 
     assert called
+
+
+def test_activate_license_trial(monkeypatch, caplog):
+    activated_keys = []
+
+    def _fake_cy_activate_license(key: str, cacert_filepath: str, cache_folderpath: str):
+        activated_keys.append(key)
+
+    def _fake_cy_get_license():
+        return FakeCyLicense(
+            key=activated_keys[-1],
+            expiry_datetime=None,
+            valid=True,
+            max_nb_buses=50,
+            machine_fingerprint="",
+            offline=True,
+        )
+
+    assert PUBLIC_LICENSE_KEY.startswith("key/")
+    with monkeypatch.context() as m:
+        m.setattr("roseau.load_flow.license.cy_activate_license", _fake_cy_activate_license)
+        m.setattr("roseau.load_flow.license.cy_get_license", _fake_cy_get_license)
+
+        # Without any key: the trial license is used, with a warning
+        m.delenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", raising=False)
+        with caplog.at_level(logging.WARNING, logger="roseau.load_flow.license"):
+            activate_license()
+        assert activated_keys == [PUBLIC_LICENSE_KEY]
+        assert "free trial license is used (networks of up to 50 buses)" in caplog.text
+
+        # An empty environment variable is ignored as well
+        caplog.clear()
+        m.setenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "")
+        with caplog.at_level(logging.WARNING, logger="roseau.load_flow.license"):
+            activate_license()
+        assert activated_keys[-1] == PUBLIC_LICENSE_KEY
+        assert "free trial license" in caplog.text
+
+        # With the environment variable: no trial license, no warning
+        caplog.clear()
+        m.setenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "my-key")
+        with caplog.at_level(logging.WARNING, logger="roseau.load_flow.license"):
+            activate_license()
+        assert activated_keys[-1] == "my-key"
+        assert "free trial license" not in caplog.text
+
+        # With an explicit key: no trial license, no warning
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="roseau.load_flow.license"):
+            activate_license("other-key")
+        assert activated_keys[-1] == "other-key"
+        assert "free trial license" not in caplog.text
+    deactivate_license()
