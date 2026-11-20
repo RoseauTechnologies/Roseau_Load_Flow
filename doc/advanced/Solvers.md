@@ -179,7 +179,18 @@ alternative to traditional Newton-Raphson algorithms.
 
 - **Modeling Restrictions**:
   - The network cannot contain loops.
-  - Floating neutrals are not allowed for loads and sources.
+  - Floating neutrals are not allowed.
+  - The network must contain exactly one voltage source.
+  - The potential reference of each galvanic section (a part of the network connected without going
+    through a transformer) must be at the bus where the section is fed: the bus of the voltage
+    source for the first section, and the bus of the transformer on the side away from the source
+    for the others. It can be a `PotentialRef` on this bus, or a `PotentialRef` on a `Ground`
+    connected to this bus.
+  - A `Ground` cannot be connected to more than one bus of the same galvanic section, as this
+    creates a loop through the ground. A ground shared by the two sides of a transformer is allowed.
+
+  A network that does not respect these restrictions raises a `NO_BACKWARD_FORWARD` error; use one
+  of the Newton solvers instead.
 - **Convergence**: This method may exhibit weaker convergence properties, particularly in scenarios
   involving flexible loads.
 

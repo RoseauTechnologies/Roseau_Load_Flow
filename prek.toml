@@ -53,7 +53,7 @@ hooks = [
 [[repos]]
 repo = "https://github.com/rvben/rumdl-pre-commit"
 rev = "v0.3.2"
-hooks = [{ id = "rumdl" }]
+hooks = [{ id = "rumdl-check" }]
 
 [[repos]]
 repo = "https://github.com/owenlamont/ryl-pre-commit"

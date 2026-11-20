@@ -21,6 +21,11 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`518` {gh-issue}`517` The experimental backward-forward solver now raises a
+  `NO_BACKWARD_FORWARD` error for networks it cannot solve correctly instead of failing to converge
+  or, worse, converging to wrong results: networks with more than one voltage source, with a
+  potential reference that is not at the bus where its galvanic section is fed, or with a ground
+  connected more than once to the same galvanic section.
 - Simplify the shunt line model by directly using the self
   ($\underline{Z}^{-1} + \frac{1}{2} \underline{Y}$) and mutual ($-\underline{Z}^{-1}$) admittance
   matrices, which are the same on both sides of the line, reducing the number of matrices to store
