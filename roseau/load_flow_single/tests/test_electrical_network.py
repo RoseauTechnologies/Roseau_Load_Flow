@@ -1,4 +1,5 @@
 import cmath
+import contextlib
 import itertools as it
 import json
 import re
@@ -1763,3 +1764,37 @@ def test_propagate_voltages_voltage_regulators():
     ElectricalNetwork.from_element(bus1)
     npt.assert_allclose(bus1.initial_voltage.m, 20e3)
     npt.assert_allclose(bus2.initial_voltage.m, 21e3)  # <- regulation voltage
+
+
+def test_bfs_limitations():
+    bus1 = Bus(id="Bus1")
+    bus2 = Bus(id="Bus2")
+    bus3 = Bus(id="Bus3")
+    VoltageSource(id="Src", bus=bus1, voltage=400)
+    lp = LineParameters(id="LP", z_line=0.1 + 0.1j)
+    Line(id="Line1", bus1=bus1, bus2=bus2, parameters=lp, length=1.0)
+    Line(id="Line2", bus1=bus2, bus2=bus3, parameters=lp, length=1.0)
+    en = ElectricalNetwork.from_element(bus1)
+    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
+        en.solve_load_flow(solver="backward_forward")  # Ok, no loop and a single source
+
+    # Add second source
+    src2 = VoltageSource(id="Src2", bus=bus3, voltage=401)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en.solve_load_flow(solver="backward_forward")
+    assert e.value.code == RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
+    assert e.value.msg == (
+        "The backward-forward solver supports only one voltage source, but the network contains 2. "
+        "Use a Newton solver instead."
+    )
+    src2.disconnect()
+
+    with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
+        en.solve_load_flow(solver="backward_forward")  # Ok, no loop and a single source
+
+    # Add loop
+    Line(id="Line3", bus1=bus1, bus2=bus3, parameters=lp, length=1.0)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en.solve_load_flow(solver="backward_forward")
+    assert e.value.code == RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
+    assert e.value.msg == "The backward-forward solver does not support loops, but the network contains one."

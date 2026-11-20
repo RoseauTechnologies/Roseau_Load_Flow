@@ -1148,15 +1148,18 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 all_phases |= set(bus.phases)
 
         starting_potentials, starting_source = self._get_starting_potentials(all_phases)
-        elements: list[tuple[Element, dict[str, complex], Element | None]] = [
-            (starting_source, starting_potentials, None)
+        # The root bus of a galvanic section is where the traversal enters it
+        elements: list[tuple[Element, dict[str, complex], Element | None, Bus]] = [
+            (starting_source, starting_potentials, None, starting_source.bus)
         ]
         self._elements = []
         self._has_loop = False
+        section_roots: dict[Element, Bus] = {}
         visited: set[Element] = {starting_source}
         while elements:
-            element, potentials, parent = elements.pop(-1)
+            element, potentials, parent, root = elements.pop(-1)
             self._elements.append(element)
+            section_roots[element] = root
             if isinstance(element, Bus) and not element._initialized:
                 element.initial_potentials = np.array([potentials[p] for p in element.phases], dtype=np.complex128)
                 element._initialized_by_the_user = False  # only used for serialization
@@ -1166,6 +1169,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             if not isinstance(element, Ground):  # Do not go from ground to buses/branches
                 for e in element._connected_elements:
                     if e not in visited:
+                        new_root = root
                         if isinstance(element, Transformer):
                             phase_shift = CLOCK_PHASE_SHIFT[element.parameters.phase_displacement]
                             kd = element.parameters._ulv / element.parameters._uhv * phase_shift
@@ -1175,9 +1179,10 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                             else:
                                 # Traversing from LV side to HV side
                                 new_potentials = {key: p / (kd * element.tap) for key, p in potentials.items()}
+                            new_root = e if isinstance(e, Bus) else root
                         else:
                             new_potentials = potentials
-                        elements.append((e, new_potentials, element))
+                        elements.append((e, new_potentials, element, new_root))
                         visited.add(e)
                     elif (
                         not self._has_loop  # Save some checks if we already found a loop
@@ -1189,9 +1194,62 @@ class ElectricalNetwork(AbstractNetwork[Element]):
             else:
                 for e in element._connected_elements:
                     if e not in visited and isinstance(e, PotentialRef):
-                        elements.append((e, potentials, element))
+                        elements.append((e, potentials, element, root))
                         visited.add(e)
         self._check_connectivity(visited, starting_source)
+        self._backward_forward_error = None if self._has_loop else self._check_backward_forward_refs(section_roots)
+
+    def _check_backward_forward_refs(self, section_roots: dict[Element, Bus]) -> str | None:
+        """Check the potential references and grounds supported by the backward-forward solver.
+
+        Args:
+            section_roots:
+                The root bus of the galvanic section of each visited element, i.e. the bus where the
+                traversal from the voltage source enters the section.
+
+        Returns:
+            The reason the network is not supported, or ``None`` if it is supported.
+        """
+        grounded: dict[tuple[Ground, Bus], Bus] = {}  # (ground, section root) -> grounded bus
+        for gc in self.ground_connections.values():
+            bus = gc.element if isinstance(gc.element, Bus) else gc.element.bus  # type: ignore
+            root = section_roots[bus]
+            key = (gc.ground, root)
+            if key in grounded:
+                return (
+                    f"ground {gc.ground.id!r} is connected more than once to the section fed at bus {root.id!r} "
+                    f"(buses {grounded[key].id!r} and {bus.id!r}), which creates a loop through the ground"
+                )
+            grounded[key] = bus
+
+        referenced_roots: set[Bus] = set()
+        for pref in self.potential_refs.values():
+            element = pref.element
+            if isinstance(element, Bus):
+                root = section_roots[element]
+                if element is not root:
+                    return (
+                        f"potential reference {pref.id!r} is on bus {element.id!r} but it must be on bus "
+                        f"{root.id!r} where its section is fed"
+                    )
+                referenced_roots.add(root)
+            else:
+                for (ground, root), bus in grounded.items():
+                    if ground is not element:
+                        continue
+                    if bus is not root:
+                        return (
+                            f"potential reference {pref.id!r} is on ground {element.id!r} which is connected "
+                            f"to bus {bus.id!r} but it must be connected to bus {root.id!r} where its section is fed"
+                        )
+                    referenced_roots.add(root)
+        for root in dict.fromkeys(section_roots.values()):
+            if root not in referenced_roots:
+                return (
+                    f"the section fed at bus {root.id!r} must have its potential reference on this bus or on a "
+                    f"ground connected to it"
+                )
+        return None
 
     def _get_starting_potentials(self, all_phases: set[str]) -> tuple[dict[str, complex], VoltageSource]:
         """Compute the initial potentials from the voltage sources of the network and get the starting source."""

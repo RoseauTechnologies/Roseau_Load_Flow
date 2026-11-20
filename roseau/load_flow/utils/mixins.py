@@ -655,6 +655,7 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         self._elements: list[_E_co] = []
         self._has_loop = False
         self._has_floating_neutral = False
+        self._backward_forward_error: str | None = None
         self._check_validity(constructed=True)
         self._create_network()
         self._valid = True
@@ -756,7 +757,8 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
                   classical Newton-Raphson method. This is the default.
                 - ``backward_forward``: the *Backward-Forward Sweep* method. It usually executes
                   faster than the other approaches but may exhibit weaker convergence properties. It
-                  does not support meshed networks or floating neutrals.
+                  does not support meshed networks, floating neutrals, multiple sources or potential
+                  references not attached to the root buses.
 
             solver_params:
                 A dictionary of parameters used by the solver. Available parameters depend on the
