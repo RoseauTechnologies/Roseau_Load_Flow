@@ -1,4 +1,5 @@
 from roseau.load_flow import (
+    PUBLIC_LICENSE_KEY,
     SQRT3,
     Insulator,
     License,
@@ -106,6 +107,7 @@ __all__ = [
     "deactivate_license",
     "get_license",
     "license",
+    "PUBLIC_LICENSE_KEY",
     # Units
     "Q_",
     "units",

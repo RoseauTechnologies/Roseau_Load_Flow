@@ -22,7 +22,7 @@ from roseau.load_flow.__about__ import (
 )
 from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.license import License, activate_license, deactivate_license, get_license
+from roseau.load_flow.license import PUBLIC_LICENSE_KEY, License, activate_license, deactivate_license, get_license
 from roseau.load_flow.models import (
     AbstractBranch,
     AbstractConnectable,
@@ -116,6 +116,7 @@ __all__ = [
     "deactivate_license",
     "get_license",
     "License",
+    "PUBLIC_LICENSE_KEY",
     # Constants
     "ALPHA",
     "ALPHA2",
