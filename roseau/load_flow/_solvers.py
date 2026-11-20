@@ -390,8 +390,7 @@ class BackwardForward(AbstractSolver[CyBackwardForward]):
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD)
         if self.network._has_floating_neutral:
             msg = (
-                "The backward-forward solver does not support loads or voltage sources with floating neutral, "
-                "but the network contains at least one."
+                "The backward-forward solver does not support floating neutral, but the network contains at least one."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD)

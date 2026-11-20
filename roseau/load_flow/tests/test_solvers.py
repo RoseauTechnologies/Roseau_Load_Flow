@@ -108,10 +108,10 @@ def test_bfs_limitations():
     load = PowerLoad(id="load", bus=bus3, powers=[10, 10, 10], phases="abcn")
     with pytest.raises(RoseauLoadFlowException) as e:
         en.solve_load_flow(solver="backward_forward")
-    assert (
-        "The backward-forward solver does not support loads or voltage sources with floating neutral" in e.value.args[0]
+    assert e.value.code == RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
+    assert e.value.msg == (
+        "The backward-forward solver does not support floating neutral, but the network contains at least one."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
     load.disconnect()
 
     with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
@@ -121,10 +121,10 @@ def test_bfs_limitations():
     load = PowerLoad(id="Load", bus=bus3, powers=20e3, phases="abcn")
     with pytest.raises(RoseauLoadFlowException) as e:
         en.solve_load_flow(solver="backward_forward")
-    assert (
-        "The backward-forward solver does not support loads or voltage sources with floating neutral" in e.value.args[0]
+    assert e.value.code == RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
+    assert e.value.msg == (
+        "The backward-forward solver does not support floating neutral, but the network contains at least one."
     )
-    assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
     load.disconnect()
 
     with contextlib.suppress(TypeError):  # cython solve_load_flow method has been patched
@@ -147,6 +147,23 @@ def test_bfs_limitations():
         en.solve_load_flow(solver="backward_forward")
     assert "The backward-forward solver does not support loops, but the network contains one." in e.value.args[0]
     assert e.value.args[1] == RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
+
+    # Transformer with a floating neutral
+    tp = TransformerParameters(id="TP", vg="Dyn11", uhv=20e3, ulv=400, sn=160e3, z2=0.02 + 0.05j, ym=1e-7 - 2e-6j)
+    hv = Bus(id="HV Bus", phases="abc")
+    lv = Bus(id="LV Bus", phases="abc")
+    VoltageSource(id="Src", bus=hv, voltages=20e3)
+    PotentialRef(id="PRef HV", element=hv)
+    PotentialRef(id="PRef LV", element=lv)
+    tr = Transformer(id="Tr", bus_hv=hv, bus_lv=lv, parameters=tp, phases_lv="abcn")
+    assert tr.has_floating_neutral_lv
+    en = ElectricalNetwork.from_element(hv)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        en.solve_load_flow(solver="backward_forward")
+    assert e.value.code == RoseauLoadFlowExceptionCode.NO_BACKWARD_FORWARD
+    assert e.value.msg == (
+        "The backward-forward solver does not support floating neutral, but the network contains at least one."
+    )
 
 
 def test_bfs_pref():
