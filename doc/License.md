@@ -39,14 +39,14 @@ to 50 buses; larger networks require a valid license key.
 
 **No license key is needed** to solve networks containing up to 50 buses. When no license key is
 provided (neither with the `activate_license` function nor with the `ROSEAU_LOAD_FLOW_LICENSE_KEY`
-environment variable), the free trial license is used automatically and a warning reminds you of
-it. For example, it can be used to follow the tutorials in this documentation or for personal
-projects. It is valid indefinitely and does not require an internet connection.
+environment variable), the free trial license is used automatically. For example, it can be used
+to follow the tutorials in this documentation or for personal projects. It is valid indefinitely
+and does not require an internet connection.
 
 ```{note}
 The public license key previously given on this page is no longer valid. If it is still set in your
-`ROSEAU_LOAD_FLOW_LICENSE_KEY` environment variable or passed to `activate_license`, remove it to
-use the trial license.
+`ROSEAU_LOAD_FLOW_LICENSE_KEY` environment variable or passed to `activate_license`, it is
+temporarily replaced by the trial license, with a warning. Please remove it.
 ```
 
 ### Academic license (free)

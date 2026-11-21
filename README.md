@@ -41,9 +41,9 @@ You can find the complete documentation at <https://roseau-load-flow.roseautechn
 
 ## License
 
-This project is _partially_ open source but using the solver requires a license. Without any
-license key, the solver can be used free of charge with networks containing up to 50 buses. To
-obtain a personal or commercial license, please contact us at
+This project is _partially_ open source. The solver can be used free of charge with networks
+containing up to 50 buses without a license. Commercial use of the solver or use with larger
+networks requires a license. To obtain a personal or commercial license, please contact us at
 [contact@roseautechnologies.com](mailto:contact@roseautechnologies.com).
 
 > [!NOTE]

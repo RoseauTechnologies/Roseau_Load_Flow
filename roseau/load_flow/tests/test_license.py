@@ -1,5 +1,4 @@
 import datetime as dt
-import logging
 
 import certifi
 import pytest
@@ -107,54 +106,43 @@ def test_deactivate_license(monkeypatch):
     assert called
 
 
-def test_activate_license_trial(monkeypatch, caplog):
+def test_activate_license_trial(monkeypatch, recwarn):
     activated_keys = []
 
     def _fake_cy_activate_license(key: str, cacert_filepath: str, cache_folderpath: str):
         activated_keys.append(key)
 
-    def _fake_cy_get_license():
-        return FakeCyLicense(
-            key=activated_keys[-1],
-            expiry_datetime=None,
-            valid=True,
-            max_nb_buses=50,
-            machine_fingerprint="",
-            offline=True,
-        )
-
     assert PUBLIC_LICENSE_KEY.startswith("key/")
     with monkeypatch.context() as m:
         m.setattr("roseau.load_flow.license.cy_activate_license", _fake_cy_activate_license)
-        m.setattr("roseau.load_flow.license.cy_get_license", _fake_cy_get_license)
 
-        # Without any key: the trial license is used, with a warning
+        # Without any key: the trial license is used, silently
         m.delenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", raising=False)
-        with caplog.at_level(logging.WARNING, logger="roseau.load_flow.license"):
-            activate_license()
+        activate_license()
         assert activated_keys == [PUBLIC_LICENSE_KEY]
-        assert "free trial license is used (networks of up to 50 buses)" in caplog.text
 
         # An empty environment variable is ignored as well
-        caplog.clear()
         m.setenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "")
-        with caplog.at_level(logging.WARNING, logger="roseau.load_flow.license"):
+        activate_license()
+        assert activated_keys[-1] == PUBLIC_LICENSE_KEY
+
+        # With the environment variable: no trial license
+        m.setenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "my-key")
+        activate_license()
+        assert activated_keys[-1] == "my-key"
+
+        # With an explicit key: no trial license
+        activate_license("other-key")
+        assert activated_keys[-1] == "other-key"
+        assert not recwarn.list
+
+        # The former public key, explicit or in the environment variable, is replaced by the trial license
+        old_key = "A8C6DA-9405FB-E74FB9-C71C3C-207661-V3"
+        with pytest.warns(FutureWarning, match=r"The public license key used is no longer valid"):
+            activate_license(old_key)
+        assert activated_keys[-1] == PUBLIC_LICENSE_KEY
+        m.setenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", old_key)
+        with pytest.warns(FutureWarning, match=r"The public license key used is no longer valid"):
             activate_license()
         assert activated_keys[-1] == PUBLIC_LICENSE_KEY
-        assert "free trial license" in caplog.text
-
-        # With the environment variable: no trial license, no warning
-        caplog.clear()
-        m.setenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "my-key")
-        with caplog.at_level(logging.WARNING, logger="roseau.load_flow.license"):
-            activate_license()
-        assert activated_keys[-1] == "my-key"
-        assert "free trial license" not in caplog.text
-
-        # With an explicit key: no trial license, no warning
-        caplog.clear()
-        with caplog.at_level(logging.WARNING, logger="roseau.load_flow.license"):
-            activate_license("other-key")
-        assert activated_keys[-1] == "other-key"
-        assert "free trial license" not in caplog.text
     deactivate_license()

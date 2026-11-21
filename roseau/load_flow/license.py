@@ -7,6 +7,7 @@ import certifi
 from platformdirs import user_cache_dir
 
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
+from roseau.load_flow.utils.helpers import warn_external
 from roseau.load_flow_engine.cy_engine import (
     PUBLIC_LICENSE_KEY,
     CyLicense,
@@ -18,6 +19,9 @@ from roseau.load_flow_engine.cy_engine import (
 logger = logging.getLogger(__name__)
 
 __all__ = ["activate_license", "deactivate_license", "get_license", "License"]
+
+# The former public license key, no longer valid: it is temporarily replaced by the free trial license
+_OLD_PUBLIC_LICENSE_KEY = "A8C6DA-9405FB-E74FB9-C71C3C-207661-V3"
 
 # Cache the license object. Cache cleared when the license is deactivated
 _license: "License | None" = None
@@ -93,16 +97,20 @@ def activate_license(key: str | None = None) -> None:
         key:
             The key of the license to activate. If ``None`` is provided (default), the environment
             variable `ROSEAU_LOAD_FLOW_LICENSE_KEY` is used. If this variable is not set either, the
-            free trial license is used: it is limited to networks of up to 50 buses and a warning is
-            logged.
+            free trial license is used: it is limited to networks of up to 50 buses.
     """
     global _license
-    trial = False
     if key is None:
-        key = os.getenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "")
-        if not key:
-            key = PUBLIC_LICENSE_KEY
-            trial = True
+        key = os.getenv("ROSEAU_LOAD_FLOW_LICENSE_KEY", "") or PUBLIC_LICENSE_KEY
+    if key == _OLD_PUBLIC_LICENSE_KEY:
+        # TODO: remove this temporary replacement of the former public license key
+        warn_external(
+            "The public license key used is no longer valid: the free trial license is used instead. "
+            "Please remove this key from your code or from the `ROSEAU_LOAD_FLOW_LICENSE_KEY` environment "
+            "variable: the free trial license is used by default when no license key is provided.",
+            category=FutureWarning,
+        )
+        key = PUBLIC_LICENSE_KEY
     try:
         cy_activate_license(key=key, cacert_filepath=certifi.where(), cache_folderpath=user_cache_dir())
         _license = None
@@ -113,15 +121,6 @@ def activate_license(key: str | None = None) -> None:
         msg = f"The license cannot be activated. The detailed error message is {err_msg!r}."
         logger.error(msg)
         raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.LICENSE_ERROR) from e
-    if trial:
-        lic = get_license()
-        max_nb_buses = lic.max_nb_buses if lic is not None else None
-        limit = "no bus limit" if max_nb_buses is None else f"networks of up to {max_nb_buses} buses"
-        logger.warning(
-            f"No license key has been provided: the free trial license is used ({limit}). Please use "
-            f"`activate_license(key)` or set the `ROSEAU_LOAD_FLOW_LICENSE_KEY` environment variable to use "
-            f"your own license."
-        )
 
 
 def deactivate_license() -> None:
