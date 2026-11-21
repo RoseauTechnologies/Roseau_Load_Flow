@@ -3,21 +3,22 @@ myst:
   html_meta:
     description lang=en: |
       Depending on your status, Roseau Load Flow is available with several types of free or paid
-      licenses. A trial key is also available.
+      licenses. A free trial license is also available, without any license key.
     keywords lang=en: simulation, distribution grid, solver, license, open-source, free, test
     # spellchecker:off
     description lang=fr: |
       En fonction de votre statut, Roseau Load Flow est disponible avec plusieurs types de licences
-      gratuites ou payantes. Une clef d'essai est également disponible.
+      gratuites ou payantes. Une licence d'essai gratuite est également disponible, sans clef de
+      licence.
     keywords lang=fr: solveur, simulation, réseau, électrique, licence, open-source, gratuit, essai
     # spellchecker:on
 og:image: https://www.roseautechnologies.com/wp-content/uploads/2024/04/DSCF0265-scaled.webp
 og:image:alt: |-
   An engineer uses Roseau Load Flow to perform compute the electric state of a MV/LV transformer
-og:title: Free public license key
+og:title: Free trial license
 og:description: |-
-  You can try out RLF without registration on a distribution network of up to ten nodes by using the
-  public license key provided below.
+  You can try out RLF without registration and without any license key on a distribution network of
+  up to 50 buses.
 ---
 
 (license-page)=
@@ -27,7 +28,8 @@ og:description: |-
 This project is partially open source. The source code of the Python interface is available on
 [GitHub](https://github.com/RoseauTechnologies/Roseau_Load_Flow) under the
 [BSD 3-Clause License](https://github.com/RoseauTechnologies/Roseau_Load_Flow/blob/main/LICENSE.md). The solver used in
-this project is not open source. You need a valid license key to use it.
+this project is not open source. Without a license key, it can be used with networks containing up
+to 50 buses; larger networks require a valid license key.
 
 (license-types)=
 
@@ -35,9 +37,17 @@ this project is not open source. You need a valid license key to use it.
 
 ### Trial license (free)
 
-The license key **`A8C6DA-9405FB-E74FB9-C71C3C-207661-V3`** can be used with networks containing up
-to 50 buses. For example, this key can be used to follow the tutorials in this documentation or for
-personal projects. This key is valid indefinitely.
+**No license key is needed** to solve networks containing up to 50 buses. When no license key is
+provided (neither with the `activate_license` function nor with the `ROSEAU_LOAD_FLOW_LICENSE_KEY`
+environment variable), the free trial license is used automatically. For example, it can be used
+to follow the tutorials in this documentation or for personal projects. It is valid indefinitely
+and does not require an internet connection.
+
+```{note}
+The public license key previously given on this page is no longer valid. If it is still set in your
+`ROSEAU_LOAD_FLOW_LICENSE_KEY` environment variable or passed to `activate_license`, it is
+temporarily replaced by the trial license, with a warning. Please remove it.
+```
 
 ### Academic license (free)
 
@@ -81,8 +91,7 @@ rlf.activate_license(Path("my_license_key.txt").read_text().strip())
 # Rest of your code here
 ```
 
-where the file `my_license_key.txt` contains `A8C6DA-9405FB-E74FB9-C71C3C-207661-V3` (replace with
-your license key).
+where the file `my_license_key.txt` contains your license key.
 
 ```{important}
 Do not share your license key with others. The license key is personal and should not be shared
@@ -131,7 +140,7 @@ If you are using a _Jupyter Notebook_, you can follow these instructions to set 
    (replace the key with your license key):
 
    ```bash
-   ROSEAU_LOAD_FLOW_LICENSE_KEY="A8C6DA-9405FB-E74FB9-C71C3C-207661-V3"
+   ROSEAU_LOAD_FLOW_LICENSE_KEY="XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX-V3"
    ```
 
 2. Add a cell to the beginning of your notebook with the following content and execute it:
