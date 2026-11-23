@@ -294,3 +294,54 @@ def test_use_name_as_id(dgs_networks_dir, tmp_path):
         ElectricalNetwork.from_dgs_file(bad_path, use_name_as_id=True)
     assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NON_UNIQUE_NAME
     assert e.value.msg == "ElmLne has non-unique loc_name values, cannot use them as IDs."
+
+
+@pytest.mark.parametrize(
+    ("iintgnd", "cgnd", "floating_neutral", "earthed_element"),
+    (
+        pytest.param(1, 0, False, "Bus", id="connected-earthed"),
+        pytest.param(1, 1, False, None, id="connected-not-earthed"),
+        pytest.param(0, 0, True, "VoltageSource", id="separate-earthed"),
+        pytest.param(0, 1, True, None, id="separate-not-earthed"),
+    ),
+)
+def test_dgs_external_grid_star_point(dgs_networks_dir, iintgnd, cgnd, floating_neutral, earthed_element):
+    data = json.loads((dgs_networks_dir / "LV_Line.json").read_text())
+    xnet = data["ElmXnet"]
+    xnet["Attributes"].append("cgnd")
+    iintgnd_index = xnet["Attributes"].index("iintgnd")
+    for values in xnet["Values"]:
+        values[iintgnd_index] = iintgnd
+        values.append(cgnd)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        en = ElectricalNetwork.from_dgs_dict(data, use_name_as_id=True)
+    source = en.sources["LV source"]
+    assert source.has_floating_neutral is floating_neutral
+    earthed = [
+        type(gc.element).__name__
+        for gc in en.ground_connections.values()
+        if gc.element is source or gc.element is source.bus
+    ]
+    assert earthed == ([earthed_element] if earthed_element else [])
+
+
+@pytest.mark.no_patch_engine
+@pytest.mark.parametrize("name", ("LV_Line", "LV_network"))
+def test_dgs_external_grid_earthing(dgs_networks_dir, name):
+    """The earthed star point of the external grid earths the neutral of its terminal (as in
+    PowerFactory): the voltages match PowerFactory's."""
+    path = dgs_networks_dir / f"{name}.json"
+    data = json.loads(path.read_text())
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        en = ElectricalNetwork.from_dgs_file(path, use_name_as_id=True)
+    assert any(gc.element.id == next(iter(en.sources.values())).bus.id for gc in en.ground_connections.values())
+    en.solve_load_flow()
+    terms = data["ElmTerm"]
+    for values in terms["Values"]:
+        term = dict(zip(terms["Attributes"], values, strict=True))
+        base = term["uknom"] * 1e3 / np.sqrt(3)
+        expected = np.array([complex(term[f"m:ur:{p}"] or 0, term[f"m:ui:{p}"] or 0) for p in "ABC"])
+        actual = en.buses[term["loc_name"]].res_potentials.m[:3] / base
+        npt.assert_allclose(actual, expected, atol=1e-4, err_msg=term["loc_name"])

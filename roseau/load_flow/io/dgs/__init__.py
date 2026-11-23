@@ -102,7 +102,14 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
     elm_term_to_buses(elm_term=elm_term, buses=buses, use_name_as_id=use_name_as_id)
 
     # Sources
-    elm_xnet_to_sources(elm_xnet=elm_xnet, sources=sources, buses=buses, sta_cubic=sta_cubic)
+    separate_star_points = elm_xnet_to_sources(
+        elm_xnet=elm_xnet,
+        sources=sources,
+        buses=buses,
+        sta_cubic=sta_cubic,
+        ground=ground,
+        ground_connections=ground_connections,
+    )
 
     # Loads
     if elm_lod is not None:  # General loads
@@ -159,7 +166,7 @@ def network_from_dgs(data: Mapping[str, Any], /, use_name_as_id: bool = False) -
         lines=lines.values(),
         transformers=transformers.values(),
         switches=switches.values(),
-        sources=sources,
+        sources={k: v for k, v in sources.items() if k not in separate_star_points},
         potential_refs=potential_refs,
         ground_connections=ground_connections,
         ground=ground,
