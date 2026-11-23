@@ -175,11 +175,11 @@ class GroundConnection(Element["CySimplifiedLine | CySwitch"]):
         element_to_connect = element
         if not isinstance(element, AbstractTerminal):
             msg = f"Cannot connect {element._element_info} to the ground."
-            if element.element_type in {"transformer", "line", "switch"}:
+            if element.element_type in {"transformer", "line", "switch", "regulator"}:
                 msg += " Did you mean to connect one of its sides?"
             logger.error(msg)
             raise RoseauLoadFlowException(msg, RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT)
-        if element.element_type in {"transformer", "line", "switch"}:
+        if element.element_type in {"transformer", "line", "switch", "regulator"}:
             element_to_connect = element._branch  # type: ignore
 
         if id is None:

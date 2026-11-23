@@ -235,10 +235,10 @@ class Bus(AbstractTerminal["CyBus"]):
     def propagate_limits(self, force: bool = False) -> None:
         """Propagate the voltage limits to galvanically connected buses.
 
-        Galvanically connected buses are buses connected to this bus through lines or switches. This
-        ensures that these voltage limits are only applied to buses with the same voltage level. If
-        a bus is connected to this bus through a transformer, the voltage limits are not propagated
-        to that bus.
+        Galvanically connected buses are buses connected to this bus through lines, switches or
+        voltage regulators. This ensures that these voltage limits are only applied to buses with
+        the same voltage level. If a bus is connected to this bus through a transformer, the
+        voltage limits are not propagated to that bus.
 
         If this bus does not define any voltage limits, calling this method will unset the limits
         of the connected buses.
@@ -250,6 +250,7 @@ class Bus(AbstractTerminal["CyBus"]):
                 connected buses have different limits.
         """
         from roseau.load_flow_single.models.lines import Line
+        from roseau.load_flow_single.models.regulators import VoltageRegulator
         from roseau.load_flow_single.models.switches import Switch
 
         buses: set[Bus] = set()
@@ -259,7 +260,7 @@ class Bus(AbstractTerminal["CyBus"]):
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
-            if not isinstance(branch, (Line, Switch)):
+            if not isinstance(branch, (Line, Switch, VoltageRegulator)):
                 continue
             for element in branch._connected_elements:
                 if not isinstance(element, Bus) or element is self or element in buses:
@@ -312,9 +313,11 @@ class Bus(AbstractTerminal["CyBus"]):
     def get_connected_buses(self) -> Iterator[Id]:
         """Get IDs of all the buses galvanically connected to this bus.
 
-        These are all the buses connected via one or more lines or switches to this bus.
+        These are all the buses connected via one or more lines, switches or voltage regulators
+        to this bus.
         """
         from roseau.load_flow_single.models.lines import Line
+        from roseau.load_flow_single.models.regulators import VoltageRegulator
         from roseau.load_flow_single.models.switches import Switch
 
         visited_buses = {self.id}
@@ -326,7 +329,7 @@ class Bus(AbstractTerminal["CyBus"]):
         while remaining:
             branch = remaining.pop()
             visited.add(branch)
-            if not isinstance(branch, (Line, Switch)):
+            if not isinstance(branch, (Line, Switch, VoltageRegulator)):
                 continue
             for element in branch._connected_elements:
                 if not isinstance(element, Bus) or element.id in visited_buses:

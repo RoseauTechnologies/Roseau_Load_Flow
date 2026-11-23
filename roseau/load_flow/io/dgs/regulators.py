@@ -8,11 +8,7 @@ import shapely
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.io.dgs.utils import parse_extra_rlf_data
 from roseau.load_flow.models import Bus, Ground, GroundConnection, RegulatorParameters, VoltageRegulator
-from roseau.load_flow.models.regulator_parameters import (
-    PowerFactoryClosedDeltaConnection,
-    PowerFactoryRegulatorConfiguration,
-    PowerFactoryRegulatorType,
-)
+from roseau.load_flow.models.regulator_parameters import PowerFactoryRegulatorConfiguration, PowerFactoryRegulatorType
 from roseau.load_flow.typing import Id
 from roseau.load_flow.utils import warn_external
 
@@ -30,8 +26,6 @@ REGULATOR_CONFIGURATIONS: Final[dict[int, PowerFactoryRegulatorConfiguration]] =
 """The configurations of the PowerFactory step-voltage regulator types (``TypVoltreg.config``)."""
 REGULATOR_TYPES: Final[dict[int, PowerFactoryRegulatorType]] = {0: "Type A", 1: "Type B"}
 """The types of the PowerFactory step-voltage regulators (``TypVoltreg.type``)."""
-CLOSED_DELTA_CONNECTIONS: Final[dict[int, PowerFactoryClosedDeltaConnection]] = {0: "Lagging", 1: "Leading"}
-"""The connections of the PowerFactory closed-delta step-voltage regulators (``TypVoltreg.cldeltacn``)."""
 
 
 def _get(df: pd.DataFrame, idx: str, column: str) -> object | None:
@@ -42,6 +36,26 @@ def _get(df: pd.DataFrame, idx: str, column: str) -> object | None:
     if value is None or (isinstance(value, float) and np.isnan(value)):
         return None
     return value
+
+
+def _check_closed_delta_connection(typ_voltreg: pd.DataFrame, fid: str, type_id: Id) -> None:
+    """Check the connection of a closed-delta regulator type (``cldeltacn``): only the lagging one
+    (0) is modelled, a leading one (1) is read as a lagging one with a warning."""
+    code = int(_get(typ_voltreg, fid, "cldeltacn") or 0)  # type: ignore[arg-type]
+    if code == 0:
+        return
+    if code == 1:
+        warn_external(
+            f"The step-voltage regulator type {type_id!r} is a leading closed delta, which is not "
+            f"supported: it is read as a lagging closed delta."
+        )
+    else:
+        msg = (
+            f"The step-voltage regulator type {type_id!r} has an unknown closed delta connection "
+            f"{code}: only the lagging (0) and leading (1) connections exist."
+        )
+        logger.error(msg)
+        raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_NOT_SUPPORTED)
 
 
 #
@@ -89,16 +103,8 @@ def typ_voltreg_to_rp(
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_NOT_SUPPORTED)
-        closed_delta_connection = None
-        if configuration == "Closed delta, 3 x 1-phase" and (code := _get(typ_voltreg, fid, "cldeltacn")) is not None:
-            closed_delta_connection = CLOSED_DELTA_CONNECTIONS.get(int(code))  # type: ignore[arg-type]
-            if closed_delta_connection is None:
-                msg = (
-                    f"The step-voltage regulator type {type_id!r} has an unknown closed delta "
-                    f"connection {code}: only the lagging (0) and leading (1) connections exist."
-                )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_NOT_SUPPORTED)
+        if configuration == "Closed delta, 3 x 1-phase":
+            _check_closed_delta_connection(typ_voltreg, fid, type_id)
         if multi_phase and configuration == "Star, 3-phase":
             warn_external(
                 f"The step-voltage regulator type {type_id!r} is a 'Star, 3-phase' one, whose single "
@@ -163,7 +169,6 @@ def typ_voltreg_to_rp(
             pcu=float(pcu),  # type: ignore[arg-type]
             kind=kind,
             configuration=configuration,
-            closed_delta_connection=closed_delta_connection,
         )
 
         # Extra data of roseau-load-flow (magnetising admittance and alpha)
@@ -275,7 +280,7 @@ def elm_voltreg_to_regulators(
         parameters = regulator_params[type_id]
         bus1 = buses[sta_cubic.at[elm_voltreg.at[idx, "buss"], "cterm"]]
         bus2 = buses[sta_cubic.at[elm_voltreg.at[idx, "busl"], "cterm"]]
-        if parameters.is_delta:
+        if parameters._connection == "delta":
             phases = "abc"
         else:
             if "n" not in bus1.phases or "n" not in bus2.phases:
@@ -301,7 +306,7 @@ def elm_voltreg_to_regulators(
             geometry=geometry,
         )
         regulators[idx] = regulator
-        if not parameters.is_delta and _get(elm_voltreg, idx, "cgnd") != 1:
+        if parameters._connection == "wye" and _get(elm_voltreg, idx, "cgnd") != 1:
             earthed_star_points.append(regulator)
     return earthed_star_points
 

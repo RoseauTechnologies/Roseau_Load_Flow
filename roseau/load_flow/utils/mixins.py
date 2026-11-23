@@ -193,6 +193,7 @@ class ToJsonMixin(metaclass=ABCMeta):
                 "lines": [line1_dict, line2_dict, ...],
                 "transformers": [transformer1_dict, transformer2_dict, ...],
                 "switches": [switch1_dict, switch2_dict, ...],
+                "regulators": [regulator1_dict, regulator2_dict, ...],
                 "loads": [load1_dict, load2_dict, ...],
                 "sources": [source1_dict, source2_dict, ...],
                 "grounds": [ground1_dict, ground2_dict, ...],

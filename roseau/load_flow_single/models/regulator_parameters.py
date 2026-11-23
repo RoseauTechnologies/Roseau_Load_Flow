@@ -48,7 +48,8 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
                 A unique ID of the regulator parameters.
 
             sn:
-                Rated apparent power of the regulator (VA).
+                Rated (total, throughput) apparent power of the regulator (VA): the power flowing
+                through the regulator at its rated current (``√3·un·In``).
 
             un:
                 Nominal voltage of the regulator (V).
@@ -68,14 +69,26 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
                 Defaults to 1000.
         """
         super().__init__(id)
+        if sn <= 0:
+            msg = f"sn must be positive, got {sn!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
+        if un <= 0:
+            msg = f"un must be positive, got {un!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
+        if z2 == 0:
+            msg = f"z2 must be non-zero, got {z2!r}."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
         if u_range <= 0 or u_range >= 1:
             msg = f"u_range must be between 0 and 1, got {u_range!r}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
         if alpha <= 0:
             msg = f"alpha must be positive, got {alpha!r}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
         self._sn = float(sn)
         self._un = float(un)
         self._z2 = complex(z2)
@@ -92,7 +105,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
 
     @property
     def sn(self) -> Q_[float]:
-        """Rated apparent power of the regulator (VA)."""
+        """Rated (total, throughput) apparent power of the regulator (VA)."""
         return Q_(self._sn, "VA")
 
     @property

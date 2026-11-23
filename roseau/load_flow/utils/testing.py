@@ -89,7 +89,7 @@ def access_elements_results[**P, R](  # noqa: C901
                 yield invoke_result_access(element, result_name, func, *args, **kwargs)
 
             # Other results for sides of the element
-            if element_type in ("line", "switch", "transformer"):
+            if element_type in ("line", "switch", "transformer", "regulator"):
                 for result_name in get_result_names(type(element.side1)):
                     if "shunt" in result_name and not element.with_shunt:
                         continue

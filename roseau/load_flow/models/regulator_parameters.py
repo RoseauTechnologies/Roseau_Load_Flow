@@ -21,9 +21,6 @@ type PowerFactoryRegulatorConfiguration = Literal[
     "Star, 3-phase", "Star, 3 x 1-phase", "Closed delta, 3 x 1-phase", "Open delta, 2 x 1-phase"
 ]
 """The configuration of a DIgSILENT PowerFactory step-voltage regulator (``TypVoltreg.config``)."""
-type PowerFactoryClosedDeltaConnection = Literal["Lagging", "Leading"]
-"""The connection of a DIgSILENT PowerFactory closed-delta step-voltage regulator
-(``TypVoltreg.cldeltacn``)."""
 
 
 class _RegulatorParametersMixin:
@@ -184,11 +181,10 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
     - ``"wye"``: a star, each unit is connected between a phase and the neutral, which is carried
       through the regulator. The phases of the regulator must contain the neutral (``"an"``,
       ``"abn"``, ``"abcn"``, etc.). Each unit regulates its phase-to-neutral voltage.
-    - ``"delta_positive_rotation"``: a closed delta (ANSI/PowerFactory "lagging" connection), the
-      common terminal of each unit is the output of the next phase (A → B → C → A). The phases of
-      the regulator must be ``"abc"``. Each unit regulates a line-to-line voltage.
-    - ``"delta_negative_rotation"``: a closed delta (ANSI/PowerFactory "leading" connection), the
-      common terminal of each unit is the output of the previous phase (A → C → B → A).
+    - ``"delta"``: a closed delta with a positive rotation (ANSI/PowerFactory "lagging"
+      connection), the common terminal of each unit is the output of the next phase
+      (A → B → C → A). The phases of the regulator must be ``"abc"``. Each unit regulates a
+      line-to-line voltage.
 
     The parameters here define the physical and control characteristics shared across all
     regulator instances that use the same parameter set. The per-instance target voltage ``u_ref``
@@ -197,8 +193,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
 
     is_multi_phase: Final = True
     allowed_connections: Final[frozenset[RegulatorConnection]] = frozenset(get_args(RegulatorConnection.__value__))
-    """The allowed connections of the regulator units: ``"wye"``, ``"delta_positive_rotation"``
-    and ``"delta_negative_rotation"``."""
+    """The allowed connections of the regulator units: ``"wye"`` and ``"delta"``."""
 
     @ureg_wraps(None, (None, None, "VA", "V", "ohm", "S", None, None, None))
     def __init__(
@@ -222,8 +217,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
             sn:
                 Rated (total, throughput) apparent power of the regulator (VA): the power flowing
                 through the regulator at its rated current (``√3·un·In`` for a three-phase
-                regulator). This is not the regulator's own catalogue rating, which only covers the
-                boosted or bucked part of that power: ``sn · u_range``.
+                regulator).
 
             un:
                 Nominal (line-to-line) voltage of the regulator (V).
@@ -238,8 +232,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
                 Voltage regulation range as a fraction, e.g. ``0.1`` means ±10 %. Defaults to 0.1.
 
             connection:
-                How the units of the regulator are connected: ``"wye"`` (default),
-                ``"delta_positive_rotation"`` or ``"delta_negative_rotation"``.
+                How the units of the regulator are connected: ``"wye"`` (default) or ``"delta"``.
 
             alpha:
                 Steepness of the softplus functions smoothing the tap bounds: the corners of the
@@ -250,23 +243,23 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         if sn <= 0:
             msg = f"sn must be positive, got {sn!r}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
         if un <= 0:
             msg = f"un must be positive, got {un!r}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
         if z2 == 0:
             msg = f"z2 must be non-zero, got {z2!r}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
         if u_range <= 0 or u_range >= 1:
             msg = f"u_range must be between 0 and 1, got {u_range!r}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
         if alpha <= 0:
             msg = f"alpha must be positive, got {alpha!r}."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
         if connection not in self.allowed_connections:
             msg = (
                 f"Invalid connection {connection!r} for regulator parameters {id!r}. Allowed "
@@ -284,7 +277,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         self._elements: set = set()
 
     @classmethod
-    @ureg_wraps(None, (None, None, "kV", "A", "percent", "percent", "W", None, None, None))
+    @ureg_wraps(None, (None, None, "kV", "A", "percent", "percent", "W", None, None))
     def from_power_factory(
         cls,
         id: Id,
@@ -296,7 +289,6 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         pcu: QtyOrMag[Float],
         kind: PowerFactoryRegulatorType = "Type A",
         configuration: PowerFactoryRegulatorConfiguration = "Star, 3-phase",
-        closed_delta_connection: PowerFactoryClosedDeltaConnection | None = None,
     ) -> Self:
         """Create regulator parameters from the data of a DIgSILENT PowerFactory step-voltage
         regulator type (``TypVoltreg``).
@@ -337,12 +329,8 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
             configuration:
                 The configuration of the regulator (``config``): ``"Star, 3-phase"`` (default) and
                 ``"Star, 3 x 1-phase"`` give ``"wye"`` parameters, ``"Closed delta, 3 x 1-phase"``
-                gives closed-delta parameters. The open delta is not supported.
-
-            closed_delta_connection:
-                The connection of a closed delta (``cldeltacn``): ``"Lagging"`` (default) gives the
-                ``"delta_positive_rotation"`` connection, ``"Leading"`` the
-                ``"delta_negative_rotation"`` one. Ignored by the star configurations.
+                gives ``"delta"`` parameters, those of a "lagging" closed delta. The open delta is
+                not supported.
 
         Returns:
             The created regulator parameters.
@@ -354,18 +342,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         elif configuration == "Star, 3 x 1-phase":
             un_ll, sb, connection = un * SQRT3, un * in_, "wye"
         elif configuration == "Closed delta, 3 x 1-phase":
-            if closed_delta_connection is None or closed_delta_connection == "Lagging":
-                connection = "delta_positive_rotation"
-            elif closed_delta_connection == "Leading":
-                connection = "delta_negative_rotation"
-            else:
-                msg = (
-                    f"Invalid closed delta connection {closed_delta_connection!r} for regulator "
-                    f"parameters {id!r}: expected 'Lagging' or 'Leading'."
-                )
-                logger.error(msg)
-                raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION)
-            un_ll, sb = un, un * in_
+            un_ll, sb, connection = un, un * in_, "delta"
         else:
             msg = (
                 f"The PowerFactory step-voltage regulator configuration {configuration!r} of the "
@@ -381,7 +358,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         elif kind != "Type A":
             msg = f"Invalid regulator type {kind!r} for regulator parameters {id!r}: expected 'Type A' or 'Type B'."
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
         sn = SQRT3 * un_ll * in_  # VA, the throughput rating
         zb = un * un / sb  # The base impedance of each unit (Ω)
         r = float(pcu) / sb  # p.u.
@@ -392,7 +369,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
                 f"short-circuit voltage uk={uk} % allows."
             )
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
         z2 = complex(r, np.sqrt(z * z - r * r)) * zb
         return cls(id, sn=sn, un=un_ll, z2=z2, ym=0.0, u_range=float(pc_reg) / 100.0, connection=connection)
 
@@ -431,11 +408,6 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
     def connection(self) -> RegulatorConnection:
         """How the units of the regulator are connected."""
         return self._connection
-
-    @property
-    def is_delta(self) -> bool:
-        """Whether the units of the regulator are connected in a closed delta."""
-        return self._connection != "wye"
 
     @property
     def alpha(self) -> float:

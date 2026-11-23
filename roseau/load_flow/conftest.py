@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 
+import roseau.load_flow as rlf
+
 HERE = Path(__file__).parent.expanduser().absolute()
 TEST_ALL_NETWORKS_DATA_FOLDER = HERE / "tests" / "data" / "networks"
 
@@ -42,3 +44,33 @@ def dgs_regulators_networks_dir() -> Path:
 @pytest.fixture(scope="session")
 def test_networks_path() -> Path:
     return TEST_ALL_NETWORKS_DATA_FOLDER
+
+
+# The following networks are generated using the scripts/generate_test_networks.py script
+@pytest.fixture
+def all_elements_network(test_networks_path) -> rlf.ElectricalNetwork:
+    # Load the network from the JSON file (without results)
+    return rlf.ElectricalNetwork.from_json(path=test_networks_path / "all_elements_network.json", include_results=False)
+
+
+@pytest.fixture
+def all_elements_network_with_results(test_networks_path) -> rlf.ElectricalNetwork:
+    # Load the network from the JSON file (with results, no need to invoke the solver)
+    return rlf.ElectricalNetwork.from_json(path=test_networks_path / "all_elements_network.json", include_results=True)
+
+
+@pytest.fixture
+def small_network(test_networks_path) -> rlf.ElectricalNetwork:
+    # Load the network from the JSON file (without results)
+    return rlf.ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=False)
+
+
+@pytest.fixture
+def small_network_with_results(test_networks_path) -> rlf.ElectricalNetwork:
+    # Load the network from the JSON file (with results, no need to invoke the solver)
+    return rlf.ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=True)
+
+
+@pytest.fixture
+def single_phase_network(test_networks_path) -> rlf.ElectricalNetwork:
+    return rlf.ElectricalNetwork.from_json(path=test_networks_path / "single_phase_network.json", include_results=True)

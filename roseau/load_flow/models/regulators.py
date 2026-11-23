@@ -33,12 +33,12 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
     """
 
     element_type: Final = "regulator"
-    allowed_phases: Final = frozenset({"an", "bn", "cn", "abn", "bcn", "can", "abcn", "abc"})
+    allowed_phases: Final = frozenset({"an", "bn", "cn", "abcn", "abc"})
     """The allowed phases for a voltage regulator are:
 
-    - P-N, P-P-N or P-P-P-N: ``"an"``, ``"bn"``, ``"cn"``, ``"abn"``, ``"bcn"``, ``"can"``,
-      ``"abcn"`` for the ``"wye"`` connection (one unit per phase);
-    - P-P-P: ``"abc"`` for the closed-delta connections (three units).
+    - P-N or P-P-P-N: ``"an"``, ``"bn"``, ``"cn"``, ``"abcn"`` for the ``"wye"`` connection (one
+      unit per phase);
+    - P-P-P: ``"abc"`` for the ``"delta"`` connection (three units).
     """
 
     def __init__(
@@ -95,7 +95,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
         self._initialized = False
         self._res_taps: FloatArray | None = None
         self._check_compatible_phase_tech(parameters, id=id)
-        if phases is None and parameters.is_delta:
+        if phases is None and parameters._connection == "delta":
             phases = "abc"
         phases = self._check_phases_common(id, bus1=bus1, bus2=bus2, phases=phases)
         self._check_connection(id=id, phases=phases, parameters=parameters)
@@ -111,21 +111,15 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
         self._cy_connect()
         self._connect(bus1, bus2)
 
-    def __repr__(self) -> str:
-        return (
-            f"<{type(self).__name__}: id={self.id!r}, bus1={self.bus1.id!r}, bus2={self.bus2.id!r}, "
-            f"phases={self.phases!r}, u_ref={self._u_ref:f}, max_loading={self._max_loading:f}>"
-        )
-
     @classmethod
     def _check_connection(cls, id: Id, phases: str, parameters: RegulatorParameters) -> None:
         """Check that the phases of the regulator are compatible with the connection of its parameters."""
-        if parameters.is_delta:
+        if parameters._connection == "delta":
             ok = phases == "abc"
             expected = "'abc'"
         else:
             ok = "n" in phases
-            expected = "phases with a neutral ('an', 'abn', 'abcn', etc.)"
+            expected = "'an', 'bn', 'cn' or 'abcn'"
         if not ok:
             msg = (
                 f"Phases {phases!r} of voltage regulator {id!r} are not compatible with the "
@@ -267,11 +261,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
     def _refresh_results(self) -> None:
         if self._fetch_results:
             super()._refresh_results()
-            taps = self._cy_element.get_taps()
-            if self._parameters._connection == "delta_negative_rotation":
-                # The unit of phase "a" is connected between "c" and "a": reorder as "ab", "bc", "ca"
-                taps = np.roll(taps, -1)
-            self._res_taps = taps
+            self._res_taps = self._cy_element.get_taps()
 
     def _res_taps_getter(self, warning: bool) -> FloatArray:
         self._refresh_results()
@@ -303,7 +293,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
         return self._res_taps_getter(warning=True)
 
     @property
-    def res_power_losses(self) -> Q_[complex]:
+    def res_losses(self) -> Q_[complex]:
         """Get the total power losses in the regulator (in VA)."""
         powers1 = self._side1._res_powers_getter(warning=True)
         powers2 = self._side2._res_powers_getter(warning=False)  # warn only once
@@ -327,10 +317,9 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
     @classmethod
     def _from_dict(cls, data: JsonDict, *, include_results: bool = True) -> "VoltageRegulator":
         results = data.get("results")  # peek before super() pops it
-        taps = results.pop("taps", None) if results else None
         self = super()._from_dict(data, include_results=include_results)
-        if include_results and taps is not None:
-            self._res_taps = np.array(taps, dtype=np.float64)
+        if include_results and results and "taps" in results:
+            self._res_taps = np.array(results["taps"], dtype=np.float64)
         return self
 
     def _to_dict(self, include_results: bool) -> JsonDict:

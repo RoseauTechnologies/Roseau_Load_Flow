@@ -98,6 +98,7 @@ def generate_all_element_network() -> None:
     bus4 = rlf.Bus(id="bus4", phases="abcn")
     bus5 = rlf.Bus(id="bus5", phases="bn", nominal_voltage=400, min_voltage_level=0.9, max_voltage_level=1.1)
     bus6 = rlf.Bus(id="bus6", phases="ca")
+    bus7 = rlf.Bus(id="bus7", phases="abc", nominal_voltage=20e3, min_voltage_level=0.95, max_voltage_level=1.05)
 
     # Voltage source
     source0 = rlf.VoltageSource(id="source0", bus=bus0, voltages=20e3, phases="abc")
@@ -189,12 +190,20 @@ def generate_all_element_network() -> None:
     source1 = rlf.VoltageSource(id="source1", bus=bus5, voltages=230)
     source2 = rlf.VoltageSource(id="source2", bus=bus6, voltages=400)
 
+    # Voltage regulator between bus0 and bus7
+    rp0 = rlf.RegulatorParameters(
+        id="rp0", sn=1e6, un=20e3, z2=0.01, ym=1e-5j, u_range=0.12, connection="delta", alpha=150
+    )
+    reg0 = rlf.VoltageRegulator(id="reg0", bus1=bus0, bus2=bus7, parameters=rp0, u_ref=1.025, max_loading=1.5)
+    load8 = rlf.PowerLoad(id="load8", bus=bus7, powers=rlf.Q_([50 + 10j, 40 + 5j, 60 + 15j], "kVA"), phases="abc")
+
     en = rlf.ElectricalNetwork(
-        buses=[bus0, bus1, bus2, bus3, bus4, bus5, bus6],
+        buses=[bus0, bus1, bus2, bus3, bus4, bus5, bus6, bus7],
         lines=[line0, line1, line2],
         transformers=[transformer0],
         switches=[switch0, switch1],
-        loads=[load0, load1, load2, load3, load4, load5, load6, load7],
+        regulators=[reg0],
+        loads=[load0, load1, load2, load3, load4, load5, load6, load7, load8],
         sources=[source0, source1, source2],
         grounds=[ground],
         potential_refs=[pref],

@@ -29,9 +29,14 @@ if TYPE_CHECKING:
 
     from roseau.load_flow.plotting import FeatureMap, StyleColorCallback, StyleDict
 
-_MAP_FIELDS = {et: {k: v for k, v in fields.items() if k != "phases"} for et, fields in _MAP_FIELDS_MULTI.items()}
+_MULTI_PHASE_ONLY_FIELDS = {"phases", "connection"}
+_MAP_FIELDS = {
+    et: {k: v for k, v in fields.items() if k not in _MULTI_PHASE_ONLY_FIELDS}
+    for et, fields in _MAP_FIELDS_MULTI.items()
+}
 _MAP_RESULTS_FIELDS = {
-    et: {k: v for k, v in fields.items() if k != "phases"} for et, fields in _MAP_RESULTS_FIELDS_MULTI.items()
+    et: {k: v for k, v in fields.items() if k not in _MULTI_PHASE_ONLY_FIELDS}
+    for et, fields in _MAP_RESULTS_FIELDS_MULTI.items()
 }
 
 

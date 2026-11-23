@@ -13,7 +13,7 @@ import numpy as np
 import shapely as shp
 from pint import PintError
 
-from roseau.load_flow.models import AbstractTerminal, Bus, Line, Switch, Transformer
+from roseau.load_flow.models import AbstractTerminal, Bus, Line, Switch, Transformer, VoltageRegulator
 from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.sym import NegativeSequence, PositiveSequence, ZeroSequence, phasor_to_sym
 from roseau.load_flow.types import LineType
@@ -136,7 +136,8 @@ def _get_phases_and_potentials(
         raise TypeError(f"Only multi-phase elements can be plotted. Did you mean to use rlf.{type(element).__name__}?")
     if not isinstance(element, AbstractTerminal):
         raise ValueError(
-            "The element must be a terminal (bus, load, source) or a branch side (line, switch, transformer)."
+            "The element must be a terminal (bus, load, source) or a branch side (line, switch, "
+            "transformer, regulator)."
         )
     phases, potentials = element.phases, element.res_potentials.m
 
@@ -396,11 +397,12 @@ _MAP_FIELDS: dict["MapElementType", dict[str, str]] = {
     },
     "regulator": {
         "id": "Regulator ID:",
-        "phases": "Phases [S,L]:",
+        "phases": "Phases:",
         "bus1_id": "S-Side Bus:",
         "bus2_id": "L-Side Bus:",
         "rating": "Rating:",
         "parameters_id": "Parameters ID:",
+        "connection": "Connection:",
         "u_ref": "Uref (%):",
         "u_range": "Urange (%):",
         "max_loading": "Max loading (%):",
@@ -1030,6 +1032,42 @@ def _get_switches_data_for_map_plot(network: ElectricalNetwork, with_results: bo
     return gpd.GeoDataFrame(switches_data, crs=network.crs)
 
 
+def _get_regulators_data_for_map_plot(
+    network: ElectricalNetwork, with_results: bool, buses_frame: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    regs_data: dict[str, list[Any]] = {
+        field: [] for field in (_MAP_RESULTS_FIELDS if with_results else _MAP_FIELDS)["regulator"]
+    }
+    regs_data["geometry"] = []
+    buses_frame = buses_frame.set_index("id")
+    for reg in network.regulators.values():
+        rp = reg._parameters
+        regs_data["id"].append(reg.id)
+        regs_data["phases"].append(reg.phases)
+        regs_data["bus1_id"].append(reg.bus1.id)
+        regs_data["bus2_id"].append(reg.bus2.id)
+        regs_data["rating"].append(rp._rating_pretty())
+        regs_data["parameters_id"].append(rp.id)
+        regs_data["connection"].append(rp._connection)
+        regs_data["max_loading"].append(reg._max_loading * 100)  # Convert to percentage
+        regs_data["u_ref"].append(reg._u_ref * 100)  # Convert to percentage
+        regs_data["u_range"].append(f"±{_pp_num(rp._u_range * 100)}")  # Convert to percentage
+        regs_data["geometry"].append(reg.bus1.geometry)
+        regs_data["nominal_voltage"].append(buses_frame.at[reg.bus1.id, "nominal_voltage"])
+        regs_data["min_voltage_level"].append(buses_frame.at[reg.bus1.id, "min_voltage_level"])
+        regs_data["max_voltage_level"].append(buses_frame.at[reg.bus1.id, "max_voltage_level"])
+        if not with_results:
+            continue
+        regs_data["res_separator"].append("")
+        regs_data["res_tap"].append(_pp_num((reg._res_taps_getter(warning=False) * 100).tolist()))
+        regs_data["res_loading"].append(reg._res_loading_getter(warning=False) * 100)  # Convert to percentage
+        regs_data["res_voltage1"].append(buses_frame.at[reg.bus1.id, "res_voltage"])
+        regs_data["res_voltage2"].append(buses_frame.at[reg.bus2.id, "res_voltage"])
+        regs_data["res_voltage_level1"].append(buses_frame.at[reg.bus1.id, "res_voltage_level"])
+        regs_data["res_voltage_level2"].append(buses_frame.at[reg.bus2.id, "res_voltage_level"])
+    return gpd.GeoDataFrame(regs_data, crs=network.crs)
+
+
 def plot_interactive_map(
     network: ElectricalNetwork,
     *,
@@ -1054,16 +1092,17 @@ def plot_interactive_map(
 
     Args:
         network:
-            The electrical network to plot. Buses, sources, lines and transformers are plotted.
-            Sources are represented with bigger square markers.
+            The electrical network to plot. Buses, sources, lines, transformers and regulators are
+            plotted. Sources are represented with bigger square markers.
 
         style_color:
             A string to use as the default color of all elements, or a callback function in the form
             ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
-            is one of ``"bus"``, ``"source"``, ``"line"``, ``"transformer"``, ``"switch"``. Return
-            ``None`` from the callable to use the default color for that element instead. Defaults to
-            :roseau-primary:`■ #234e83` for buses, sources and lines, :color-gray:`■ #888888` for
-            switches, and :color-black:`■ #000000` for transformers.
+            is one of ``"bus"``, ``"source"``, ``"line"``, ``"transformer"``, ``"switch"``,
+            ``"regulator"``. Return ``None`` from the callable to use the default color for that
+            element instead. Defaults to :roseau-primary:`■ #234e83` for buses, sources and lines,
+            :color-gray:`■ #888888` for switches and regulators, and :color-black:`■ #000000` for
+            transformers.
 
         highlight_color:
             The color of the default style when an element is highlighted. Defaults to
@@ -1119,6 +1158,7 @@ def plot_interactive_map(
     lines_gdf = _get_lines_data_for_map_plot(network, with_results=False)
     transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
     switches_gdf = _get_switches_data_for_map_plot(network, with_results=False)
+    regulators_gdf = _get_regulators_data_for_map_plot(network, with_results=False, buses_frame=buses_gdf)
     m = _plot_interactive_map_internal(
         network=network,
         dataframes={
@@ -1128,6 +1168,7 @@ def plot_interactive_map(
             "source": sources_gdf,
             "transformer": transformers_gdf,
             "switch": switches_gdf,
+            "regulator": regulators_gdf,
         },
         fields=_MAP_FIELDS,
         style_color_callback=_make_style_color_callback(style_color, lambda et, eid: _DEFAULT_MAP_STYLE_COLORS[et]),
@@ -1190,15 +1231,15 @@ def plot_results_interactive_map(
 
     Args:
         network:
-            The electrical network to plot. Buses, sources, lines and transformers are plotted.
-            Sources are represented with bigger square markers.
+            The electrical network to plot. Buses, sources, lines, transformers and regulators are
+            plotted. Sources are represented with bigger square markers.
 
         style_color:
             A string to use as the default color of all elements, or a callback function in the form
             ``(el_type, el_id, /) -> str`` returning the color of that specific element. ``el_type``
-            is one of ``"bus"``, ``"source"``, ``"line"``, ``"transformer"``, ``"switch"``. Return
-            ``None`` from the callable to use the default color for that element instead. The default
-            colors depend on the element type and its results:
+            is one of ``"bus"``, ``"source"``, ``"line"``, ``"transformer"``, ``"switch"``,
+            ``"regulator"``. Return ``None`` from the callable to use the default color for that
+            element instead. The default colors depend on the element type and its results:
 
             For buses and sources, the default color is determined by their voltage levels:
 
@@ -1208,7 +1249,7 @@ def plot_results_interactive_map(
             - orange: `U` close to `Umax`; specifically, `0.75 * Umax + 0.25 < U ≤ Umax`
             - red: `U` above `Umax`
 
-            For lines and transformers, the default color depends on their loadings:
+            For lines, transformers and regulators, the default color depends on their loadings:
             - green: below 75% of the maximum loading
             - orange: between 75% and 100% of the maximum loading
             - red: above 100% of the maximum loading
@@ -1270,6 +1311,7 @@ def plot_results_interactive_map(
     lines_gdf = _get_lines_data_for_map_plot(network, with_results=True)
     transformers_gdf = _get_transformers_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
     switches_gdf = _get_switches_data_for_map_plot(network, with_results=True)
+    regulators_gdf = _get_regulators_data_for_map_plot(network, with_results=True, buses_frame=buses_gdf)
     m = _plot_interactive_map_internal(
         network=network,
         dataframes={
@@ -1279,6 +1321,7 @@ def plot_results_interactive_map(
             "source": sources_gdf,
             "transformer": transformers_gdf,
             "switch": switches_gdf,
+            "regulator": regulators_gdf,
         },
         fields=_MAP_RESULTS_FIELDS,
         style_color_callback=_make_style_color_callback(
@@ -1380,6 +1423,8 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 continue
             switches[switch.id] = cls._handle_switch(switch)
         for reg in network.regulators.values():
+            if not traverse_transformers and reg.bus1.id not in distances:
+                continue
             regulators[reg.id] = cls._handle_regulator(reg)
             buses[reg.bus1.id]["is_reg_bus"] = True
             buses[reg.bus2.id]["is_reg_bus"] = True
@@ -1471,7 +1516,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         }
 
     @classmethod
-    def _handle_regulator(cls, reg: "rlfs.VoltageRegulator") -> "VoltageProfileEdge":
+    def _handle_regulator(cls, reg: "VoltageRegulator | rlfs.VoltageRegulator") -> "VoltageProfileEdge":
         return {
             "from_bus": reg.bus1.id,
             "to_bus": reg.bus2.id,
@@ -1562,13 +1607,26 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
     def _get_extra_regulator_info(self, reg_id: Id) -> dict[str, Any]:
         """Get extra information for a regulator to display in the tooltip."""
         reg = self.network.regulators[reg_id]
-        return {
-            "parameters_id": reg._parameters.id,
-            "sn": reg._parameters._sn / 1e3,  # Convert to kVA
-            "un": reg._parameters._un,
-            "u_ref": reg._u_ref * 100,  # Convert to percentage
-            "tap": reg._res_tap_getter(warning=False) * 100,
-        }
+        if isinstance(reg, VoltageRegulator):
+            return {
+                "parameters_id": reg._parameters.id,
+                "connection": reg._parameters._connection,
+                "sn": reg._parameters._sn / 1e3,  # Convert to kVA
+                "un": reg._parameters._un,
+                "u_ref": reg._u_ref * 100,  # Convert to percentage
+                "taps": _pp_num((reg._res_taps_getter(warning=False) * 100).tolist()),
+                "phases": reg.phases,
+            }
+        else:
+            return {
+                "parameters_id": reg._parameters.id,
+                "connection": None,
+                "sn": reg._parameters._sn / 1e3,  # Convert to kVA
+                "un": reg._parameters._un,
+                "u_ref": reg._u_ref * 100,  # Convert to percentage
+                "taps": _pp_num(reg._res_tap_getter(warning=False) * 100),
+                "phases": None,
+            }
 
     @property
     def _title(self) -> str:
@@ -1816,7 +1874,6 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         # Regulators
         regulator_scatter_traces: list[go.Scatter | go.Scattergl] = []
         if self.regulators:
-            assert not self.network.is_multi_phase, "Regulators are only supported in single-phase networks."
             # Traces for regulators (grouped by color for better performance)
             reg_traces: dict[ResultState, dict[str, list[float | None]]] = {
                 state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
@@ -1830,10 +1887,12 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                     + f"<b>Regulator:    </b> {_pp_eid(reg_id, indent='               ')}<br>"
                     + f"<b>Loading (%):  </b> {reg['loading']:.5g}<br>"
                     + f"<b>Parameters:   </b> {reg_info['parameters_id']}<br>"
+                    + f"<b>Connection:   </b> {reg_info['connection']}<br>" * is_multi_phase
                     + f"<b>Sn (kVA):     </b> {reg_info['sn']:.5g}<br>"
                     + f"<b>Un (V):       </b> {reg_info['un']:.5g}<br>"
                     + f"<b>Uref (%):     </b> {reg_info['u_ref']:.5g}<br>"
-                    + f"<b>Tap ratio (%):</b> {reg_info['tap']:.5g}<br>"
+                    + f"<b>Tap ratio (%):</b> {reg_info['taps']}<br>"
+                    + f"<b>Phases:       </b> {reg_info['phases']}<br>" * is_multi_phase
                     + "</span>"
                 )
                 add_hover_point(reg["state"], sum(get_xs(reg)) / 2, sum(get_ys(reg)) / 2, reg_html)
@@ -1968,8 +2027,8 @@ def voltage_profile(
     """Create a voltage profile of the network.
 
     A voltage profile shows the voltage (in %) of buses in the network as a function of distance
-    from a starting bus. Lines and transformers are also represented, colored according to their
-    loading levels.
+    from a starting bus. Lines, transformers and regulators are also represented, colored according
+    to their loading levels.
 
     The network does not need to have geometries defined for this function to work, as distances are
     calculated based on line lengths. However, the network must have valid load flow results, and
@@ -1989,7 +2048,7 @@ def voltage_profile(
 
         traverse_transformers:
             If True, the entire network is traversed including transformers. If False, transformers
-            are not traversed.
+            are not traversed. Regulators are always traversed regardless of this parameter.
 
         switch_length:
             The length in km to assign to switches when calculating distances. If None, it is set to

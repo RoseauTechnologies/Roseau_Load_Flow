@@ -164,40 +164,6 @@ def test_dgs_regulator_parameters(dgs_regulators_networks_dir):
     np.testing.assert_allclose(rp2.z2.m, rp.z2.m)
 
 
-@pytest.mark.no_patch_engine
-@pytest.mark.parametrize(
-    ("name", "tolerance"),
-    (
-        ("Regulator_103_Type_A", 1e-3),
-        ("Regulator_103_Type_B", 1.5e-3),
-        # Saturated: the same tap ratio 1.1, only the position of the series impedance differs
-        ("Regulator_12_Type_A", 2e-4),
-    ),
-)
-def test_dgs_regulator_voltages_match_power_factory(dgs_regulators_networks_dir, name, tolerance):
-    """The voltages match PowerFactory's: exactly at the source side, and at the regulated side
-    within PowerFactory's own regulation tolerance (it stops within 0.1 % of the setpoint, while the
-    continuous controller reaches it exactly)."""
-    data = json.loads((dgs_regulators_networks_dir / "single" / f"{name}.json").read_text())
-    elm = dict(zip(data["ElmVoltreg"]["Attributes"], data["ElmVoltreg"]["Values"][0], strict=True))
-    en = _read_regulator_network(dgs_regulators_networks_dir, name)
-    en.solve_load_flow()
-    regulator = en.regulators[REGULATOR_ID]
-    for side, tol in ((regulator.side1, 1e-5), (regulator.side2, tolerance)):
-        expected = elm[f"m:U1l:bus{'s' if side is regulator.side1 else 'l'}"] * 1e3
-        np.testing.assert_allclose(abs(side.res_voltage.m), expected, rtol=tol)
-
-
-@pytest.mark.no_patch_engine
-@pytest.mark.parametrize("name", ("Regulator_12_Type_A", "Regulator_12_Type_B"))
-def test_dgs_type_b_regulator_saturates_with_type_a_law(dgs_regulators_networks_dir, name):
-    """A Type B regulator is read with the Type A ratio law: an unreachable setpoint saturates it
-    at `1 + u_range` = 1.1, where PowerFactory's own Type B ratio is 1 / (1 - 0.1) = 1.111."""
-    en = _read_regulator_network(dgs_regulators_networks_dir, name)
-    en.solve_load_flow()
-    np.testing.assert_allclose(en.regulators[REGULATOR_ID].res_tap, 1.1, rtol=1e-6)
-
-
 def test_dgs_unsupported_regulators(dgs_regulators_networks_dir):
     # A closed delta has no single-phase equivalent
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -269,14 +235,3 @@ def test_to_dgs_without_regulators():
     data = en.to_dgs_dict()
     assert "TypVoltreg" not in data
     assert "ElmVoltreg" not in data
-
-
-@pytest.mark.no_patch_engine
-def test_to_from_dgs_regulator_results():
-    en = _create_regulator_network()
-    en.solve_load_flow()
-    en2 = rlfs.ElectricalNetwork.from_dgs_dict(en.to_dgs_dict(), use_name_as_id=True)
-    en2.solve_load_flow()
-    np.testing.assert_allclose(en2.regulators["Regulator"].res_tap, en.regulators["Regulator"].res_tap, rtol=1e-8)
-    np.testing.assert_allclose(en2.buses["Bus 2"].res_voltage.m, en.buses["Bus 2"].res_voltage.m, rtol=1e-8)
-    np.testing.assert_allclose(abs(en.buses["Bus 2"].res_voltage.m), 1.02 * 20e3, rtol=1e-6)

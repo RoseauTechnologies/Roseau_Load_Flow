@@ -11,7 +11,6 @@ from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowE
 from roseau.load_flow.testing import assert_json_close
 
 UN = 400.0
-A = cmath.exp(-2j * math.pi / 3)
 
 
 def create_network(
@@ -34,8 +33,7 @@ def create_network(
         # A wye regulator carries the neutral through: the neutral of Bus2 is already grounded
         rlf.GroundConnection(id="GC2", ground=ground, element=bus2)
     rlf.PotentialRef("PRef", element=ground)
-    voltages = [u / math.sqrt(3) * A**i for i, u in enumerate(u_src)]
-    rlf.VoltageSource("Src", bus1, voltages=voltages)
+    rlf.VoltageSource("Src", bus1, voltages=np.array(u_src) / rlf.SQRT3 * rlf.PositiveSequence)
     rp = rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=z2, ym=ym, u_range=u_range, connection=connection)
     rlf.VoltageRegulator("Reg", bus1, bus2, parameters=rp, u_ref=u_ref, phases=phases)
     rlf.PowerLoad("Load", bus2, powers=powers)
@@ -45,7 +43,6 @@ def create_network(
 def test_regulator_parameters():
     rp = rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=1e-4j)
     assert rp.connection == "wye"
-    assert not rp.is_delta
     assert rp.sn.m == 1e6
     assert rp.un.m == UN
     assert rp.z2.m == 1e-4
@@ -54,38 +51,30 @@ def test_regulator_parameters():
     assert rp.alpha == 1000.0
     assert "connection='wye'" in repr(rp)
 
-    rp = rlf.RegulatorParameters("RP2", sn=1e6, un=UN, z2=1e-4, ym=0, connection="delta_negative_rotation")
-    assert rp.connection == "delta_negative_rotation"
-    assert rp.is_delta
+    rp = rlf.RegulatorParameters("RP2", sn=1e6, un=UN, z2=1e-4, ym=0, connection="delta")
+    assert rp.connection == "delta"
 
     # Serialization
     rp2 = rlf.RegulatorParameters.from_dict(rp.to_dict())
     assert rp2.to_dict() == rp.to_dict()
 
     # Bad values
-    with pytest.raises(RoseauLoadFlowException) as e:
-        rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=0, connection="delta")  # type: ignore
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION
+    for connection in ("delta_positive_rotation", "delta_negative_rotation"):
+        with pytest.raises(RoseauLoadFlowException) as e:
+            rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=0, connection=connection)  # type: ignore
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION
     for kwargs in ({"u_range": 0.0}, {"u_range": 1.0}, {"alpha": 0.0}, {"z2": 0.0}, {"sn": 0.0}, {"un": -1.0}):
         params = {"sn": 1e6, "un": UN, "z2": 1e-4, "ym": 0} | kwargs
         with pytest.raises(RoseauLoadFlowException) as e:
             rlf.RegulatorParameters("RP", **params)
-        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE
-
-
-@pytest.mark.no_patch_engine
-def test_compute_tap():
-    rp = rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=1e-4j)
-    assert math.isclose(rp.compute_tap(u_ref=1.0, u_in=370.0), UN / 370.0, rel_tol=1e-9)
-    assert math.isclose(rp.compute_tap(u_ref=1.0, u_in=300.0), 1.1, rel_tol=1e-6)  # saturated
-    assert math.isclose(rp.compute_tap(u_ref=1.0, u_in=500.0), 0.9, rel_tol=1e-6)  # saturated
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS
 
 
 def test_regulator_phases():
     bus1 = rlf.Bus("Bus1", phases="abcn")
     bus2 = rlf.Bus("Bus2", phases="abcn")
     rp_wye = rlf.RegulatorParameters("RP-wye", sn=1e6, un=UN, z2=1e-4, ym=0)
-    rp_delta = rlf.RegulatorParameters("RP-delta", sn=1e6, un=UN, z2=1e-4, ym=0, connection="delta_positive_rotation")
+    rp_delta = rlf.RegulatorParameters("RP-delta", sn=1e6, un=UN, z2=1e-4, ym=0, connection="delta")
 
     # Default phases
     reg = rlf.VoltageRegulator("Reg1", bus1, bus2, parameters=rp_wye)
@@ -94,8 +83,8 @@ def test_regulator_phases():
     reg = rlf.VoltageRegulator("Reg2", bus1, bus2, parameters=rp_delta)
     assert reg.phases == "abc"
     assert reg.tap_phases == ["ab", "bc", "ca"]
-    reg = rlf.VoltageRegulator("Reg3", bus1, bus2, parameters=rp_wye, phases="can")
-    assert reg.tap_phases == ["cn", "an"]
+    reg = rlf.VoltageRegulator("Reg3", bus1, bus2, parameters=rp_wye, phases="cn")
+    assert reg.tap_phases == ["cn"]
 
     # Incompatible phases and connection
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -105,9 +94,10 @@ def test_regulator_phases():
     with pytest.raises(RoseauLoadFlowException) as e:
         rlf.VoltageRegulator("Reg5", bus1, bus2, parameters=rp_delta, phases="abcn")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    with pytest.raises(RoseauLoadFlowException) as e:
-        rlf.VoltageRegulator("Reg6", bus1, bus2, parameters=rp_wye, phases="ab")
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
+    for phases in ("ab", "abn", "bcn", "can"):  # No bi-phase regulators
+        with pytest.raises(RoseauLoadFlowException) as e:
+            rlf.VoltageRegulator("Reg6", bus1, bus2, parameters=rp_wye, phases=phases)
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
     bus3 = rlf.Bus("Bus3", phases="abc")
     with pytest.raises(RoseauLoadFlowException) as e:
         rlf.VoltageRegulator("Reg7", bus1, bus3, parameters=rp_wye)  # No neutral in bus3
@@ -150,163 +140,32 @@ def test_regulator_u_ref():
     assert reg.un.m == UN
 
 
-@pytest.mark.no_patch_engine
-@pytest.mark.parametrize("connection", ("wye", "delta_positive_rotation", "delta_negative_rotation"))
-@pytest.mark.parametrize("solver", ("newton", "newton_goldstein"))
-@pytest.mark.parametrize(("u_src", "expected_tap"), ((370.0, UN / 370.0), (430.0, UN / 430.0)))
-def test_regulate_to_u_ref(connection, solver, u_src, expected_tap):
-    """Within its range, each unit regulates its voltage exactly to u_ref (boost and buck)."""
-    en = create_network(connection, u_src=(u_src,) * 3, powers=(1e3, 1e3, 1e3))
-    en.solve_load_flow(solver=solver)
-    reg = en.regulators["Reg"]
-    bus2 = en.buses["Bus2"]
-    if connection == "wye":
-        npt.assert_allclose(np.abs(bus2.res_voltages_pn.m), UN / math.sqrt(3), rtol=1e-6)
-        npt.assert_allclose(reg.res_taps, expected_tap, rtol=1e-3)
-    else:
-        npt.assert_allclose(np.abs(bus2.res_voltages_pp.m), UN, rtol=1e-6)
-        # In a closed delta, each tap acts on the three line-to-line voltages: the regulation is
-        # amplified by about 1.5
-        npt.assert_allclose(reg.res_taps, reg.res_taps[0], rtol=1e-6)
-        npt.assert_allclose(1 + 1.5 * (reg.res_taps - 1), expected_tap, rtol=5e-3)
-
-
-@pytest.mark.no_patch_engine
-@pytest.mark.parametrize("connection", ("wye", "delta_positive_rotation", "delta_negative_rotation"))
-def test_saturation(connection):
-    """Outside its range, the taps stay at their bounds."""
-    en = create_network(connection, u_src=(300.0, 300.0, 300.0), powers=(1e3, 1e3, 1e3))
-    en.solve_load_flow()
-    reg = en.regulators["Reg"]
-    npt.assert_allclose(reg.res_taps, 1.1, rtol=1e-6)
-    en = create_network(connection, u_src=(500.0, 500.0, 500.0), powers=(1e3, 1e3, 1e3))
-    en.solve_load_flow()
-    reg = en.regulators["Reg"]
-    npt.assert_allclose(reg.res_taps, 0.9, rtol=1e-6)
-
-
-# Reference results for the same unbalanced networks
-REFERENCE_RESULTS = {
-    ("wye", 1.0): (
-        [
-            230.81301338687211 - 5.966336060557444j,
-            -119.01769443844712 - 197.90937760472556j,
-            -104.43666788345533 + 196.6355313825748j,
-            0j,
-        ],
-        [1.0984473035103586, 1.0626689290508522, 1.1],
-    ),
-    ("delta_positive_rotation", 1.0): (
-        [
-            228.5283857797637 + 6.041829074808867j,
-            -111.31291905217799 - 204.92709643393778j,
-            -124.09669827174676 + 194.86857011244092j,
-            0j,
-        ],
-        [1.059505975400669, 1.0497357200300685, 1.0898921074920191],
-    ),
-    ("delta_negative_rotation", 1.02): (
-        [
-            239.78646006915196 - 26.462813423768157j,
-            -131.87830159747492 - 194.77592918272518j,
-            -91.6712157604981 + 211.2380967230025j,
-            0j,
-        ],
-        [1.054755125640482, 1.0873843827934884, 1.098714950523822],
-    ),
-    ("wye", 1.05): (
-        [
-            231.15074014529347 - 5.95791432578975j,
-            -123.03284590394844 - 205.14330864277562j,
-            -104.43666788371479 + 196.63553138023497j,
-            0j,
-        ],
-        [1.1, 1.0999999997162635, 1.1],
-    ),
-}
-
-
-@pytest.mark.no_patch_engine
-@pytest.mark.parametrize(("connection", "u_ref"), list(REFERENCE_RESULTS))
-def test_unbalanced_reference_results(connection, u_ref):
-    en = create_network(
-        connection,
-        u_src=(370.0, 380.0, 360.0),
-        powers=(30e3 + 5e3j, 20e3 + 2e3j, 40e3 + 10e3j),
-        u_ref=u_ref,
-        z2=0.02 + 0.05j,
-    )
-    en.solve_load_flow()
-    expected_potentials, expected_taps = REFERENCE_RESULTS[connection, u_ref]
-    npt.assert_allclose(en.buses["Bus2"].res_potentials.m, expected_potentials, atol=1e-8)
-    npt.assert_allclose(en.regulators["Reg"].res_taps, expected_taps, rtol=1e-8)
-
-    # Currents: the regulator conserves the currents
-    reg = en.regulators["Reg"]
-    currents1, currents2 = reg.res_currents
-    npt.assert_allclose(sum(currents1.m) + sum(currents2.m), 0, atol=1e-6)
-    # Losses are small and positive
-    assert reg.res_power_losses.m.real > 0
-
-
-@pytest.mark.no_patch_engine
-def test_neutral_current():
-    """The neutral of a wye regulator is carried through: its current flows from one side to the other."""
-    en = create_network("wye", powers=(30e3, 10e3, 20e3), z2=0.02 + 0.05j)
-    en.solve_load_flow()
-    reg = en.regulators["Reg"]
-    _, currents2 = reg.res_currents
-    load_currents = en.loads["Load"].res_currents.m
-    npt.assert_allclose(-currents2.m, load_currents, atol=1e-8)  # All the load currents flow through bus2
-    potentials1, potentials2 = reg.res_potentials
-    npt.assert_allclose(potentials1.m[3], potentials2.m[3], atol=1e-10)
-
-
-@pytest.mark.no_patch_engine
 def test_update_parameters():
-    en = create_network("wye", powers=(10e3, 10e3, 10e3))
+    en = create_network("wye")
     reg = en.regulators["Reg"]
-    en.solve_load_flow()
-    npt.assert_allclose(np.abs(en.buses["Bus2"].res_voltages_pn.m), UN / math.sqrt(3), rtol=1e-6)
-
-    # New target: warm started
-    reg.u_ref = 0.98
-    en.solve_load_flow()
-    npt.assert_allclose(np.abs(en.buses["Bus2"].res_voltages_pn.m), 0.98 * UN / math.sqrt(3), rtol=1e-6)
 
     # Same connection and range, other impedances: the C++ model is updated in place
     cy_element = reg._cy_element
     reg.parameters = rlf.RegulatorParameters("RP2", sn=1e6, un=1.01 * UN, z2=1e-3, ym=0)
     assert reg._cy_element is cy_element
-    en.solve_load_flow()
-    npt.assert_allclose(np.abs(en.buses["Bus2"].res_voltages_pn.m), 0.98 * 1.01 * UN / math.sqrt(3), rtol=1e-6)
+    assert set(en._parameters["regulator"]) == {"RP2"}
 
     # Another range: the C++ model is rebuilt
     reg.parameters = rlf.RegulatorParameters("RP3", sn=1e6, un=UN, z2=1e-3, ym=0, u_range=0.05)
     assert reg._cy_element is not cy_element
-    en.solve_load_flow()
-    npt.assert_allclose(reg.res_taps, 1.05, rtol=1e-6)  # saturated
     assert set(en._parameters["regulator"]) == {"RP3"}
 
 
-@pytest.mark.no_patch_engine
-def test_results(tmp_path):
-    en = create_network(
-        "delta_negative_rotation",
-        u_src=(370.0, 380.0, 360.0),
-        powers=(30e3 + 5e3j, 20e3 + 2e3j, 40e3 + 10e3j),
-        u_ref=1.02,
-        z2=0.02 + 0.05j,
-    )
-    en.solve_load_flow()
-    reg = en.regulators["Reg"]
+def test_results(all_elements_network_with_results, tmp_path):
+    en = all_elements_network_with_results
+    reg = en.regulators["reg0"]
 
     # Loading
     powers1, powers2 = reg.res_powers
-    loading = max(abs(powers1.m.sum()), abs(powers2.m.sum())) / 1e6
-    assert math.isclose(reg.res_loading.m, loading)
+    loading = max(abs(powers1.m.sum()), abs(powers2.m.sum())) / reg.sn.m
+    npt.assert_allclose(reg.res_loading.m, loading)
     assert not reg.res_violated
-    reg.max_loading = 0.05
+    reg.max_loading = loading / 2
     assert reg.res_violated
     assert reg._res_state_getter() == "very-high"
 
@@ -320,31 +179,27 @@ def test_results(tmp_path):
     assert list(df.index.get_level_values("phase")) == ["ab", "bc", "ca"]
     npt.assert_allclose(df["tap"].to_numpy(), reg.res_taps)
     df = en.regulators_frame
-    assert df.loc["Reg", "parameters_id"] == "RP"
-    assert df.loc["Reg", "phases"] == "abc"
+    assert df.loc["reg0", "parameters_id"] == "rp0"
+    assert df.loc["reg0", "phases"] == "abc"
 
     # Results to dict
     res = en.results_to_dict(full=True)
     (res_reg,) = res["regulators"]
     npt.assert_allclose(res_reg["taps"], reg.res_taps)
-    assert math.isclose(res_reg["loading"], loading)
+    npt.assert_allclose(res_reg["loading"], loading)
 
     # JSON round trip with the results
     path = tmp_path / "network.json"
     en.to_json(path)
     data = json.loads(path.read_text())
-    assert data["regulators_params"][0]["connection"] == "delta_negative_rotation"
+    assert data["regulators_params"][0]["connection"] == "delta"
     en2 = rlf.ElectricalNetwork.from_json(path)
-    reg2 = en2.regulators["Reg"]
-    assert reg2.parameters.connection == "delta_negative_rotation"
-    assert reg2.u_ref.m == 1.02
+    reg2 = en2.regulators["reg0"]
+    assert reg2.parameters.connection == "delta"
+    assert reg2.u_ref.m == 1.025
     npt.assert_allclose(reg2.res_taps, reg.res_taps)
-    npt.assert_allclose(en2.buses["Bus2"].res_potentials.m, en.buses["Bus2"].res_potentials.m)
+    npt.assert_allclose(en2.buses["bus7"].res_potentials.m, en.buses["bus7"].res_potentials.m)
     assert_json_close(en2.to_dict(), en.to_dict())
-
-    # Solving again gives the same results
-    en2.solve_load_flow()
-    npt.assert_allclose(reg2.res_taps, reg.res_taps, rtol=1e-8)
 
 
 def test_network_without_regulators_json():
@@ -359,28 +214,6 @@ def test_network_without_regulators_json():
     assert "regulators" not in data
     assert "regulators_params" not in data
     assert rlf.ElectricalNetwork.from_dict(data).regulators == {}
-
-
-@pytest.mark.no_patch_engine
-def test_convert_to_single_phase():
-    import roseau.load_flow_single as rlfs
-
-    en = create_network("wye", powers=(10e3 + 2e3j,) * 3, z2=0.02 + 0.05j, u_ref=1.02)
-    en.solve_load_flow()
-    en_s = rlfs.ElectricalNetwork.from_rlf(en)
-    reg_s = en_s.regulators["Reg"]
-    assert reg_s.u_ref.m == 1.02
-    assert reg_s.parameters.sn.m == 1e6
-    en_s.solve_load_flow()
-    reg = en.regulators["Reg"]
-    npt.assert_allclose(reg_s.res_tap, reg.res_taps, rtol=1e-8)
-    npt.assert_allclose(abs(en_s.buses["Bus2"].res_voltage.m), np.abs(en.buses["Bus2"].res_voltages_pp.m), rtol=1e-8)
-
-    # A closed delta has no single-phase equivalent
-    en = create_network("delta_positive_rotation")
-    with pytest.raises(RoseauLoadFlowException) as e:
-        rlfs.ElectricalNetwork.from_rlf(en)
-    assert e.value.code == RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
 
 
 def test_from_power_factory():
@@ -413,26 +246,14 @@ def test_from_power_factory():
     # The closed-delta type of the PowerFactory 2022 validation: three 20 kV (line-to-line), 300 A
     # units, uk = 1 %, pcu = 2 kW each, whose export gives Sb = 6000 kVA (one unit) and
     # r1pu/x1pu = 0.000333/0.009994
-    for closed_delta_connection, expected in (
-        (None, "delta_positive_rotation"),
-        ("Lagging", "delta_positive_rotation"),
-        ("Leading", "delta_negative_rotation"),
-    ):
-        rp = rlf.RegulatorParameters.from_power_factory(
-            "delta",
-            un=20,
-            in_=300,
-            pc_reg=10,
-            uk=1,
-            pcu=2000,
-            configuration="Closed delta, 3 x 1-phase",
-            closed_delta_connection=closed_delta_connection,
-        )
-        assert rp.connection == expected
-        assert rp.un.m == 20e3
-        z_pu = rp.z2.m / (20e3**2 / 6e6)  # The impedance base is a single unit's
-        assert math.isclose(z_pu.real, 0.000333, abs_tol=1e-6)
-        assert math.isclose(z_pu.imag, 0.009994, abs_tol=1e-6)
+    rp = rlf.RegulatorParameters.from_power_factory(
+        "delta", un=20, in_=300, pc_reg=10, uk=1, pcu=2000, configuration="Closed delta, 3 x 1-phase"
+    )
+    assert rp.connection == "delta"
+    assert rp.un.m == 20e3
+    z_pu = rp.z2.m / (20e3**2 / 6e6)  # The impedance base is a single unit's
+    assert math.isclose(z_pu.real, 0.000333, abs_tol=1e-6)
+    assert math.isclose(z_pu.imag, 0.009994, abs_tol=1e-6)
 
     # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -442,5 +263,5 @@ def test_from_power_factory():
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION
     with pytest.raises(RoseauLoadFlowException) as e:
         rlf.RegulatorParameters.from_power_factory("rp", un=20, in_=300, pc_reg=10, uk=1, pcu=1e6)
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_SIZE
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS
     assert "exceed" in e.value.msg

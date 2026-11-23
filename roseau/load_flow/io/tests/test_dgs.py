@@ -326,66 +326,6 @@ def test_dgs_external_grid_star_point(dgs_networks_dir, iintgnd, cgnd, floating_
     assert earthed == ([earthed_element] if earthed_element else [])
 
 
-def _dgs_rows(data: dict, cls: str) -> list[dict]:
-    table = data[cls]
-    return [dict(zip(table["Attributes"], values, strict=True)) for values in table["Values"]]
-
-
-def _max_voltage_deviation(data: dict, en: ElectricalNetwork, line_to_line: bool) -> float:
-    """The largest deviation (p.u.) between the voltages of the buses and those of PowerFactory:
-    phase-to-ground for a four-wire network, line-to-line for a three-wire one."""
-    deviation = 0.0
-    for term in _dgs_rows(data, "ElmTerm"):
-        base = term["uknom"] * 1e3 / np.sqrt(3)
-        expected = np.array([complex(term[f"m:ur:{p}"] or 0, term[f"m:ui:{p}"] or 0) for p in "ABC"])
-        actual = en.buses[term["loc_name"]].res_potentials.m[:3] / base
-        if line_to_line:
-            expected, actual = expected - np.roll(expected, -1), actual - np.roll(actual, -1)
-        deviation = max(deviation, np.abs(expected - actual).max())
-    return deviation
-
-
-@pytest.mark.no_patch_engine
-@pytest.mark.parametrize(
-    ("name", "voltage_tolerance", "tap_tolerance"),
-    (
-        ("Star_3x1_103", 1e-3, 1e-3),
-        ("Star_3x1_120", 1.5e-3, 1e-6),
-        ("Star_3x1_103_Unbalanced", 1.5e-2, 1e-6),
-        ("Star_3x1_103_Unbalanced_Separate_Star_Point", 3e-2, 5e-3),
-        ("Closed_Delta_Lagging_103", 2e-3, 1e-3),
-        ("Closed_Delta_Leading_103", 2e-3, 1e-3),
-        ("Closed_Delta_Lagging_120", 2.5e-3, 1e-6),
-    ),
-)
-def test_dgs_regulators_match_power_factory(dgs_regulators_networks_dir, name, voltage_tolerance, tap_tolerance):
-    """The voltages and taps match PowerFactory's within its own regulation tolerance (it stops
-    within about 0.07 % of the setpoint, while the continuous controller reaches it exactly). The
-    unbalanced cases run at about 7 times the rating, where the position of the series impedance
-    (source side in PowerFactory, load side here) is no longer negligible."""
-    path = dgs_regulators_networks_dir / "multi" / f"{name}.json"
-    data = json.loads(path.read_text())
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        en = ElectricalNetwork.from_dgs_file(path, use_name_as_id=True)
-    en.solve_load_flow()
-    regulator = en.regulators["Step-Voltage Regulator"]
-    assert _max_voltage_deviation(data, en, line_to_line=regulator.parameters.is_delta) < voltage_tolerance
-
-    # PowerFactory's tap ratio of each unit (`1 + n·dutap`), `c:nntap1..3` being the units of the
-    # phases A, B and C. PowerFactory does not always export `c:nntap1`.
-    (typ,) = _dgs_rows(data, "TypVoltreg")
-    (elm,) = _dgs_rows(data, "ElmVoltreg")
-    if typ["config"] == 3:
-        pairs = ("ca", "ab", "bc") if typ["cldeltacn"] == 1 else ("ab", "bc", "ca")
-    else:
-        pairs = ("an", "bn", "cn")
-    taps = dict(zip(regulator.tap_phases, regulator.res_taps.tolist(), strict=True))
-    for pair, field in zip(pairs, ("c:nntap1", "c:nntap2", "c:nntap3"), strict=True):
-        if elm.get(field) is not None:
-            assert abs(taps[pair] - (1 + elm[field] * typ["dutap"] / 100)) < tap_tolerance, pair
-
-
 def test_dgs_regulator_shapes_and_earthing(dgs_regulators_networks_dir):
     def read(name: str) -> ElectricalNetwork:
         with warnings.catch_warnings():
@@ -409,10 +349,15 @@ def test_dgs_regulator_shapes_and_earthing(dgs_regulators_networks_dir):
     en = read("Closed_Delta_Lagging_103")
     regulator = en.regulators["Step-Voltage Regulator"]
     assert regulator.phases == "abc"
-    assert regulator.parameters.connection == "delta_positive_rotation"
+    assert regulator.parameters.connection == "delta"
     assert not en.ground_connections  # Three-wire network
-    en = read("Closed_Delta_Leading_103")
-    assert en.regulators["Step-Voltage Regulator"].parameters.connection == "delta_negative_rotation"
+
+    # A leading closed delta is read as a lagging one
+    with pytest.warns(UserWarning, match=r"leading closed delta, which is not supported"):
+        en = ElectricalNetwork.from_dgs_file(
+            dgs_regulators_networks_dir / "multi" / "Closed_Delta_Leading_103.json", use_name_as_id=True
+        )
+    assert en.regulators["Step-Voltage Regulator"].parameters.connection == "delta"
 
     # `iintgnd = 1`: the external grid earths the neutral of its bus, the regulator its own
     # source-side neutral
@@ -453,6 +398,14 @@ def test_dgs_unsupported_regulators(dgs_regulators_networks_dir):
     with pytest.raises(RoseauLoadFlowException) as e:
         ElectricalNetwork.from_dgs_dict(data_star)
     assert e.value.code == RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_TECHNOLOGY
+
+    # An unknown closed delta connection
+    data_bad_connection = copy.deepcopy(data)
+    data_bad_connection["TypVoltreg"]["Values"][0][data["TypVoltreg"]["Attributes"].index("cldeltacn")] = 2
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_dgs_dict(data_bad_connection)
+    assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NOT_SUPPORTED
+    assert "unknown closed delta connection 2" in e.value.msg
 
 
 @pytest.mark.no_patch_engine

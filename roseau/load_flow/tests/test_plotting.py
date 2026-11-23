@@ -3,6 +3,7 @@ from unittest.mock import Mock
 import numpy as np
 import numpy.testing as npt
 import pytest
+import shapely
 
 import roseau.load_flow_single as rlfs
 from roseau.load_flow.models import (
@@ -15,14 +16,15 @@ from roseau.load_flow.models import (
     TransformerParameters,
     VoltageSource,
 )
-from roseau.load_flow.network import ElectricalNetwork
 from roseau.load_flow.plotting import (
     plot_interactive_map,
     plot_results_interactive_map,
     plot_symmetrical_voltages,
     plot_voltage_phasors,
+    voltage_profile,
 )
 from roseau.load_flow.sym import PositiveSequence
+from roseau.load_flow.testing import assert_json_close
 
 
 @pytest.fixture
@@ -195,8 +197,159 @@ def test_plot_symmetrical_voltages(elements):
         plot_symmetrical_voltages(bus_single)  # type: ignore
 
 
-def test_plot_interactive_map(test_networks_path):
-    en = ElectricalNetwork.from_json(path=test_networks_path / "all_elements_network.json", include_results=True)
+def test_plot_interactive_map(all_elements_network_with_results):
+    en = all_elements_network_with_results
     en.crs = "EPSG:4326"
-    plot_interactive_map(en)
-    plot_results_interactive_map(en)
+    points = {bus_id: shapely.Point(0.001 * i, 0.001 * i) for i, bus_id in enumerate(en.buses)}
+    for bus_id, bus in en.buses.items():
+        bus.geometry = points[bus_id]
+    for line in en.lines.values():
+        line.geometry = shapely.LineString([points[line.bus1.id], points[line.bus2.id]])
+
+    for plot in (plot_interactive_map, plot_results_interactive_map):
+        html = plot(en).get_root().render()
+        for layer in ("Lines", "Buses", "Sources", "Transformers", "Switches", "Regulators"):
+            assert layer in html
+        for branches in (en.lines, en.transformers, en.switches, en.regulators):
+            for branch_id in branches:
+                assert f'"{branch_id}"' in html
+
+
+@pytest.mark.parametrize("mode", ("min", "max"))
+def test_voltage_profile(all_elements_network_with_results, mode):
+    en = all_elements_network_with_results
+    for bus_id, vn in en._get_nominal_voltages().items():
+        en.buses[bus_id].nominal_voltage = vn
+    profile = voltage_profile(en, mode=mode)
+    assert profile.starting_bus_id == next(iter(profile.network.sources.values())).bus.id
+    aggregate = {"min": min, "max": max}[mode]
+    bus0_voltages = (profile.network.buses["bus0"].res_voltage_levels.m * 100).tolist()
+    bus1_voltages = (profile.network.buses["bus1"].res_voltage_levels.m * 100).tolist()
+    bus7_voltages = (profile.network.buses["bus7"].res_voltage_levels.m * 100).tolist()
+    assert_json_close(
+        profile.buses,
+        {
+            "bus0": {
+                "distance": 0.0,
+                "voltage": aggregate(bus0_voltages),
+                "voltages": bus0_voltages,
+                "min_voltage": None,
+                "max_voltage": None,
+                "state": "unknown",  # no voltage limits
+                "is_tr_bus": False,
+                "is_reg_bus": True,
+            },
+            "bus1": {
+                "distance": 1.5,
+                "voltage": aggregate(bus1_voltages),
+                "voltages": bus1_voltages,
+                "min_voltage": 95,
+                "max_voltage": 115,
+                "state": "normal",
+                "is_tr_bus": False,  # because traverse_transformers=False by default
+                "is_reg_bus": False,
+            },
+            "bus7": {
+                "distance": 0.0,
+                "voltage": aggregate(bus7_voltages),
+                "voltages": bus7_voltages,
+                "min_voltage": 95,
+                "max_voltage": 105,
+                "state": "normal",
+                "is_tr_bus": False,
+                "is_reg_bus": True,
+            },
+        },
+    )
+    line0_loadings = (profile.network.lines["line0"].res_loading.m * 100).tolist()
+    assert_json_close(
+        profile.lines,
+        {
+            "line0": {
+                "from_bus": "bus0",
+                "to_bus": "bus1",
+                "loading": max(line0_loadings),
+                "loadings": line0_loadings,
+                "max_loading": 100.0,
+                "state": "normal",
+            },
+        },
+    )
+    assert not profile.transformers  # because traverse_transformers=False by default
+    assert not profile.switches  # need to traverse transformers to include the switch on the other end
+    assert_json_close(
+        profile.regulators,
+        {
+            "reg0": {
+                "from_bus": "bus0",
+                "to_bus": "bus7",
+                "loading": profile.network.regulators["reg0"].res_loading.m * 100,
+                "loadings": None,
+                "max_loading": 150.0,
+                "state": "normal",
+            },
+        },
+    )
+    profile.plot_plotly()
+    profile.plot_matplotlib()
+
+
+def test_voltage_profile_traverse_transformers(all_elements_network_with_results):
+    en = all_elements_network_with_results
+    for bus_id, vn in en._get_nominal_voltages().items():
+        en.buses[bus_id].nominal_voltage = vn
+    profile = voltage_profile(en, mode="min", traverse_transformers=True)
+    assert profile.starting_bus_id == next(iter(profile.network.sources.values())).bus.id
+    assert len(profile.buses) == len(profile.network.buses)
+    assert profile.buses["bus0"]["is_tr_bus"] is False
+    assert profile.buses["bus1"]["is_tr_bus"] is True
+    assert profile.buses["bus2"]["is_tr_bus"] is True
+    assert profile.buses["bus3"]["is_tr_bus"] is False
+    assert profile.buses["bus0"]["is_reg_bus"] is True
+    assert profile.buses["bus7"]["is_reg_bus"] is True
+    assert len(profile.lines) == len(profile.network.lines)
+    tr = profile.network.transformers["transformer0"]
+    assert_json_close(
+        profile.transformers,
+        {
+            "transformer0": {
+                "from_bus": "bus1",
+                "to_bus": "bus2",
+                "loading": tr.res_loading.m * 100,
+                "loadings": None,
+                "max_loading": tr.max_loading.m * 100,
+                "state": "very-high",
+            },
+        },
+    )
+    assert_json_close(
+        profile.switches,
+        {
+            "switch0": {
+                "from_bus": "bus2",
+                "to_bus": "bus3",
+                "loading": None,
+                "loadings": None,
+                "max_loading": 100,
+                "state": "unknown",
+            },
+            "switch1": {
+                "from_bus": "bus4",
+                "to_bus": "bus5",
+                "loading": None,
+                "loadings": None,
+                "max_loading": 100,
+                "state": "unknown",
+            },
+        },
+    )
+    assert list(profile.regulators) == ["reg0"]
+    profile.plot_plotly()
+    profile.plot_matplotlib()
+
+    # Starting on the LV side without traversing the transformer, the regulator is not reached
+    profile = voltage_profile(en, mode="min", starting_bus_id="bus2")
+    assert sorted(profile.buses) == ["bus2", "bus3", "bus4", "bus5", "bus6"]
+    assert not profile.regulators
+    assert not any(node["is_reg_bus"] for node in profile.buses.values())
+    profile.plot_plotly()

@@ -260,7 +260,7 @@ def network_from_rlf(  # noqa: C901
     regulators: dict[Id, VoltageRegulator] = {}
     for rg_m in en_m.regulators.values():
         rp_m = rg_m.parameters
-        if rp_m.is_delta:
+        if rp_m._connection == "delta":
             msg = (
                 f"Voltage regulator {rg_m.id!r} has the connection {rp_m.connection!r}, only 'wye' "
                 f"regulators are supported"

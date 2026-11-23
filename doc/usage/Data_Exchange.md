@@ -235,9 +235,9 @@ objects:
   phases `"abcn"`, which need a neutral on both of their terminals. The star point of the regulator
   is earthed (`cgnd`) through its source-side neutral. The single tap controller of the "Star,
   3-phase" configuration is read as three independent units, with a warning;
-- the "Closed delta, 3 x 1-phase" configuration gives closed-delta regulators with the phases
-  `"abc"`: the lagging connection gives `"delta_positive_rotation"` regulators, the leading
-  connection `"delta_negative_rotation"` ones;
+- the "Closed delta, 3 x 1-phase" configuration gives `"delta"` regulators with the phases `"abc"`.
+  Only the lagging connection is modelled: a leading closed delta is imported as a lagging one, with
+  a warning;
 - every unit regulates its own voltage at the voltage setpoint (`usetp`), its tap being continuous.
   Ganged taps, discrete tap changers, line drop compensation and reverse power operation are not
   modelled (a warning is emitted). The open-delta configuration and the regulators without
@@ -257,8 +257,7 @@ method:
 ...     pc_reg=rlf.Q_(10, "%"),  # Voltage Regulation Range (+/-)
 ...     uk=rlf.Q_(1, "%"),  # Short-Circuit Voltage
 ...     pcu=rlf.Q_(2, "kW"),  # Copper Losses (of each unit)
-...     configuration="Closed delta, 3 x 1-phase",  # Configuration
-...     closed_delta_connection="Lagging",  # Closed Delta Connection
+...     configuration="Closed delta, 3 x 1-phase",  # Configuration (lagging connection)
 ... )
 ```
 

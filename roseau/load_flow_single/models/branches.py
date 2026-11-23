@@ -37,7 +37,7 @@ class AbstractBranchSide(AbstractConnectable[_CyB_co]):
 
             side:
                 The side of the branch to access. It can be ``"HV"`` or ``"LV"`` for transformers or
-                ``1`` or ``2`` for lines and switches.
+                ``1`` or ``2`` for lines, switches and voltage regulators.
 
             bus:
                 The bus to connect the side to.
@@ -64,8 +64,9 @@ class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
 
     See Also:
         :doc:`Line models documentation </models/Line/index>`,
-        :doc:`Transformer models documentation </models/Transformer/index>` and
-        :doc:`Switch model documentation </models/Switch>`
+        :doc:`Transformer models documentation </models/Transformer/index>`,
+        :doc:`Switch model documentation </models/Switch>` and
+        :doc:`Voltage regulator model documentation </models/VoltageRegulator>`
     """
 
     @abstractmethod

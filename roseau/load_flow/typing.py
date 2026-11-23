@@ -47,8 +47,8 @@ Roseau Load Flow Literals
 
 .. class:: RegulatorConnection
 
-    How the single-phase units of a voltage regulator are connected: ``"wye"``,
-    ``"delta_positive_rotation"`` or ``"delta_negative_rotation"``.
+    How the single-phase units of a voltage regulator are connected: ``"wye"`` or ``"delta"``
+    (closed delta, positive rotation).
 
 Union Input Types (Wide)
 ------------------------
@@ -148,7 +148,7 @@ type Solver = Literal["newton", "newton_goldstein", "backward_forward"]
 type Side = Literal[1, 2, "HV", "LV"]
 type ResultState = Literal["very-low", "low", "normal", "high", "very-high", "unknown"]
 type BranchType = Literal["line", "transformer", "switch", "regulator"]
-type RegulatorConnection = Literal["wye", "delta_positive_rotation", "delta_negative_rotation"]
+type RegulatorConnection = Literal["wye", "delta"]
 
 # Input Types (Wide)
 type Int = int | np.integer
