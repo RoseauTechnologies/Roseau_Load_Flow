@@ -732,9 +732,10 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         network (e.g. ``print(net.res_buses``). To get the results for a specific element, use the
         `res_` properties on the element (e.g. ``print(net.buses["bus1"].res_potentials)``.
 
-        You need to activate the license before calling this method. You may set the environment
-        variable ``ROSEAU_LOAD_FLOW_LICENSE_KEY`` to your license key and it will be picked
-        automatically when calling this method. See the :ref:`license` page for more information.
+        You may activate your license before calling this method, or set the environment variable
+        ``ROSEAU_LOAD_FLOW_LICENSE_KEY`` to your license key and it will be picked automatically
+        when calling this method. Without any license key, the free trial license is used: it is
+        limited to networks of up to 50 buses. See the :ref:`license` page for more information.
 
         Args:
             max_iterations:

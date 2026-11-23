@@ -75,6 +75,9 @@ for _name, _bases in _CY_CLASSES_WITH_BASES.items():
 for name, stub in _PATCHED_CY_CLASSES.items():
     if not hasattr(cy_engine, name):
         setattr(cy_engine, name, stub)
+# TODO: remove after the next engine release
+if not hasattr(cy_engine, "PUBLIC_LICENSE_KEY"):
+    setattr(cy_engine, "PUBLIC_LICENSE_KEY", "key/placeholder-for-old-engine")  # noqa: B010
 
 
 @pytest.fixture(autouse=True)

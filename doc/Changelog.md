@@ -21,6 +21,16 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+```{important}
+No license key is needed anymore to solve networks containing up to 50 buses: when no license key is
+provided, the free trial license is used automatically. It is verified offline, without any
+internet connection. The public license key previously given in the documentation is no longer
+valid: it is temporarily replaced by the trial license, with a warning. Please remove it from your
+environment or code.
+```
+
+- {gh-pr}`519` Add the `License.offline` property, `True` for licenses verified offline such as the
+  free trial license, and the `PUBLIC_LICENSE_KEY` constant, the key of the free trial license.
 - {gh-pr}`520` The DGS import now earths the star point of the external grids (`ElmXnet`) as
   PowerFactory does: when its terminal has a neutral, an earthed star point (`cgnd`) connected to
   the neutral of the terminal (`iintgnd`) earths this neutral, and a star point not connected to it
