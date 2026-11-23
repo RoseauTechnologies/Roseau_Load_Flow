@@ -337,7 +337,12 @@ def test_dgs_external_grid_earthing(dgs_networks_dir, name):
         warnings.simplefilter("ignore")
         en = ElectricalNetwork.from_dgs_file(path, use_name_as_id=True)
     assert any(gc.element.id == next(iter(en.sources.values())).bus.id for gc in en.ground_connections.values())
-    en.solve_load_flow()
+    try:
+        en.solve_load_flow()
+    except RoseauLoadFlowException as e:
+        if e.code == RoseauLoadFlowExceptionCode.LICENSE_ERROR:
+            pytest.skip(e.msg)
+        raise
     terms = data["ElmTerm"]
     for values in terms["Values"]:
         term = dict(zip(terms["Attributes"], values, strict=True))
