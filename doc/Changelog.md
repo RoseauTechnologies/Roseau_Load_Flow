@@ -21,6 +21,12 @@ og:description: See what's new in the latest release of Roseau Load Flow !
 
 ## Unreleased
 
+- {gh-pr}`520` The DGS import now earths the star point of the external grids (`ElmXnet`) as
+  PowerFactory does: when its terminal has a neutral, an earthed star point (`cgnd`) connected to
+  the neutral of the terminal (`iintgnd`) earths this neutral, and a star point not connected to it
+  gives the voltage source its own floating neutral, earthed directly. The neutral of the source
+  terminal of LV networks is thus now earthed, which brings their voltages much closer to
+  PowerFactory's.
 - {gh-pr}`518` {gh-issue}`517` The experimental backward-forward solver now raises a
   `NO_BACKWARD_FORWARD` error for networks it cannot solve correctly instead of failing to converge
   or, worse, converging to wrong results: networks with more than one voltage source, with a

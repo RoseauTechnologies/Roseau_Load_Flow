@@ -113,6 +113,10 @@ Please note that there are some limitations in the supported features:
 - **Ignored elements**: elements that are not mentioned in the table above are ignored;
 - **Ignored attributes**: functionality that is not yet available in `roseau-load-flow` is ignored.
   This includes the state of the switches (switches are considered to be always closed);
+- **Earthing of the external grids**: when its terminal has a neutral, the star point of an
+  external grid is earthed (`cgnd`) through the neutral of its terminal if it is connected to it
+  (`iintgnd`), as in PowerFactory. Otherwise, the voltage source has its own floating neutral,
+  earthed directly if its star point is earthed.
 
 ### Lines and Transformers
 
