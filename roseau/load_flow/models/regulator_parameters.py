@@ -36,10 +36,16 @@ class _RegulatorParametersMixin:
     def _compute_tap(self, u_in: Float, cy_element: CyVoltageRegulator | CySingleVoltageRegulator) -> float:
         return cy_element.compute_tap(float(u_in) / SQRT3)
 
+    def _no_load_voltage_ratio(self, taps: np.ndarray) -> np.ndarray:
+        """The ratio of the output to the input voltage magnitudes at no load for the given taps."""
+        return taps
+
     def compute_tap(self, u_ref: Float, u_in: Float) -> float:
         """Compute the no-load tap ratio for the given source-side voltage magnitude (V).
 
-        This is the steady-state tap of an ideal regulator unit (no series impedance, no load).
+        This is the steady-state tap of an ideal regulator (no load, no magnetising current) with
+        balanced source-side voltages, the same for all its units. The units of a closed delta act
+        on each other's outputs, so a tap moves the voltages about 1.5 times as much as in a wye.
 
         Args:
             u_ref:
@@ -119,8 +125,8 @@ class _RegulatorParametersMixin:
         """Plot the regulated load-side voltage as a function of source-side voltage.
 
         For each source-side voltage ``u_in``, the no-load tap ``a`` is computed and the output
-        voltage is ``u_out = a · u_in``. This gives the exact no-load regulation curve of a
-        regulator unit.
+        voltage is ``u_out = a · u_in`` (scaled by ``a / √(3 - 3a + a²)`` instead of ``a`` for a
+        closed delta). This gives the exact no-load regulation curve of the regulator.
 
         Args:
             u_ref:
@@ -149,7 +155,7 @@ class _RegulatorParametersMixin:
         cy_element = self._create_cy_tap_calculator(u_ref=u_ref)
         taps = np.array([self._compute_tap(u_in=u, cy_element=cy_element) for u in u_in])
         u_in = u_in * scale
-        u_out = taps * u_in  # output voltage produced by this source voltage (exact at no-load)
+        u_out = self._no_load_voltage_ratio(taps) * u_in  # output voltage produced by this source voltage
 
         ax.plot(u_in, u_out, color="steelblue", marker=".", label="Output voltage")
         ax.plot(u_in, u_in, color="gray", marker=".", label="No regulation ($a = 1$)")
@@ -427,16 +433,22 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         )
 
     def _create_cy_tap_calculator(self, u_ref: float) -> CyVoltageRegulator:
-        # A single wye unit: the no-load characteristic of every unit
+        # With balanced voltages, all the units have the same tap
         return CyVoltageRegulator(
-            n=2,
-            connection="wye",
+            n=3 if self._connection == "delta" else 2,
+            connection=self._connection,
             z2=self._z2,
             ym=self._ym,
             u_ref=self._un * u_ref / SQRT3,
             u_range=self._u_range,
             alpha=self._alpha,
         )
+
+    def _no_load_voltage_ratio(self, taps: np.ndarray) -> np.ndarray:
+        if self._connection == "delta":
+            # The units act on each other's outputs: |a / (1 - (1 - a)·α²)|
+            return taps / np.sqrt(3.0 - 3.0 * taps + taps * taps)
+        return taps
 
     def _rating_pretty(self) -> str:
         """Return a pretty string representation of the regulator rating."""
