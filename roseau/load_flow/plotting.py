@@ -80,7 +80,7 @@ _DEFAULT_MAP_STYLE_COLORS: dict["MapElementType", str] = {
     "line": "#234e83",
     "transformer": "#000000",
     "switch": "#888888",
-    "regulator": "#888888",  # TODO: choose a color for regulators
+    "regulator": "#888888",
 }
 
 
@@ -171,11 +171,11 @@ def _multiply[V: float | complex | list[float] | list[complex] | None](v: V, by:
 
 
 def _pp_num(v: float | list[float] | list[float | None] | None, /, missing: str = "n/a") -> str:
-    """Pretty print number(s) or `missing` if `None`."""
-    if v is None:
+    """Pretty print number(s) or `missing` if `None` or NaN."""
+    if isinstance(v, list):
+        return "[" + ", ".join(_pp_num(val, missing=missing) for val in v) + "]"
+    elif v is None or math.isnan(v):
         return missing
-    elif isinstance(v, list):
-        return "[" + ", ".join(missing if val is None else f"{val:.5g}" for val in v) + "]"
     else:
         return f"{v:.5g}"
 
@@ -382,7 +382,7 @@ _MAP_FIELDS: dict["MapElementType", dict[str, str]] = {
         "vg": "Vector Group:",
         "rating": "Rating:",
         "parameters_id": "Parameters ID:",
-        "tap": "Tap Position (%):",
+        "tap": "Tap ratio (%):",
         "max_loading": "Max loading (%):",
         "nominal_voltages": "Un [ʜv,ʟv] (V):",
         "min_voltage_levels": "Umin [ʜv,ʟv] (%):",
@@ -406,9 +406,9 @@ _MAP_FIELDS: dict["MapElementType", dict[str, str]] = {
         "u_ref": "Uref (%):",
         "u_range": "Urange (%):",
         "max_loading": "Max loading (%):",
-        "nominal_voltage": "Un (V):",
-        "min_voltage_level": "Umin (%):",
-        "max_voltage_level": "Umax (%):",
+        "nominal_voltages": "Un [1,2] (V):",
+        "min_voltage_levels": "Umin [1,2] (%):",
+        "max_voltage_levels": "Umax [1,2] (%):",
     },
 }
 _MAP_RESULTS_FIELDS: dict["MapElementType", dict[str, str]] = {
@@ -448,7 +448,7 @@ _MAP_RESULTS_FIELDS: dict["MapElementType", dict[str, str]] = {
     "regulator": {
         **_MAP_FIELDS["regulator"],
         "res_separator": "--",
-        "res_tap": "Tap Position (%):",
+        "res_tap": "Tap ratio (%):",
         "res_loading": "Loading (%):",
         "res_voltage1": "U1 (V):",
         "res_voltage2": "U2 (V):",
@@ -596,9 +596,9 @@ def _map_get_regulator_style_dict(
             radius = 7  # MV
         else:
             radius = 10  # HV
-    tr_color = color_callback("regulator", reg_id)
-    hv_color = color_callback("bus", bus1_id)
-    lv_color = color_callback("bus", bus2_id)
+    reg_color = color_callback("regulator", reg_id)
+    bus1_color = color_callback("bus", bus1_id)
+    bus2_color = color_callback("bus", bus2_id)
     markup = f"""\
     <div style="position: absolute;
                 left: 0;
@@ -606,15 +606,15 @@ def _map_get_regulator_style_dict(
                 transform: translate(-50%, -50%);
                 width: {radius}px;
                 height: {radius}px;
-                border-top: 2px solid {tr_color};
-                border-bottom: 2px solid {tr_color};
+                border-top: 2px solid {reg_color};
+                border-bottom: 2px solid {reg_color};
                 background: linear-gradient(to right,
-                                            {hv_color} 0%,
-                                            {hv_color} 40%,
-                                            {tr_color} 41%,
-                                            {tr_color} 59%,
-                                            {lv_color} 60%,
-                                            {lv_color} 100%);
+                                            {bus1_color} 0%,
+                                            {bus1_color} 40%,
+                                            {reg_color} 41%,
+                                            {reg_color} 59%,
+                                            {bus2_color} 60%,
+                                            {bus2_color} 100%);
                 ">
     </div>
     """
@@ -1053,9 +1053,15 @@ def _get_regulators_data_for_map_plot(
         regs_data["u_ref"].append(reg._u_ref * 100)  # Convert to percentage
         regs_data["u_range"].append(f"±{_pp_num(rp._u_range * 100)}")  # Convert to percentage
         regs_data["geometry"].append(reg.bus1.geometry)
-        regs_data["nominal_voltage"].append(buses_frame.at[reg.bus1.id, "nominal_voltage"])
-        regs_data["min_voltage_level"].append(buses_frame.at[reg.bus1.id, "min_voltage_level"])
-        regs_data["max_voltage_level"].append(buses_frame.at[reg.bus1.id, "max_voltage_level"])
+        regs_data["nominal_voltages"].append(
+            _pp_num([buses_frame.at[bus.id, "nominal_voltage"] for bus in (reg.bus1, reg.bus2)])
+        )
+        regs_data["min_voltage_levels"].append(
+            _pp_num([buses_frame.at[bus.id, "min_voltage_level"] for bus in (reg.bus1, reg.bus2)])
+        )
+        regs_data["max_voltage_levels"].append(
+            _pp_num([buses_frame.at[bus.id, "max_voltage_level"] for bus in (reg.bus1, reg.bus2)])
+        )
         if not with_results:
             continue
         regs_data["res_separator"].append("")
@@ -1614,6 +1620,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 "sn": reg._parameters._sn / 1e3,  # Convert to kVA
                 "un": reg._parameters._un,
                 "u_ref": reg._u_ref * 100,  # Convert to percentage
+                "u_range": reg._parameters._u_range * 100,
                 "taps": _pp_num((reg._res_taps_getter(warning=False) * 100).tolist()),
                 "phases": reg.phases,
             }
@@ -1624,6 +1631,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 "sn": reg._parameters._sn / 1e3,  # Convert to kVA
                 "un": reg._parameters._un,
                 "u_ref": reg._u_ref * 100,  # Convert to percentage
+                "u_range": reg._parameters._u_range * 100,
                 "taps": _pp_num(reg._res_tap_getter(warning=False) * 100),
                 "phases": None,
             }
@@ -1854,7 +1862,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                     + f"<b>Vector Group:     </b> {tr_info['vg']}<br>"
                     + f"<b>Sn (kVA):         </b> {tr_info['sn']:.5g}<br>"
                     + f"<b>Ur [ʜv,ʟv] (V):   </b> {tr_info['rated_voltages']}<br>"
-                    + f"<b>Tap Position (%): </b> {tr_info['tap']:.5g}<br>"
+                    + f"<b>Tap ratio (%):    </b> {tr_info['tap']:.5g}<br>"
                     + f"<b>Phases [ʜv,ʟv]:   </b> {tr_info['phases']}<br>" * is_multi_phase
                     + "</span>"
                 )
@@ -1876,7 +1884,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if self.regulators:
             # Traces for regulators (grouped by color for better performance)
             reg_traces: dict[ResultState, dict[str, list[float | None]]] = {
-                state: {"x": [], "y": []} for state in ("normal", "high", "very-high", "unknown")
+                state: {"x": [], "y": []} for state in ("normal", "high", "very-high")
             }
             for reg_id, reg in self.regulators.items():
                 reg_traces[reg["state"]]["x"].extend((*get_xs(reg), None))
@@ -1884,15 +1892,17 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                 reg_info = self._get_extra_regulator_info(reg_id)
                 reg_html = (
                     '<span style="font-family: monospace">'
-                    + f"<b>Regulator:    </b> {_pp_eid(reg_id, indent='               ')}<br>"
-                    + f"<b>Loading (%):  </b> {reg['loading']:.5g}<br>"
-                    + f"<b>Parameters:   </b> {reg_info['parameters_id']}<br>"
-                    + f"<b>Connection:   </b> {reg_info['connection']}<br>" * is_multi_phase
-                    + f"<b>Sn (kVA):     </b> {reg_info['sn']:.5g}<br>"
-                    + f"<b>Un (V):       </b> {reg_info['un']:.5g}<br>"
-                    + f"<b>Uref (%):     </b> {reg_info['u_ref']:.5g}<br>"
-                    + f"<b>Tap ratio (%):</b> {reg_info['taps']}<br>"
-                    + f"<b>Phases:       </b> {reg_info['phases']}<br>" * is_multi_phase
+                    + f"<b>Regulator:        </b> {_pp_eid(reg_id, indent='                   ')}<br>"
+                    + f"<b>Loading (%):      </b> {reg['loading']:.5g}<br>"
+                    + f"<b>Loading limit (%):</b> {reg['max_loading']:.5g}<br>"
+                    + f"<b>Parameters:       </b> {reg_info['parameters_id']}<br>"
+                    + f"<b>Connection:       </b> {reg_info['connection']}<br>" * is_multi_phase
+                    + f"<b>Sn (kVA):         </b> {reg_info['sn']:.5g}<br>"
+                    + f"<b>Un (V):           </b> {reg_info['un']:.5g}<br>"
+                    + f"<b>Uref (%):         </b> {reg_info['u_ref']:.5g}<br>"
+                    + f"<b>Urange (%):       </b> ±{reg_info['u_range']:.5g}<br>"
+                    + f"<b>Tap ratio (%):    </b> {reg_info['taps']}<br>"
+                    + f"<b>Phases:           </b> {reg_info['phases']}<br>" * is_multi_phase
                     + "</span>"
                 )
                 add_hover_point(reg["state"], sum(get_xs(reg)) / 2, sum(get_ys(reg)) / 2, reg_html)

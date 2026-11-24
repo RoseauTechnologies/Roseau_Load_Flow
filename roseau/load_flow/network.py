@@ -1295,7 +1295,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 return True
         return False
 
-    def _propagate_voltages(self) -> None:
+    def _propagate_voltages(self) -> None:  # noqa: C901
         all_phases = set()
         for bus in self.buses.values():
             if not bus._initialized:
@@ -1336,7 +1336,17 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                             new_root = e if isinstance(e, Bus) else root
                         elif isinstance(element, VoltageRegulator) and element.bus1 in visited:
                             # Traversing from the source side to the load side: no-load taps
-                            new_potentials = element._no_load_potentials(potentials)
+                            params = element.parameters
+                            u_ref = element._u_ref * params._un / SQRT3
+                            tap_min, tap_max = 1 - params._u_range, 1 + params._u_range
+                            v_n = potentials.get("n", 0j)
+                            new_potentials = dict(potentials)
+                            for phase in element.phases:
+                                if phase != "n" and phase in potentials:
+                                    u = abs(potentials[phase] - v_n)
+                                    if u > 0:
+                                        tap = min(max(u_ref / u, tap_min), tap_max)
+                                        new_potentials[phase] = v_n + tap * (potentials[phase] - v_n)
                         else:
                             new_potentials = potentials
                         elements.append((e, new_potentials, element, new_root))

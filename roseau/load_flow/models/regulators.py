@@ -141,24 +141,6 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
         ``"bc"``, ``"ca"`` for a closed delta."""
         return calculate_voltage_phases(self.phases)
 
-    def _no_load_potentials(self, potentials: dict[str, complex]) -> dict[str, complex]:
-        """Estimate the load-side potentials from the source-side ones with the no-load taps.
-
-        This is only used to initialize the potentials of the buses before the load flow.
-        """
-        params = self._parameters
-        u_ref = self._u_ref * params._un / SQRT3
-        v_n = potentials.get("n", 0j)
-        new_potentials = dict(potentials)
-        for phase in self.phases:
-            if phase == "n" or phase not in potentials:
-                continue
-            u = abs(potentials[phase] - v_n)
-            if u > 0:
-                tap = min(max(u_ref / u, 1 - params._u_range), 1 + params._u_range)
-                new_potentials[phase] = v_n + tap * (potentials[phase] - v_n)
-        return new_potentials
-
     def _update_cy_parameters(self) -> None:
         """Update the C++ model parameters after a change in u_ref, z2, or ym."""
         if self._cy_initialized:

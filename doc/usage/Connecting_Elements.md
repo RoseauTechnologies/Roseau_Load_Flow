@@ -246,4 +246,4 @@ array([[0.5+0.1j, 0. +0.j , 0. +0.j , 0. +0.j ],
 ```
 
 Modifying the parameters of a transformer is similar, assign a new `parameters` attribute. For a
-transformer, you can also change the tap position by assigning a new `tap` attribute.
+transformer, you can also change the tap ratio by assigning a new `tap` attribute.
