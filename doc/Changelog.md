@@ -29,6 +29,7 @@ valid: it is temporarily replaced by the trial license, with a warning. Please r
 environment or code.
 ```
 
+- {gh-pr}`521` Fix a bug in warm start not being respected when changing the solver
 - {gh-pr}`519` Add the `License.offline` property, `True` for licenses verified offline such as the
   free trial license, and the `PUBLIC_LICENSE_KEY` constant, the key of the free trial license.
 - {gh-pr}`520` The DGS import now earths the star point of the external grids (`ElmXnet`) as
