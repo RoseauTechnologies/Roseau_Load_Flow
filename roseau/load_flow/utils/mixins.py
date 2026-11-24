@@ -776,7 +776,11 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
         # Update solver
         if solver != self._solver.name:
             solver_params = solver_params if solver_params is not None else {}
+            previous_solver = self._solver
             self._solver = AbstractSolver.from_dict(data={"name": solver, "params": solver_params}, network=self)
+            if warm_start:
+                # A new solver starts from the initial potentials, continue from the previous solver instead
+                self._solver.variables = previous_solver.variables
         elif solver_params is not None:
             self._solver.update_params(solver_params)
 
