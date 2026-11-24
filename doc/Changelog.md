@@ -29,7 +29,7 @@ valid: it is temporarily replaced by the trial license, with a warning. Please r
 environment or code.
 ```
 
-- {gh-pr}`515` Add the multi-phase voltage regulators `rlf.VoltageRegulator` and
+- {gh-pr}`515` Add the **experimental** multi-phase voltage regulators `rlf.VoltageRegulator` and
   `rlf.RegulatorParameters`: a bank of single-phase autotransformers with on-load tap changers that
   keep the voltage of the load side at `u_ref`. The units are connected in wye or in closed delta
   (`connection` parameter). The taps are available with `ElectricalNetwork.res_regulators_taps` and

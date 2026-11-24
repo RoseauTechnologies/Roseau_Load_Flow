@@ -17,6 +17,12 @@ myst:
 
 # Voltage Regulator
 
+```{warning}
+Voltage regulators are **experimental**. Their model and API may change in future releases, and
+some edge cases may not be handled correctly. If you face any issues with them, please let us know
+by filing a GitHub issue.
+```
+
 ## Definition
 
 A voltage regulator (or step-voltage regulator) keeps the voltage of its load side (`bus2`) at a
