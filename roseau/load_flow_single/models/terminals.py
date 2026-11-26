@@ -26,8 +26,8 @@ class AbstractTerminal(Element[_CyE_co], ABC):
 
             side:
                 For branches, this is the side of the branch associated with to be connected to the
-                bus. It can be ``"HV"`` or ``"LV"`` for transformers or ``1`` or ``2`` for lines and
-                switches. This is ``None`` for other elements.
+                bus. It can be ``"HV"`` or ``"LV"`` for transformers or ``1`` or ``2`` for lines,
+                switches and voltage regulators. This is ``None`` for other elements.
         """
         super().__init__(id)
         self._n = n

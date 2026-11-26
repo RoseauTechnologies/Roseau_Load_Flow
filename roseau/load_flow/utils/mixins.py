@@ -193,6 +193,7 @@ class ToJsonMixin(metaclass=ABCMeta):
                 "lines": [line1_dict, line2_dict, ...],
                 "transformers": [transformer1_dict, transformer2_dict, ...],
                 "switches": [switch1_dict, switch2_dict, ...],
+                "regulators": [regulator1_dict, regulator2_dict, ...],
                 "loads": [load1_dict, load2_dict, ...],
                 "sources": [source1_dict, source2_dict, ...],
                 "grounds": [ground1_dict, ground2_dict, ...],
@@ -709,13 +710,12 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
             "switches": elements_by_type["switch"],
             "loads": elements_by_type["load"],
             "sources": elements_by_type["source"],
+            "regulators": elements_by_type["regulator"],
         }
         if cls.is_multi_phase:
             elements_kwargs["potential_refs"] = elements_by_type["potential ref"]
             elements_kwargs["grounds"] = elements_by_type["ground"]
             elements_kwargs["ground_connections"] = elements_by_type["ground connection"]
-        else:
-            elements_kwargs["regulators"] = elements_by_type["regulator"]
         return cls(**elements_kwargs, name=name, crs=crs)
 
     def solve_load_flow(
@@ -1158,7 +1158,9 @@ class AbstractNetwork(RLFObject, JsonMixin, CatalogueMixin[JsonDict], Generic[_E
                             else current_vn * e.parameters._uhv / e.parameters._ulv
                         )
                     buses.append((other_bus, other_vn))
-                elif isinstance(e, (rlf.Line, rlf.Switch, rlfs.Line, rlfs.Switch, rlfs.VoltageRegulator)):
+                elif isinstance(
+                    e, (rlf.Line, rlf.Switch, rlf.VoltageRegulator, rlfs.Line, rlfs.Switch, rlfs.VoltageRegulator)
+                ):
                     other_bus = e.bus2 if e.bus1.id == current_bus.id else e.bus1
                     other_vn = nominal_voltages.get(other_bus.id, current_vn)
                     buses.append((other_bus, other_vn))

@@ -1,3 +1,5 @@
+import shapely
+
 import roseau.load_flow_single as rlfs
 from roseau.load_flow.testing import assert_json_close
 
@@ -5,8 +7,19 @@ from roseau.load_flow.testing import assert_json_close
 def test_plot_interactive_map(all_elements_network_with_results):
     en = all_elements_network_with_results
     en.crs = "EPSG:4326"
-    rlfs.plotting.plot_interactive_map(en)
-    rlfs.plotting.plot_results_interactive_map(en)
+    points = {bus_id: shapely.Point(0.001 * i, 0.001 * i) for i, bus_id in enumerate(en.buses)}
+    for bus_id, bus in en.buses.items():
+        bus.geometry = points[bus_id]
+    for line in en.lines.values():
+        line.geometry = shapely.LineString([points[line.bus1.id], points[line.bus2.id]])
+
+    for plot in (rlfs.plotting.plot_interactive_map, rlfs.plotting.plot_results_interactive_map):
+        html = plot(en).get_root().render()
+        for layer in ("Lines", "Buses", "Transformers", "Switches", "Regulators"):
+            assert layer in html
+        for branches in (en.lines, en.transformers, en.switches, en.regulators):
+            for branch_id in branches:
+                assert f'"{branch_id}"' in html
 
 
 def test_voltage_profile(all_elements_network_with_results):
@@ -121,6 +134,12 @@ def test_voltage_profile_traverse_transformers(all_elements_network_with_results
             },
         },
     )
+
+    # Starting on the LV side without traversing the transformer, the regulator is not reached
+    profile = rlfs.plotting.voltage_profile(en, starting_bus_id="bus2")
+    assert "bus0" not in profile.buses
+    assert not profile.regulators
+    assert not any(node["is_reg_bus"] for node in profile.buses.values())
 
 
 def test_voltage_profile_parallel_branches():

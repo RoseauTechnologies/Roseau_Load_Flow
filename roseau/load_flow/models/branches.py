@@ -12,6 +12,7 @@ from roseau.load_flow.models.buses import Bus
 from roseau.load_flow.models.connectables import AbstractConnectable
 from roseau.load_flow.models.core import Element
 from roseau.load_flow.models.line_parameters import LineParameters
+from roseau.load_flow.models.regulator_parameters import RegulatorParameters
 from roseau.load_flow.models.transformer_parameters import TransformerParameters
 from roseau.load_flow.typing import ComplexArray, Id, JsonDict, Side
 from roseau.load_flow.units import Q_
@@ -20,7 +21,7 @@ from roseau.load_flow_engine.cy_engine import CyBranch
 
 logger = logging.getLogger(__name__)
 
-type _Parameters = LineParameters | TransformerParameters
+type _Parameters = LineParameters | TransformerParameters | RegulatorParameters
 _CyB_co = TypeVar("_CyB_co", bound=CyBranch, default=CyBranch, covariant=True)
 _Side_co = TypeVar("_Side_co", bound="AbstractBranchSide", default="AbstractBranchSide", covariant=True)
 
@@ -45,7 +46,7 @@ class AbstractBranchSide(AbstractConnectable[_CyB_co]):
 
             side:
                 The side of the branch to access. It can be ``"HV"`` or ``"LV"`` for transformers or
-                ``1`` or ``2`` for lines and switches.
+                ``1`` or ``2`` for lines, switches and voltage regulators.
 
             bus:
                 The bus to connect the branch side to.
@@ -82,12 +83,13 @@ class AbstractBranchSide(AbstractConnectable[_CyB_co]):
 
 
 class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
-    """Base class of all the branches (lines, switches and transformers) of the network.
+    """Base class of all the branches (lines, switches, transformers and regulators) of the network.
 
     See Also:
         :doc:`Line models documentation </models/Line/index>`,
-        :doc:`Transformer models documentation </models/Transformer/index>` and
-        :doc:`Switch model documentation </models/Switch>`
+        :doc:`Transformer models documentation </models/Transformer/index>`,
+        :doc:`Switch model documentation </models/Switch>` and
+        :doc:`Voltage regulator model documentation </models/VoltageRegulator>`
     """
 
     @abstractmethod
@@ -174,7 +176,8 @@ class AbstractBranch(Element[_CyB_co], Generic[_Side_co, _CyB_co]):
         self._side2._cy_connect()
 
     def _check_phases_common(self, id: Id, bus1: Bus, bus2: Bus, phases: str | None) -> str:
-        """Check the common phases between the buses and the branch (for lines and switches)."""
+        """Check the common phases between the buses and the branch (for lines, switches and
+        regulators)."""
         self._check_compatible_phase_tech(bus1, id=id)
         self._check_compatible_phase_tech(bus2, id=id)
         buses_phases = set(bus1.phases) & set(bus2.phases)

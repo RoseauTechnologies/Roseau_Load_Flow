@@ -52,6 +52,7 @@ plot = ["matplotlib>=3.9.0"]
 dev = [
   "covdefaults>=2.3.0",
   "folium>=0.20.0",
+  "plotly>=7.1.0",
   "pytest>=9.0.0",
   "pytest-codspeed>=5.0.3",
   "pytest-cov>=5.0.0",

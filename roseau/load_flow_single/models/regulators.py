@@ -31,8 +31,8 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulator
         bus2: Bus,
         *,
         parameters: RegulatorParameters,
-        u_ref: Float = 1.0,
-        max_loading: Float = 1.0,
+        u_ref: QtyOrMag[Float] = 1.0,
+        max_loading: QtyOrMag[Float] = 1.0,
         geometry: BaseGeometry | None = None,
     ) -> None:
         """VoltageRegulator constructor.
@@ -76,7 +76,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulator
         self._cy_connect()
         self._connect(bus1, bus2)
 
-    def _update_parameters(self) -> None:
+    def _update_cy_parameters(self) -> None:
         """Update the C++ model parameters after a change in u_ref, z2, or ym."""
         if self._cy_initialized:
             self._cy_element.update_parameters(
@@ -97,7 +97,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulator
         self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
         self._parameters = value
-        self._update_parameters()
+        self._update_cy_parameters()
 
     @property
     def u_ref(self) -> Q_[float]:
@@ -118,7 +118,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulator
             )
         self._u_ref = float(value)
         self._invalidate_network_results()
-        self._update_parameters()
+        self._update_cy_parameters()
 
     @property
     def max_loading(self) -> Q_[float]:

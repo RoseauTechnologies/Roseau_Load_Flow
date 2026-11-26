@@ -21,6 +21,14 @@ def make_regulator(
     return rlfs.VoltageRegulator(id="reg", bus1=bus1, bus2=bus2, parameters=rp, u_ref=u_ref, max_loading=max_loading)
 
 
+def test_regulator_parameters():
+    for kwargs in ({"u_range": 0.0}, {"u_range": 1.0}, {"alpha": 0.0}, {"z2": 0.0}, {"sn": 0.0}, {"un": -1.0}):
+        params = {"sn": 1e6, "un": 400.0, "z2": 1e-4, "ym": 0} | kwargs
+        with pytest.raises(RoseauLoadFlowException) as e:
+            rlfs.RegulatorParameters("RP", **params)
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS
+
+
 def test_max_power():
     reg = make_regulator(sn=10e3)
     assert reg.sn == Q_(10e3, "VA")

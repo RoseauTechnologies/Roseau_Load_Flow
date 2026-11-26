@@ -10,9 +10,11 @@ from roseau.load_flow.models import (
     LineParameters,
     PotentialRef,
     PowerLoad,
+    RegulatorParameters,
     Switch,
     Transformer,
     TransformerParameters,
+    VoltageRegulator,
     VoltageSource,
 )
 from roseau.load_flow.network import ElectricalNetwork
@@ -118,6 +120,17 @@ def test_ground_connections():
     assert gc11 in ground1.connections
     assert gc11.id == "switch 'sw' side (2) phase 'b' to ground 'ground1'"
 
+    # Voltage regulators
+    rp = RegulatorParameters("rp", sn=1e6, un=400, z2=1e-4, ym=0)
+    reg = VoltageRegulator("reg", bus1=bus1, bus2=bus2, parameters=rp)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        GroundConnection(ground=ground1, element=reg)  # type: ignore
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_ELEMENT_OBJECT
+    assert e.value.msg == "Cannot connect regulator 'reg' to the ground. Did you mean to connect one of its sides?"
+    gc12 = GroundConnection(ground=ground2, element=reg.side2)
+    assert gc12 in ground2.connections
+    assert gc12.id == "regulator 'reg' side (2) phase 'n' to ground 'ground2'"
+
 
 def test_impedant_ground():
     bus = Bus("bus", phases="abcn")
@@ -147,27 +160,32 @@ def test_ground_connections_to_from_dict_roundtrip():
     pref = PotentialRef("pref", element=ground)
     bus1 = Bus("bus1", phases="abcn")
     bus2 = Bus("bus2", phases="abcn")
+    bus3 = Bus("bus3", phases="abcn")
     source = VoltageSource("source", bus=bus1, phases="abcn", voltages=230)
     load = PowerLoad("load", bus=bus2, phases="abcn", powers=3e3, connect_neutral=False)
     tp = TransformerParameters("tp", vg="Ynzn11", uhv=20e3, ulv=400, sn=160e3, z2=0.01, ym=0.01j)
     tr = Transformer("tr", bus_hv=bus1, bus_lv=bus2, parameters=tp)
+    rp = RegulatorParameters("rp", sn=1e6, un=400, z2=1e-4, ym=0)
+    reg = VoltageRegulator("reg", bus1=bus2, bus2=bus3, parameters=rp)
     connections = [
         GroundConnection(element=bus1, ground=ground),
         GroundConnection(element=bus2, ground=ground, phase="a"),
         GroundConnection(element=tr.side_hv, ground=ground),
         GroundConnection(element=tr.side_lv, ground=ground, phase="b"),
+        GroundConnection(element=reg.side2, ground=ground),
         GroundConnection(element=load, ground=ground),
         GroundConnection(element=source, ground=ground, phase="c"),
     ]
 
     en = ElectricalNetwork(
-        buses=[bus1, bus2],
+        buses=[bus1, bus2, bus3],
         grounds=[ground],
         sources=[source],
         loads=[load],
         transformers=[tr],
         lines=[],
         switches=[],
+        regulators=[reg],
         potential_refs=[pref],
         ground_connections=connections,
     )

@@ -42,36 +42,6 @@ from roseau.load_flow.utils.testing import (
 )
 
 
-# The following networks are generated using the scripts/generate_test_networks.py script
-@pytest.fixture
-def all_elements_network(test_networks_path) -> ElectricalNetwork:
-    # Load the network from the JSON file (without results)
-    return ElectricalNetwork.from_json(path=test_networks_path / "all_elements_network.json", include_results=False)
-
-
-@pytest.fixture
-def all_elements_network_with_results(test_networks_path) -> ElectricalNetwork:
-    # Load the network from the JSON file (with results, no need to invoke the solver)
-    return ElectricalNetwork.from_json(path=test_networks_path / "all_elements_network.json", include_results=True)
-
-
-@pytest.fixture
-def small_network(test_networks_path) -> ElectricalNetwork:
-    # Load the network from the JSON file (without results)
-    return ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=False)
-
-
-@pytest.fixture
-def small_network_with_results(test_networks_path) -> ElectricalNetwork:
-    # Load the network from the JSON file (with results, no need to invoke the solver)
-    return ElectricalNetwork.from_json(path=test_networks_path / "small_network.json", include_results=True)
-
-
-@pytest.fixture
-def single_phase_network(test_networks_path) -> ElectricalNetwork:
-    return ElectricalNetwork.from_json(path=test_networks_path / "single_phase_network.json", include_results=True)
-
-
 def strip_q(value):
     """Get the magnitude of a Quantity or None."""
     return None if value is None else value.m
@@ -2072,6 +2042,7 @@ def test_to_graph(all_elements_network: ElectricalNetwork):
             all_elements_network.lines.values(),
             all_elements_network.transformers.values(),
             all_elements_network.switches.values(),
+            all_elements_network.regulators.values(),
         )
     )
 
@@ -2121,6 +2092,22 @@ def test_to_graph(all_elements_network: ElectricalNetwork):
             "phases": switch.phases,
             "geom": switch.geometry.__geo_interface__ if switch.geometry is not None else None,
             "closed": switch.closed,
+        }
+
+    assert all_elements_network.regulators
+    for regulator in all_elements_network.regulators.values():
+        edge_data = g.edges[regulator.bus1.id, regulator.bus2.id, 0]
+        assert edge_data == {
+            "id": regulator.id,
+            "type": "regulator",
+            "phases": regulator.phases,
+            "parameters_id": regulator.parameters.id,
+            "sn": regulator.parameters.sn.m,
+            "u_ref": regulator.u_ref.m,
+            "max_loading": regulator.max_loading.m,
+            "u_range": regulator.parameters.u_range,
+            "connection": regulator.parameters.connection,
+            "geom": regulator.geometry.__geo_interface__ if regulator.geometry is not None else None,
         }
 
     # Test parallel branches
@@ -2181,6 +2168,7 @@ def test_propagate_nominal_voltages(all_elements_network, small_network):
         "bus0": 20000.0,
         "bus4": 400,
         "bus6": 400,
+        "bus7": 20000.0,
     }
 
     # No nominal voltages in the network
@@ -2197,6 +2185,7 @@ def test_propagate_nominal_voltages(all_elements_network, small_network):
         "bus0": 20000.0,
         "bus4": 410,
         "bus6": 410,
+        "bus7": 20000.0,
     }
 
     # No transformer
@@ -2278,6 +2267,7 @@ def test_results_to_dict(all_elements_network_with_results):
         "lines",
         "transformers",
         "switches",
+        "regulators",
         "loads",
         "sources",
         "grounds",
@@ -2382,6 +2372,7 @@ def test_results_to_dict_full(all_elements_network_with_results):
         "lines",
         "transformers",
         "switches",
+        "regulators",
         "loads",
         "sources",
         "grounds",

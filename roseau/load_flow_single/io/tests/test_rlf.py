@@ -84,6 +84,24 @@ def test_from_rlf():  # noqa: C901
     rlf.Switch(id="Sw2", bus1=bus3_m, bus2=bus4_m, closed=False)
     lp2_m = rlf.LineParameters(id="LP2", z_line=(0.01 + 0.01j) * np.eye(4), insulators=rlf.Insulator.XLPE)
     ln2_m = rlf.Line(id="Ln2", bus1=bus4_m, bus2=bus5_m, parameters=lp2_m, length=0.1)
+    bus6_m = rlf.Bus(
+        id="Bus6",
+        phases="abcn",
+        nominal_voltage=400,
+        min_voltage_level=0.9,
+        max_voltage_level=1.1,
+        geometry=Point(0.0, 5.0),
+    )
+    rp_m = rlf.RegulatorParameters(id="RP", sn=250e3, un=400, z2=0.002 + 0.008j, ym=1e-6j, u_range=0.12, alpha=500)
+    rlf.VoltageRegulator(
+        id="Reg",
+        bus1=bus5_m,
+        bus2=bus6_m,
+        parameters=rp_m,
+        u_ref=1.02,
+        max_loading=0.9,
+        geometry=Point(0.0, 4.5),
+    )
 
     rlf.VoltageSource(id="Src", bus=bus1_m, voltages=20e3)
     # Three-phase loads
@@ -136,6 +154,7 @@ def test_from_rlf():  # noqa: C901
     assert len(en_s.lines) == len(en_m.lines)
     assert len(en_s.transformers) == len(en_m.transformers)
     assert len(en_s.switches) == len(en_m.switches)
+    assert len(en_s.regulators) == len(en_m.regulators)
     assert len(en_s.loads) == len(en_m.loads)
     assert len(en_s.sources) == len(en_m.sources)
 
@@ -240,6 +259,33 @@ def test_from_rlf():  # noqa: C901
         assert sw_s.bus2.id == sw_m.bus2.id
         assert sw_s.closed == sw_m.closed
         assert sw_s.geometry == sw_m.geometry
+
+    # Regulator parameters
+    rg_params_done = set()
+    for rg_id, rg_s in en_s.regulators.items():
+        rp_s = rg_s.parameters
+        if rp_s.id in rg_params_done:
+            continue
+        rg_params_done.add(rp_s.id)
+        rp_m = en_m.regulators[rg_id].parameters
+        assert rp_s.id == rp_m.id
+        assert np.isclose(rp_s.sn.m, rp_m.sn.m)
+        assert np.isclose(rp_s.un.m, rp_m.un.m)
+        assert np.isclose(rp_s.z2.m, rp_m.z2.m)
+        assert np.isclose(rp_s.ym.m, rp_m.ym.m)
+        assert rp_s.u_range == rp_m.u_range
+        assert rp_s.alpha == rp_m.alpha
+
+    # Regulators
+    for rg_id, rg_s in en_s.regulators.items():
+        rg_m = en_m.regulators[rg_id]
+        assert rg_s.id == rg_m.id
+        assert rg_s.bus1.id == rg_m.bus1.id
+        assert rg_s.bus2.id == rg_m.bus2.id
+        assert rg_s.parameters.id == rg_m.parameters.id
+        assert np.isclose(rg_s.u_ref.m, rg_m.u_ref.m)
+        assert np.isclose(rg_s.max_loading.m, rg_m.max_loading.m)
+        assert rg_s.geometry == rg_m.geometry
 
     # Sources
     for src_id, src_s in en_s.sources.items():
@@ -428,6 +474,11 @@ def test_from_rlf():  # noqa: C901
             rlf.Transformer(
                 id="Tmp Tr", bus_hv=bus1_tmp_m, bus_lv=bus2_tmp_m, phases_hv="an", phases_lv="an", parameters=tp_tmp_m
             )
+        elif br_type in ("wye regulator", "delta regulator"):
+            connection = br_type.removesuffix(" regulator")
+            rp_tmp_m = rlf.RegulatorParameters(id="Tmp RP", sn=10e3, un=400, z2=0.01, ym=0, connection=connection)
+            phases = "an" if connection == "wye" else "abc"
+            rlf.VoltageRegulator(id="Tmp Reg", bus1=bus1_tmp_m, bus2=bus2_tmp_m, phases=phases, parameters=rp_tmp_m)
         rlf.VoltageSource(id="Tmp Src", bus=bus1_tmp_m, voltages=400)
         rlf.PowerLoad(id="Tmp Load", bus=bus2_tmp_m, powers=2e3)
         return rlf.ElectricalNetwork.from_element(bus1_tmp_m)
@@ -450,6 +501,16 @@ def test_from_rlf():  # noqa: C901
         "Multi-phase transformer parameters with id 'Tmp TP' and vector group 'Ii0' cannot be "
         "converted to `rlfs.TransformerParameters`. It must be three-phase."
     )
+    en_tmp_m = create_non_three_phase_branch("wye regulator")
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_tmp_m, on_incompatible="ignore")
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "Voltage regulator 'Tmp Reg' is not three-phase, phases='an'"
+    en_tmp_m = create_non_three_phase_branch("delta regulator")
+    with pytest.raises(rlf.RoseauLoadFlowException) as e:
+        en_s = rlfs.ElectricalNetwork.from_rlf(en_tmp_m, on_incompatible="ignore")
+    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
+    assert e.value.msg == "Voltage regulator 'Tmp Reg' has the connection 'delta', only 'wye' regulators are supported"
 
 
 def test_source_voltage():

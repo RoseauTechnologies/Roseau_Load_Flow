@@ -29,9 +29,14 @@ if TYPE_CHECKING:
 
     from roseau.load_flow.plotting import FeatureMap, StyleColorCallback, StyleDict
 
-_MAP_FIELDS = {et: {k: v for k, v in fields.items() if k != "phases"} for et, fields in _MAP_FIELDS_MULTI.items()}
+_MULTI_PHASE_ONLY_FIELDS = {"phases", "connection"}
+_MAP_FIELDS = {
+    et: {k: v for k, v in fields.items() if k not in _MULTI_PHASE_ONLY_FIELDS}
+    for et, fields in _MAP_FIELDS_MULTI.items()
+}
 _MAP_RESULTS_FIELDS = {
-    et: {k: v for k, v in fields.items() if k != "phases"} for et, fields in _MAP_RESULTS_FIELDS_MULTI.items()
+    et: {k: v for k, v in fields.items() if k not in _MULTI_PHASE_ONLY_FIELDS}
+    for et, fields in _MAP_RESULTS_FIELDS_MULTI.items()
 }
 
 
@@ -189,9 +194,15 @@ def _get_regulators_data_for_map_plot(
         regs_data["u_ref"].append(reg._u_ref * 100)  # Convert to percentage
         regs_data["u_range"].append(f"±{_pp_num(rp._u_range * 100)}")  # Convert to percentage
         regs_data["geometry"].append(reg.bus1.geometry)
-        regs_data["nominal_voltage"].append(buses_frame.at[reg.bus1.id, "nominal_voltage"])
-        regs_data["min_voltage_level"].append(buses_frame.at[reg.bus1.id, "min_voltage_level"])
-        regs_data["max_voltage_level"].append(buses_frame.at[reg.bus1.id, "max_voltage_level"])
+        regs_data["nominal_voltages"].append(
+            _pp_num([buses_frame.at[bus.id, "nominal_voltage"] for bus in (reg.bus1, reg.bus2)])
+        )
+        regs_data["min_voltage_levels"].append(
+            _pp_num([buses_frame.at[bus.id, "min_voltage_level"] for bus in (reg.bus1, reg.bus2)])
+        )
+        regs_data["max_voltage_levels"].append(
+            _pp_num([buses_frame.at[bus.id, "max_voltage_level"] for bus in (reg.bus1, reg.bus2)])
+        )
         if not with_results:
             continue
         regs_data["res_separator"].append("")

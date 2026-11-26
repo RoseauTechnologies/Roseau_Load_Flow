@@ -62,6 +62,8 @@ class RoseauLoadFlowExceptionCode(StrEnum):
 
     # Regulator
     BAD_REGULATOR_ID = auto()
+    BAD_REGULATOR_CONNECTION = auto()
+    BAD_REGULATOR_PARAMETERS = auto()
 
     # Transformer, line and regulator
     BAD_MAX_LOADING_VALUE = auto()

@@ -7,7 +7,7 @@ PhaseDtype: Final = pd.CategoricalDtype(categories=["a", "b", "c", "n"], ordered
 """Categorical data type used for the phase of potentials, currents, powers, etc."""
 VoltagePhaseDtype: Final = pd.CategoricalDtype(categories=["an", "bn", "cn", "ab", "bc", "ca"], ordered=True)
 """Categorical data type used for the phase of voltages and flexible powers only."""
-BranchTypeDtype: Final = pd.CategoricalDtype(categories=["line", "transformer", "switch"], ordered=True)
+BranchTypeDtype: Final = pd.CategoricalDtype(categories=["line", "transformer", "switch", "regulator"], ordered=True)
 """Categorical data type used for branch types."""
 LoadTypeDtype: Final = pd.CategoricalDtype(categories=["power", "current", "impedance"], ordered=True)
 """Categorical data type used for load types."""
@@ -21,6 +21,7 @@ DTYPES: Final = {
     "transformer_id": object,
     "line_id": object,
     "switch_id": object,
+    "regulator_id": object,
     "load_id": object,
     "source_id": object,
     "ground_id": object,

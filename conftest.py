@@ -40,6 +40,7 @@ _CY_CLASSES_WITH_BASES = {
     "CySingleTransformer": ("CyTransformer",),
     "CyCenterTransformer": ("CyTransformer",),
     "CySingleVoltageRegulator": ("CyBranch",),
+    "CyVoltageRegulator": ("CyBranch",),
     "CyLoad": ("CyElement",),
     "CyPowerLoad": ("CyLoad",),
     "CyDeltaPowerLoad": ("CyLoad",),

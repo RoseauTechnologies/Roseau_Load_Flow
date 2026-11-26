@@ -326,6 +326,88 @@ def test_dgs_external_grid_star_point(dgs_networks_dir, iintgnd, cgnd, floating_
     assert earthed == ([earthed_element] if earthed_element else [])
 
 
+def test_dgs_regulator_shapes_and_earthing(dgs_regulators_networks_dir):
+    def read(name: str) -> ElectricalNetwork:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return ElectricalNetwork.from_dgs_file(
+                dgs_regulators_networks_dir / "multi" / f"{name}.json", use_name_as_id=True
+            )
+
+    # Star: phases "abcn", wye connection
+    en = read("Star_3x1_103")
+    regulator = en.regulators["Step-Voltage Regulator"]
+    assert regulator.phases == "abcn"
+    assert regulator.parameters.connection == "wye"
+    assert regulator.u_ref.m == 1.03
+    assert regulator.parameters.id == "Step-Voltage Regulator Type"
+    np.testing.assert_allclose(regulator.parameters.sn.m, np.sqrt(3) * 20e3 * 300, rtol=1e-6)  # Un is rounded
+    np.testing.assert_allclose(regulator.parameters.un.m, 20e3, rtol=1e-6)
+    assert regulator.parameters.u_range == 0.1
+
+    # Closed deltas
+    en = read("Closed_Delta_Lagging_103")
+    regulator = en.regulators["Step-Voltage Regulator"]
+    assert regulator.phases == "abc"
+    assert regulator.parameters.connection == "delta"
+    assert not en.ground_connections  # Three-wire network
+
+    # A leading closed delta is read as a lagging one
+    with pytest.warns(UserWarning, match=r"leading closed delta, which is not supported"):
+        en = ElectricalNetwork.from_dgs_file(
+            dgs_regulators_networks_dir / "multi" / "Closed_Delta_Leading_103.json", use_name_as_id=True
+        )
+    assert en.regulators["Step-Voltage Regulator"].parameters.connection == "delta"
+
+    # `iintgnd = 1`: the external grid earths the neutral of its bus, the regulator its own
+    # source-side neutral
+    en = read("Star_3x1_103_Unbalanced")
+    earthed = sorted((gc.element.id, gc.phase) for gc in en.ground_connections.values())
+    assert earthed == [("Terminal1", "n"), ("Terminal2", "n")]
+
+    # `iintgnd = 0`: the external grid earths its own floating neutral, the neutral of its bus is
+    # only earthed by the regulator
+    en = read("Star_3x1_103_Unbalanced_Separate_Star_Point")
+    source = en.sources["External Grid"]
+    assert source.has_floating_neutral
+    earthed = sorted((type(gc.element).__name__, gc.element.id) for gc in en.ground_connections.values())
+    assert earthed == [("Bus", "Terminal2"), ("VoltageSource", "External Grid")]
+
+
+def test_dgs_unsupported_regulators(dgs_regulators_networks_dir):
+    # Fixed taps (no automatic tap changing)
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_dgs_file(dgs_regulators_networks_dir / "multi" / "Closed_Delta_Lagging_Fixed_Tap.json")
+    assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NOT_SUPPORTED
+    assert "no automatic tap changing" in e.value.msg
+
+    data = json.loads((dgs_regulators_networks_dir / "multi" / "Closed_Delta_Lagging_103.json").read_text())
+    config_index = data["TypVoltreg"]["Attributes"].index("config")
+
+    # An open delta
+    data_open_delta = copy.deepcopy(data)
+    data_open_delta["TypVoltreg"]["Values"][0][config_index] = 4
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_dgs_dict(data_open_delta)
+    assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NOT_SUPPORTED
+    assert "configuration 4" in e.value.msg
+
+    # A star regulator on terminals without neutral
+    data_star = copy.deepcopy(data)
+    data_star["TypVoltreg"]["Values"][0][config_index] = 2
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_dgs_dict(data_star)
+    assert e.value.code == RoseauLoadFlowExceptionCode.DGS_BAD_PHASE_TECHNOLOGY
+
+    # An unknown closed delta connection
+    data_bad_connection = copy.deepcopy(data)
+    data_bad_connection["TypVoltreg"]["Values"][0][data["TypVoltreg"]["Attributes"].index("cldeltacn")] = 2
+    with pytest.raises(RoseauLoadFlowException) as e:
+        ElectricalNetwork.from_dgs_dict(data_bad_connection)
+    assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NOT_SUPPORTED
+    assert "unknown closed delta connection 2" in e.value.msg
+
+
 @pytest.mark.no_patch_engine
 @pytest.mark.parametrize("name", ("LV_Line", "LV_network"))
 def test_dgs_external_grid_earthing(dgs_networks_dir, name):

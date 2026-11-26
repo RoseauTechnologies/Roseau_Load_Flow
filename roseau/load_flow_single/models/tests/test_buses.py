@@ -10,9 +10,11 @@ from roseau.load_flow_single import (
     Line,
     LineParameters,
     PowerLoad,
+    RegulatorParameters,
     Switch,
     Transformer,
     TransformerParameters,
+    VoltageRegulator,
     VoltageSource,
 )
 
@@ -413,11 +415,14 @@ def test_propagate_limits():  # noqa: C901
         assert bus.min_voltage == Q_(366, "V")
         assert bus.max_voltage == Q_(434, "V")
 
-    # What if there is a switch?
+    # What if there is a switch and a voltage regulator?
     b4_mv = Bus(id="b4_mv")
+    b5_mv = Bus(id="b5_mv")
     Switch(id="sw", bus1=b2_mv, bus2=b4_mv)
+    rp = RegulatorParameters(id="rp", sn=1e6, un=20e3, z2=0.01, ym=0)
+    VoltageRegulator(id="reg", bus1=b4_mv, bus2=b5_mv, parameters=rp)
     b1_mv.propagate_limits()
-    for bus in (b1_mv, b2_mv, b3_mv, b4_mv):
+    for bus in (b1_mv, b2_mv, b3_mv, b4_mv, b5_mv):
         assert bus.nominal_voltage == Q_(20_000, "V")
         assert bus.min_voltage_level is None
         assert bus.min_voltage is None
@@ -434,7 +439,7 @@ def test_propagate_limits():  # noqa: C901
     Line("l3_mv", b1_mv, b3_mv, length=1, parameters=lp_mv)
     b1_mv.min_voltage_level = 0.94
     b1_mv.propagate_limits()
-    for bus in (b1_mv, b2_mv, b3_mv, b4_mv):
+    for bus in (b1_mv, b2_mv, b3_mv, b4_mv, b5_mv):
         assert bus.nominal_voltage == Q_(20_000, "V")
         assert bus.min_voltage_level == Q_(0.94, "")
         assert bus.min_voltage == Q_(18_800, "V")
@@ -453,6 +458,7 @@ def test_get_connected_buses():
     b2_mv = Bus(id="b2_mv")
     b3_mv = Bus(id="b3_mv")
     b4_mv = Bus(id="b4_mv")
+    b5_mv = Bus(id="b5_mv")
     b1_lv = Bus(id="b1_lv")
     b2_lv = Bus(id="b2_lv")
     b3_lv = Bus(id="b3_lv")
@@ -465,6 +471,8 @@ def test_get_connected_buses():
     Line(id="l2_mv", bus1=b2_mv, bus2=b3_mv, length=2, parameters=lp_mv)
     Line(id="l3_mv", bus1=b2_mv, bus2=b4_mv, length=0.5, parameters=lp_mv)  # creates a loop
     Switch(id="sw_mv", bus1=b3_mv, bus2=b4_mv)
+    rp = RegulatorParameters(id="rp", sn=1e6, un=20e3, z2=0.01, ym=0)
+    VoltageRegulator(id="reg_mv", bus1=b4_mv, bus2=b5_mv, parameters=rp)
     Transformer(id="tr", bus_hv=b3_mv, bus_lv=b1_lv, parameters=tp)
     Line(id="l1_lv", bus1=b1_lv, bus2=b2_lv, length=1, parameters=lp_lv)
     Switch(id="sw_lv", bus1=b2_lv, bus2=b3_lv)
@@ -476,7 +484,7 @@ def test_get_connected_buses():
     PowerLoad(id="pl1_lv", bus=b1_lv, power=3e3)
     PowerLoad(id="pl2_lv", bus=b2_lv, power=3e3)
 
-    mv_buses = (b1_mv, b2_mv, b3_mv, b4_mv)
+    mv_buses = (b1_mv, b2_mv, b3_mv, b4_mv, b5_mv)
     mv_bus_ids = sorted(b.id for b in mv_buses)
     lv_buses = (b1_lv, b2_lv, b3_lv)
     lv_bus_ids = sorted(b.id for b in lv_buses)
