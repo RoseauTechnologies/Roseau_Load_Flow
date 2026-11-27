@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import roseau.load_flow as rlf
 import roseau.load_flow_single as rlfs
 from roseau.load_flow import Q_, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 
@@ -53,6 +54,37 @@ def test_regulator_parameters():
         with pytest.raises(RoseauLoadFlowException) as e:
             rlfs.RegulatorParameters("RP", **params)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS
+
+
+def test_from_power_factory():
+    # Same conversion as the multi-phase parameters
+    for config in ("Star, 3-phase", "Star, 3 x 1-phase", "Closed delta, 3 x 1-phase"):
+        kwargs = {"un": 20, "in_": 300, "pc_reg": 10, "uk": 1, "pcu": 2000, "config": config}
+        rp = rlfs.RegulatorParameters.from_power_factory("rp", **kwargs)
+        rp_m = rlf.RegulatorParameters.from_power_factory("rp", **kwargs)
+        assert isinstance(rp, rlfs.RegulatorParameters)
+        assert rp.to_dict() == rp_m.to_dict()
+
+    # Units
+    rp = rlfs.RegulatorParameters.from_power_factory(
+        "rp", un=Q_(20e3, "V"), in_=Q_(0.3, "kA"), pc_reg=Q_(0.1, ""), uk=1, pcu=Q_(2, "kW")
+    )
+    assert (
+        rp.to_dict()
+        == rlfs.RegulatorParameters.from_power_factory("rp", un=20, in_=300, pc_reg=10, uk=1, pcu=2000).to_dict()
+    )
+
+    # Errors
+    with pytest.warns(UserWarning, match=r"approximated by the Type A ratio"):
+        rlfs.RegulatorParameters.from_power_factory("B", un=20, in_=300, pc_reg=10, uk=1, pcu=2000, kind="Type B")
+    with pytest.raises(RoseauLoadFlowException) as e:
+        rlfs.RegulatorParameters.from_power_factory(
+            "rp", un=20, in_=300, pc_reg=10, uk=1, pcu=2000, config="Open delta, 2 x 1-phase"
+        )
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONFIG
+    with pytest.raises(RoseauLoadFlowException) as e:
+        rlfs.RegulatorParameters.from_power_factory("rp", un=20, in_=300, pc_reg=10, uk=1, pcu=1e6)
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS
 
 
 def test_update_parameters():

@@ -2,7 +2,11 @@ import logging
 from typing import Final, NoReturn, Self
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.models.regulator_parameters import _RegulatorParametersMixin
+from roseau.load_flow.models.regulator_parameters import (
+    PowerFactoryRegulatorConfiguration,
+    PowerFactoryRegulatorType,
+    _RegulatorParametersMixin,
+)
 from roseau.load_flow.typing import Complex, Float, Id, JsonDict, QtyOrMag, RegulatorConfig
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import Identifiable, JsonMixin, pretty_unit
@@ -125,6 +129,70 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         self._config: RegulatorConfig = config
         self._alpha = float(alpha)
         self._elements: set = set()
+
+    @classmethod
+    @ureg_wraps(None, (None, None, "kV", "A", "percent", "percent", "W", None, None))
+    def from_power_factory(
+        cls,
+        id: Id,
+        *,
+        un: QtyOrMag[Float],
+        in_: QtyOrMag[Float],
+        pc_reg: QtyOrMag[Float],
+        uk: QtyOrMag[Float],
+        pcu: QtyOrMag[Float],
+        kind: PowerFactoryRegulatorType = "Type A",
+        config: PowerFactoryRegulatorConfiguration = "Star, 3-phase",
+    ) -> Self:
+        """Create regulator parameters from the data of a DIgSILENT PowerFactory step-voltage
+        regulator type (``TypVoltreg``).
+
+        PowerFactory's step-voltage regulator is an autotransformer with a tap changer covering
+        ``±pc_reg`` % and a series impedance (``uk``, ``pcu``) given in per-unit of its circuit base
+        power ``Sb``: ``Sb = √3·Un·In`` for the "Star, 3-phase" configuration, the base power
+        ``Un·In`` of a single-phase unit for the others. Its tap ratio is ``1 + n·dutap`` for a
+        Type A regulator, exactly the law of this model, and ``1 / (1 - n·dutap)`` for a Type B
+        regulator, approximated by the Type A law (identical at the neutral tap, 1.1 instead of
+        1.111 at the end of a ±10 % range). The magnetising admittance is zero.
+
+        Args:
+            id:
+                A unique ID of the regulator parameters.
+
+            un:
+                The rated voltage (kV, ``Un``): line-to-neutral for the "Star, 3 x 1-phase"
+                configuration, line-to-line otherwise.
+
+            in_:
+                The rated current (A, ``In``). It gives the rated (throughput) power of the
+                parameters ``sn = √3·Un·In`` (``Un`` line-to-line).
+
+            pc_reg:
+                The voltage regulation range (+/-, %, ``pcReg``).
+
+            uk:
+                The short-circuit voltage (%, ``uk``).
+
+            pcu:
+                The copper losses (W, ``pcu``), per single-phase unit except for the "Star,
+                3-phase" configuration.
+
+            kind:
+                The type of the regulator (``type``): ``"Type A"`` (default) or ``"Type B"``.
+
+            config:
+                The configuration of the regulator (``config``): ``"Star, 3-phase"`` (default) and
+                ``"Star, 3 x 1-phase"`` give ``"wye"`` parameters, ``"Closed delta, 3 x 1-phase"``
+                gives ``"closed-delta"`` parameters, those of a "lagging" closed delta. The open
+                delta is not supported.
+
+        Returns:
+            The created regulator parameters.
+        """
+        sn, un_ll, z2, u_range, rp_config = cls._parse_power_factory_params(
+            id, un=un, in_=in_, pc_reg=pc_reg, uk=uk, pcu=pcu, kind=kind, config=config
+        )
+        return cls(id, sn=sn, un=un_ll, z2=z2, ym=0.0, u_range=u_range, config=rp_config)
 
     def __repr__(self) -> str:
         return (

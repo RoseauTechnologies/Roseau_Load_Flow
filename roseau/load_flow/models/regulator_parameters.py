@@ -34,6 +34,59 @@ class _RegulatorParametersMixin:
         """Create a C++ regulator unit used to compute the no-load tap ratios."""
         raise NotImplementedError
 
+    @staticmethod
+    def _parse_power_factory_params(
+        id: Id,
+        *,
+        un: Float,
+        in_: Float,
+        pc_reg: Float,
+        uk: Float,
+        pcu: Float,
+        kind: PowerFactoryRegulatorType,
+        config: PowerFactoryRegulatorConfiguration,
+    ) -> tuple[float, float, complex, float, RegulatorConfig]:
+        """Convert the data of a PowerFactory ``TypVoltreg`` (``un`` in kV, ``pcu`` in W, the others
+        in A and %) to the ``(sn, un, z2, u_range, config)`` arguments of the regulator parameters."""
+        un = float(un) * 1e3  # V
+        in_ = float(in_)
+        rp_config: RegulatorConfig
+        if config == "Star, 3-phase":
+            un_ll, sb, rp_config = un, SQRT3 * un * in_, "wye"
+        elif config == "Star, 3 x 1-phase":
+            un_ll, sb, rp_config = un * SQRT3, un * in_, "wye"
+        elif config == "Closed delta, 3 x 1-phase":
+            un_ll, sb, rp_config = un, un * in_, "closed-delta"
+        else:
+            msg = (
+                f"The PowerFactory step-voltage regulator configuration {config!r} of the "
+                f"regulator parameters {id!r} is not supported."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONFIG)
+        if kind == "Type B":
+            warn_external(
+                f"The Type B step-voltage regulator {id!r} has a tap ratio 1/(1 - n·dutap), "
+                f"approximated by the Type A ratio 1 + n·dutap."
+            )
+        elif kind != "Type A":
+            msg = f"Invalid regulator type {kind!r} for regulator parameters {id!r}: expected 'Type A' or 'Type B'."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
+        sn = SQRT3 * un_ll * in_  # VA, the throughput rating
+        zb = un * un / sb  # The base impedance of each unit (Ω)
+        r = float(pcu) / sb  # p.u.
+        z = float(uk) / 100.0  # p.u.
+        if r > z:
+            msg = (
+                f"The copper losses pcu={pcu} W of the regulator parameters {id!r} exceed what their "
+                f"short-circuit voltage uk={uk} % allows."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
+        z2 = complex(r, np.sqrt(z * z - r * r)) * zb
+        return sn, un_ll, z2, float(pc_reg) / 100.0, rp_config
+
     def _compute_tap(self, u_in: Float, cy_element: CyVoltageRegulator | CySingleVoltageRegulatorBase) -> float:
         return cy_element.compute_tap(float(u_in) / SQRT3)
 
@@ -345,43 +398,10 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         Returns:
             The created regulator parameters.
         """
-        un = float(un) * 1e3  # V
-        in_ = float(in_)
-        if config == "Star, 3-phase":
-            un_ll, sb, rp_config = un, SQRT3 * un * in_, "wye"
-        elif config == "Star, 3 x 1-phase":
-            un_ll, sb, rp_config = un * SQRT3, un * in_, "wye"
-        elif config == "Closed delta, 3 x 1-phase":
-            un_ll, sb, rp_config = un, un * in_, "closed-delta"
-        else:
-            msg = (
-                f"The PowerFactory step-voltage regulator configuration {config!r} of the "
-                f"regulator parameters {id!r} is not supported."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONFIG)
-        if kind == "Type B":
-            warn_external(
-                f"The Type B step-voltage regulator {id!r} has a tap ratio 1/(1 - n·dutap), "
-                f"approximated by the Type A ratio 1 + n·dutap."
-            )
-        elif kind != "Type A":
-            msg = f"Invalid regulator type {kind!r} for regulator parameters {id!r}: expected 'Type A' or 'Type B'."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
-        sn = SQRT3 * un_ll * in_  # VA, the throughput rating
-        zb = un * un / sb  # The base impedance of each unit (Ω)
-        r = float(pcu) / sb  # p.u.
-        z = float(uk) / 100.0  # p.u.
-        if r > z:
-            msg = (
-                f"The copper losses pcu={pcu} W of the regulator parameters {id!r} exceed what their "
-                f"short-circuit voltage uk={uk} % allows."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
-        z2 = complex(r, np.sqrt(z * z - r * r)) * zb
-        return cls(id, sn=sn, un=un_ll, z2=z2, ym=0.0, u_range=float(pc_reg) / 100.0, config=rp_config)
+        sn, un_ll, z2, u_range, rp_config = cls._parse_power_factory_params(
+            id, un=un, in_=in_, pc_reg=pc_reg, uk=uk, pcu=pcu, kind=kind, config=config
+        )
+        return cls(id, sn=sn, un=un_ll, z2=z2, ym=0.0, u_range=u_range, config=rp_config)
 
     def __repr__(self) -> str:
         return (
