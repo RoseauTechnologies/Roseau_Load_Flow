@@ -17,16 +17,66 @@ def make_regulator(
 ) -> rlfs.VoltageRegulator:
     bus1 = rlfs.Bus(id="bus1")
     bus2 = rlfs.Bus(id="bus2")
-    rp = rlfs.RegulatorParameters(id="rp", sn=sn, un=un, z2=z2, ym=ym, u_range=u_range, alpha=alpha)
+    rp = rlfs.RegulatorParameters(id="rp", sn=sn, un=un, z2=z2, ym=ym, u_range=u_range, alpha=alpha, config="wye")
     return rlfs.VoltageRegulator(id="reg", bus1=bus1, bus2=bus2, parameters=rp, u_ref=u_ref, max_loading=max_loading)
 
 
 def test_regulator_parameters():
+    # The config is required: "wye" and "closed-delta" give different results
+    with pytest.raises(TypeError, match=r"missing a required (keyword-only )?argument: 'config'"):
+        rlfs.RegulatorParameters("RP", sn=1e6, un=400.0, z2=1e-4, ym=0)  # type: ignore
+
+    rp = rlfs.RegulatorParameters("RP", sn=1e6, un=400.0, z2=1e-4, ym=0, config="wye")
+    assert rp.config == "wye"
+    rp = rlfs.RegulatorParameters("RP", sn=1e6, un=400.0, z2=1e-4, ym=0, config="closed-delta")
+    assert rp.config == "closed-delta"
+    assert "config='closed-delta'" in repr(rp)
+
+    # Serialization
+    rp2 = rlfs.RegulatorParameters.from_dict(rp.to_dict())
+    assert rp2.to_dict() == rp.to_dict()
+
+    # The no-load voltage ratio of a closed delta: |a / (1 - (1 - a)·α²)|
+    taps = np.array([0.9, 1.0, 1.1])
+    expected = np.abs(taps / (1 - (1 - taps) * np.exp(-2j * np.pi / 3)))
+    np.testing.assert_allclose(rp._no_load_voltage_ratio(taps), expected)
+
+    # Bad values
+    with pytest.raises(RoseauLoadFlowException) as e:
+        rlfs.RegulatorParameters("RP", sn=1e6, un=400.0, z2=1e-4, ym=0, config="open delta")  # type: ignore
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONFIG
+    assert e.value.msg == (
+        "Invalid config 'open delta' for regulator parameters 'RP'. Allowed configs are: ['closed-delta', 'wye']."
+    )
     for kwargs in ({"u_range": 0.0}, {"u_range": 1.0}, {"alpha": 0.0}, {"z2": 0.0}, {"sn": 0.0}, {"un": -1.0}):
-        params = {"sn": 1e6, "un": 400.0, "z2": 1e-4, "ym": 0} | kwargs
+        params = {"sn": 1e6, "un": 400.0, "z2": 1e-4, "ym": 0, "config": "wye"} | kwargs
         with pytest.raises(RoseauLoadFlowException) as e:
             rlfs.RegulatorParameters("RP", **params)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS
+
+
+def test_update_parameters():
+    reg = make_regulator()
+    rlfs.VoltageSource(id="src", bus=reg.bus1, voltage=400.0)
+    en = rlfs.ElectricalNetwork.from_element(reg.bus1)
+
+    # Same config and range, other impedances: the C++ model is updated in place
+    cy_element = reg._cy_element
+    reg.parameters = rlfs.RegulatorParameters("RP2", sn=10e3, un=404.0, z2=1e-3, ym=0, alpha=100.0, config="wye")
+    assert reg._cy_element is cy_element
+    assert set(en._parameters["regulator"]) == {"RP2"}
+
+    # Another config: the C++ model is rebuilt
+    reg.parameters = rlfs.RegulatorParameters("RP3", sn=10e3, un=400.0, z2=1e-3, ym=0, config="closed-delta")
+    assert reg._cy_element is not cy_element
+    assert set(en._parameters["regulator"]) == {"RP3"}
+
+    # Another range: the C++ model is rebuilt
+    cy_element = reg._cy_element
+    rp4 = rlfs.RegulatorParameters("RP4", sn=10e3, un=400.0, z2=1e-3, ym=0, u_range=0.05, config="closed-delta")
+    reg.parameters = rp4
+    assert reg._cy_element is not cy_element
+    assert set(en._parameters["regulator"]) == {"RP4"}
 
 
 def test_max_power():

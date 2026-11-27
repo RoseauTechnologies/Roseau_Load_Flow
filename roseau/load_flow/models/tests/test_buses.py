@@ -491,7 +491,7 @@ def test_propagate_limits():  # noqa: C901
     b4_mv = Bus(id="b4_mv", phases="abc")
     b5_mv = Bus(id="b5_mv", phases="abc")
     Switch(id="sw", bus1=b2_mv, bus2=b4_mv)
-    rp = RegulatorParameters(id="rp", sn=1e6, un=20e3, z2=0.01, ym=0, connection="delta")
+    rp = RegulatorParameters(id="rp", sn=1e6, un=20e3, z2=0.01, ym=0, config="closed-delta")
     VoltageRegulator(id="reg", bus1=b4_mv, bus2=b5_mv, parameters=rp)
     b1_mv.propagate_limits()
     for bus in (b1_mv, b2_mv, b3_mv, b4_mv, b5_mv):
@@ -547,7 +547,7 @@ def test_get_connected_buses():
     Line(id="l2_mv", bus1=b2_mv, bus2=b3_mv, length=2, parameters=lp_mv, ground=g)
     Line(id="l3_mv", bus1=b2_mv, bus2=b4_mv, length=0.5, parameters=lp_mv, ground=g)  # creates a loop
     Switch(id="sw_mv", bus1=b3_mv, bus2=b4_mv)
-    rp = RegulatorParameters(id="rp", sn=1e6, un=20e3, z2=0.01, ym=0, connection="delta")
+    rp = RegulatorParameters(id="rp", sn=1e6, un=20e3, z2=0.01, ym=0, config="closed-delta")
     VoltageRegulator(id="reg_mv", bus1=b4_mv, bus2=b5_mv, parameters=rp)
     Transformer(id="tr", bus_hv=b3_mv, bus_lv=b1_lv, parameters=tp)
     Line(id="l1_lv", bus1=b1_lv, bus2=b2_lv, length=1, parameters=lp_lv)

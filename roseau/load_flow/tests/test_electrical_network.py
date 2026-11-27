@@ -2106,7 +2106,7 @@ def test_to_graph(all_elements_network: ElectricalNetwork):
             "u_ref": regulator.u_ref.m,
             "max_loading": regulator.max_loading.m,
             "u_range": regulator.parameters.u_range,
-            "connection": regulator.parameters.connection,
+            "config": regulator.parameters.config,
             "geom": regulator.geometry.__geo_interface__ if regulator.geometry is not None else None,
         }
 

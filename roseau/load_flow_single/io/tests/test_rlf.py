@@ -92,7 +92,9 @@ def test_from_rlf():  # noqa: C901
         max_voltage_level=1.1,
         geometry=Point(0.0, 5.0),
     )
-    rp_m = rlf.RegulatorParameters(id="RP", sn=250e3, un=400, z2=0.002 + 0.008j, ym=1e-6j, u_range=0.12, alpha=500)
+    rp_m = rlf.RegulatorParameters(
+        id="RP", sn=250e3, un=400, z2=0.002 + 0.008j, ym=1e-6j, u_range=0.12, alpha=500, config="wye"
+    )
     rlf.VoltageRegulator(
         id="Reg",
         bus1=bus5_m,
@@ -102,6 +104,9 @@ def test_from_rlf():  # noqa: C901
         max_loading=0.9,
         geometry=Point(0.0, 4.5),
     )
+    bus7_m = rlf.Bus(id="Bus7", phases="abc", nominal_voltage=400)
+    rp2_m = rlf.RegulatorParameters(id="RP2", sn=250e3, un=400, z2=0.002 + 0.008j, ym=0, config="closed-delta")
+    rlf.VoltageRegulator(id="Reg2", bus1=bus5_m, bus2=bus7_m, phases="abc", parameters=rp2_m, u_ref=0.98)
 
     rlf.VoltageSource(id="Src", bus=bus1_m, voltages=20e3)
     # Three-phase loads
@@ -274,6 +279,7 @@ def test_from_rlf():  # noqa: C901
         assert np.isclose(rp_s.z2.m, rp_m.z2.m)
         assert np.isclose(rp_s.ym.m, rp_m.ym.m)
         assert rp_s.u_range == rp_m.u_range
+        assert rp_s.config == rp_m.config
         assert rp_s.alpha == rp_m.alpha
 
     # Regulators
@@ -474,10 +480,10 @@ def test_from_rlf():  # noqa: C901
             rlf.Transformer(
                 id="Tmp Tr", bus_hv=bus1_tmp_m, bus_lv=bus2_tmp_m, phases_hv="an", phases_lv="an", parameters=tp_tmp_m
             )
-        elif br_type in ("wye regulator", "delta regulator"):
-            connection = br_type.removesuffix(" regulator")
-            rp_tmp_m = rlf.RegulatorParameters(id="Tmp RP", sn=10e3, un=400, z2=0.01, ym=0, connection=connection)
-            phases = "an" if connection == "wye" else "abc"
+        elif br_type in ("wye regulator", "closed-delta regulator"):
+            config = br_type.removesuffix(" regulator")
+            rp_tmp_m = rlf.RegulatorParameters(id="Tmp RP", sn=10e3, un=400, z2=0.01, ym=0, config=config)
+            phases = "an" if config == "wye" else "abc"
             rlf.VoltageRegulator(id="Tmp Reg", bus1=bus1_tmp_m, bus2=bus2_tmp_m, phases=phases, parameters=rp_tmp_m)
         rlf.VoltageSource(id="Tmp Src", bus=bus1_tmp_m, voltages=400)
         rlf.PowerLoad(id="Tmp Load", bus=bus2_tmp_m, powers=2e3)
@@ -506,11 +512,10 @@ def test_from_rlf():  # noqa: C901
         en_s = rlfs.ElectricalNetwork.from_rlf(en_tmp_m, on_incompatible="ignore")
     assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
     assert e.value.msg == "Voltage regulator 'Tmp Reg' is not three-phase, phases='an'"
-    en_tmp_m = create_non_three_phase_branch("delta regulator")
-    with pytest.raises(rlf.RoseauLoadFlowException) as e:
-        en_s = rlfs.ElectricalNetwork.from_rlf(en_tmp_m, on_incompatible="ignore")
-    assert e.value.code == rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE
-    assert e.value.msg == "Voltage regulator 'Tmp Reg' has the connection 'delta', only 'wye' regulators are supported"
+    # A closed delta is three-phase: it is converted
+    en_tmp_m = create_non_three_phase_branch("closed-delta regulator")
+    en_s = rlfs.ElectricalNetwork.from_rlf(en_tmp_m, on_incompatible="ignore")
+    assert en_s.regulators["Tmp Reg"].parameters.config == "closed-delta"
 
 
 def test_source_voltage():

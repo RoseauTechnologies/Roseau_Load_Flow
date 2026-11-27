@@ -7,7 +7,7 @@ from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExcep
 from roseau.load_flow.typing import Float, Id, JsonDict, QtyOrMag, ResultState
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import warn_external
-from roseau.load_flow_engine.cy_engine import CySingleVoltageRegulator  # noqa: F401
+from roseau.load_flow_engine.cy_engine import CySingleVoltageRegulatorBase  # noqa: F401
 from roseau.load_flow_single.models.branches import AbstractBranch, AbstractBranchSide
 from roseau.load_flow_single.models.buses import Bus
 from roseau.load_flow_single.models.regulator_parameters import RegulatorParameters
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @final
-class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulator"]):
+class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulatorBase"]):
     """Voltage regulator with continuous smooth tap control.
 
     The model parameters are defined using the ``parameters`` argument.
@@ -97,7 +97,21 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulator
         self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
         self._parameters = value
-        self._update_cy_parameters()
+        if self._cy_initialized:
+            assert old_parameters is not None
+            if (
+                old_parameters._config != value._config
+                or old_parameters._u_range != value._u_range
+                or old_parameters._alpha != value._alpha
+            ):
+                # These parameters are baked in the C++ model, rebuild it
+                if self._network is not None:
+                    self._network._valid = False
+                self._cy_element.disconnect()
+                self._cy_element = value._create_cy_element(u_ref=self._u_ref)
+                self._cy_connect()
+            else:
+                self._update_cy_parameters()
 
     @property
     def u_ref(self) -> Q_[float]:
@@ -192,7 +206,9 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CySingleVoltageRegulator
         """The tap ratio applied by the regulator.
 
         A value of 1.05 means the regulator boosted the load-side voltage by 5%; 0.95 means a 5%
-        buck. The tap is bounded to `(1 - u_range, 1 + u_range)`.
+        buck. The tap is bounded to `(1 - u_range, 1 + u_range)`. For a ``"closed-delta"``
+        regulator, it is the tap of each unit, which boosts or bucks the voltage about 1.5 times as
+        much.
         """
         return self._res_tap_getter(warning=True)
 

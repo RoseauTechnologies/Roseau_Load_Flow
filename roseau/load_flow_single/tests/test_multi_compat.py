@@ -34,11 +34,7 @@ def test_import():
         "importlib",
     }
 
-    assert rlfs_dir - rlf_dir <= {
-        # Single-phase elements
-        "VoltageRegulator",
-        "RegulatorParameters",
-    }
+    assert rlfs_dir - rlf_dir == set()
 
 
 def test_incompatible_phase_tech():
@@ -51,7 +47,7 @@ def test_incompatible_phase_tech():
     lp_s = rlfs.LineParameters(id="LP S", z_line=0.1)
     tp_m = rlf.TransformerParameters(id="TP M", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
     tp_s = rlfs.TransformerParameters(id="TP S", vg="Dyn11", uhv=20e3, ulv=400, sn=100e3, z2=0.1, ym=0.1j)
-    rp_s = rlfs.RegulatorParameters(id="RP S", sn=100e3, un=20e3, z2=0.1, ym=0.1j)
+    rp_s = rlfs.RegulatorParameters(id="RP S", sn=100e3, un=20e3, z2=0.1, ym=0.1j, config="wye")
 
     # single-phase sources and loads
     with pytest.raises(RoseauLoadFlowException) as e:

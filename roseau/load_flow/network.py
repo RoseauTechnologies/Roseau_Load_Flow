@@ -502,7 +502,7 @@ class ElectricalNetwork(AbstractNetwork[Element]):
                 u_ref=regulator._u_ref,
                 max_loading=regulator._max_loading,
                 u_range=regulator.parameters._u_range,
-                connection=regulator.parameters._connection,
+                config=regulator.parameters._config,
                 geom=geom_mapping(regulator.geometry),
             )
         for switch in self.switches.values():

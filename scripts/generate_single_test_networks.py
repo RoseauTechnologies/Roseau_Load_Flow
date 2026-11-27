@@ -131,7 +131,7 @@ def generate_all_elements_network() -> None:
     load7 = rlfs.PowerLoad(id="load7", bus=bus4, power=rlfs.Q_(-100, "W"), flexible_param=fp4)
     load8 = rlfs.PowerLoad(id="load8", bus=bus4, power=rlfs.Q_(-100, "W"), flexible_param=fp5)
 
-    rp0 = rlfs.RegulatorParameters(id="rp0", sn=1e6, un=20e3, z2=0.01, ym=1e-5j, u_range=0.12, alpha=150)
+    rp0 = rlfs.RegulatorParameters(id="rp0", sn=1e6, un=20e3, z2=0.01, ym=1e-5j, u_range=0.12, config="wye", alpha=150)
     reg0 = rlfs.VoltageRegulator(id="reg0", bus1=bus0, bus2=bus5, parameters=rp0, u_ref=1.025, max_loading=1.5)
 
     en = rlfs.ElectricalNetwork(

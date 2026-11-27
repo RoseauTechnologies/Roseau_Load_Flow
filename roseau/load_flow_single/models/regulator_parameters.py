@@ -3,16 +3,20 @@ from typing import Final, NoReturn, Self
 
 from roseau.load_flow import SQRT3, RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.models.regulator_parameters import _RegulatorParametersMixin
-from roseau.load_flow.typing import Complex, Float, Id, JsonDict, QtyOrMag
+from roseau.load_flow.typing import Complex, Float, Id, JsonDict, QtyOrMag, RegulatorConfig
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import Identifiable, JsonMixin, pretty_unit
-from roseau.load_flow_engine.cy_engine import CySingleVoltageRegulator
+from roseau.load_flow_engine.cy_engine import (
+    CySingleDeltaVoltageRegulator,
+    CySingleVoltageRegulator,
+    CySingleVoltageRegulatorBase,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
-    """Parameters that define the electrical model of a single-phase voltage regulator.
+    """Parameters that define the electrical model of a three-phase voltage regulator.
 
     A voltage regulator is modelled as an autotransformer whose tap ratio ``a`` keeps the load-side
     voltage at ``u_ref`` while ``a`` stays within ``[1 - u_range, 1 + u_range]``, and stays at its bound
@@ -22,14 +26,27 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
 
     where ``softclamp`` is a clamp smoothed with softplus functions of steepness ``alpha``.
 
+    The regulator is the single-line equivalent of a balanced bank of three single-phase units,
+    whose ``config`` gives how they are connected:
+
+    - ``"wye"``: a star, each unit being connected between a phase and the neutral. The output
+      voltage is ``a`` times the input voltage at no load, in phase with it.
+    - ``"closed-delta"``: a closed delta with a positive rotation (ANSI/PowerFactory "lagging"
+      connection), the common terminal of each unit being the output of the next phase. The units
+      act on each other's outputs: at no load, the output voltage is ``a / (1 - (1 - a)·α²)`` times
+      the input voltage, which regulates over about 1.5 times the tap range, with a phase shift
+      that depends on the tap (the output leads the input when boosting).
+
     The parameters here define the physical and control characteristics shared across all
     regulator instances that use the same parameter set. The per-instance target voltage ``u_ref``
     is set on the :class:`VoltageRegulator` element itself.
     """
 
     is_multi_phase: Final = False
+    allowed_configs: Final[frozenset[RegulatorConfig]] = frozenset({"wye", "closed-delta"})
+    """The allowed configurations of the regulator units: ``"wye"`` and ``"closed-delta"``."""
 
-    @ureg_wraps(None, (None, None, "VA", "V", "ohm", "S", None, None))
+    @ureg_wraps(None, (None, None, "VA", "V", "ohm", "S", None, None, None))
     def __init__(
         self,
         id: Id,
@@ -38,6 +55,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         un: QtyOrMag[Float],
         z2: QtyOrMag[Complex],
         ym: QtyOrMag[Complex],
+        config: RegulatorConfig,
         u_range: Float = 0.1,
         alpha: Float = 1000.0,
     ) -> None:
@@ -55,10 +73,13 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
                 Nominal voltage of the regulator (V).
 
             z2:
-                Series impedance of the series winding (Ω). Must be non-zero.
+                Series impedance of the series winding of each unit (Ω). Must be non-zero.
 
             ym:
-                Magnetising admittance of the shunt winding (S).
+                Magnetising admittance of the shunt winding of each unit (S).
+
+            config:
+                How the units of the regulator are connected: ``"wye"`` or ``"closed-delta"``.
 
             u_range:
                 Voltage regulation range as a fraction, e.g. ``0.1`` means ±10 %. Defaults to 0.1.
@@ -89,18 +110,26 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
             msg = f"alpha must be positive, got {alpha!r}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
+        if config not in self.allowed_configs:
+            msg = (
+                f"Invalid config {config!r} for regulator parameters {id!r}. Allowed "
+                f"configs are: {sorted(self.allowed_configs)}."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONFIG)
         self._sn = float(sn)
         self._un = float(un)
         self._z2 = complex(z2)
         self._ym = complex(ym)
         self._u_range = float(u_range)
+        self._config: RegulatorConfig = config
         self._alpha = float(alpha)
         self._elements: set = set()
 
     def __repr__(self) -> str:
         return (
             f"<{type(self).__name__}: id={self.id!r}, sn={self._sn}, un={self._un}, z2={self._z2}, "
-            f"ym={self._ym}, u_range={self._u_range}, alpha={self._alpha}>"
+            f"ym={self._ym}, config={self._config!r}, u_range={self._u_range}, alpha={self._alpha}>"
         )
 
     @property
@@ -115,12 +144,12 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
 
     @property
     def z2(self) -> Q_[complex]:
-        """Series impedance of the series winding (Ω)."""
+        """Series impedance of the series winding of each unit (Ω)."""
         return Q_(self._z2, "ohm")
 
     @property
     def ym(self) -> Q_[complex]:
-        """Magnetising admittance of the shunt winding (S)."""
+        """Magnetising admittance of the shunt winding of each unit (S)."""
         return Q_(self._ym, "S")
 
     @property
@@ -129,22 +158,21 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         return self._u_range
 
     @property
+    def config(self) -> RegulatorConfig:
+        """How the units of the regulator are connected."""
+        return self._config
+
+    @property
     def alpha(self) -> float:
         """Steepness of the softplus functions smoothing the tap bounds."""
         return self._alpha
 
-    def _create_cy_element(self, u_ref: float) -> "CySingleVoltageRegulator":
+    def _create_cy_element(self, u_ref: float) -> CySingleVoltageRegulatorBase:
         """Create the C++ model of the regulator parameters."""
-        return CySingleVoltageRegulator(
-            z2=self._z2,
-            ym=self._ym,
-            u_ref=self._un * u_ref / SQRT3,
-            u_range=self._u_range,
-            alpha=self._alpha,
-            phi=0.0,  # phase shift: hardcoded until connection type is exposed on the Python API
-        )
+        cls = CySingleDeltaVoltageRegulator if self._config == "closed-delta" else CySingleVoltageRegulator
+        return cls(z2=self._z2, ym=self._ym, u_ref=self._un * u_ref / SQRT3, u_range=self._u_range, alpha=self._alpha)
 
-    def _create_cy_tap_calculator(self, u_ref: float) -> CySingleVoltageRegulator:
+    def _create_cy_tap_calculator(self, u_ref: float) -> CySingleVoltageRegulatorBase:
         return self._create_cy_element(u_ref=u_ref)
 
     def _rating_pretty(self) -> str:
@@ -158,6 +186,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
             "un": self._un,
             "z2": [self._z2.real, self._z2.imag],
             "ym": [self._ym.real, self._ym.imag],
+            "config": self._config,
             "u_range": self._u_range,
             "alpha": self._alpha,
         }
@@ -175,6 +204,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
             un=data["un"],
             z2=complex(*data["z2"]),
             ym=complex(*data["ym"]),
+            config=data["config"],
             u_range=data["u_range"],
             alpha=data["alpha"],
         )

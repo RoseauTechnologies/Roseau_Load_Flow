@@ -324,6 +324,7 @@
   "regulators_params": [
     {
       "alpha": 150.0,
+      "config": "wye",
       "id": "rp0",
       "sn": 1000000.0,
       "u_range": 0.12,

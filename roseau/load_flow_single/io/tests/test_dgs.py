@@ -164,12 +164,25 @@ def test_dgs_regulator_parameters(dgs_regulators_networks_dir):
     np.testing.assert_allclose(rp2.z2.m, rp.z2.m)
 
 
+def test_dgs_closed_delta_regulator_parameters(dgs_regulators_networks_dir):
+    en = _read_regulator_network(dgs_regulators_networks_dir, "Regulator_103_Type_A", TypVoltreg__config=3)
+    rp = en.regulators[REGULATOR_ID].parameters
+    assert rp.config == "closed-delta"
+    # A unit of a closed delta has the line-to-line `Un` and the base power Sb = Un·In, on which its
+    # uk = 1 % and pcu = 2 kW are read
+    sb = 20e3 * 300
+    np.testing.assert_allclose(rp.sn.m, np.sqrt(3) * sb)
+    np.testing.assert_allclose(rp.un.m, 20e3)
+    r = 2000 / sb
+    np.testing.assert_allclose(rp.z2.m / (20e3**2 / sb), complex(r, np.sqrt(0.01**2 - r**2)))
+
+
 def test_dgs_unsupported_regulators(dgs_regulators_networks_dir):
-    # A closed delta has no single-phase equivalent
+    # The open delta is not supported
     with pytest.raises(RoseauLoadFlowException) as e:
-        _read_regulator_network(dgs_regulators_networks_dir, "Regulator_103_Type_A", TypVoltreg__config=3)
+        _read_regulator_network(dgs_regulators_networks_dir, "Regulator_103_Type_A", TypVoltreg__config=4)
     assert e.value.code == RoseauLoadFlowExceptionCode.DGS_NOT_SUPPORTED
-    assert "only the star configurations (1, 2) are supported" in e.value.msg
+    assert "only the star and closed-delta configurations (1, 2, 3) are supported" in e.value.msg
 
     # No automatic tap changing
     with pytest.raises(RoseauLoadFlowException) as e:
@@ -178,7 +191,7 @@ def test_dgs_unsupported_regulators(dgs_regulators_networks_dir):
     assert "no automatic tap changing" in e.value.msg
 
 
-def _create_regulator_network(ym: complex = 0j) -> rlfs.ElectricalNetwork:
+def _create_regulator_network(ym: complex = 0j, config: str = "wye") -> rlfs.ElectricalNetwork:
     levels = {"min_voltage_level": 0.95, "max_voltage_level": 1.05}
     bus0 = rlfs.Bus("Source Bus", nominal_voltage=20e3, geometry=shapely.Point(5.74, 45.18), **levels)
     bus1 = rlfs.Bus("Bus 1", nominal_voltage=20e3, geometry=shapely.Point(5.75, 45.19), **levels)
@@ -186,7 +199,7 @@ def _create_regulator_network(ym: complex = 0j) -> rlfs.ElectricalNetwork:
     rlfs.VoltageSource("Grid", bus=bus0, voltage=20e3)
     lp = rlfs.LineParameters("LP", z_line=0.3 + 0.35j)
     rlfs.Line("Line", bus1=bus0, bus2=bus1, parameters=lp, length=10)
-    rp = rlfs.RegulatorParameters("RP", sn=8e6, un=20e3, z2=0.05 + 0.5j, ym=ym, u_range=0.1, alpha=500.0)
+    rp = rlfs.RegulatorParameters("RP", sn=8e6, un=20e3, z2=0.05 + 0.5j, ym=ym, u_range=0.1, config=config, alpha=500.0)
     rlfs.VoltageRegulator(
         "Regulator",
         bus1=bus1,
@@ -204,9 +217,12 @@ def test_to_from_dgs_roundtrip_with_regulator():
     en = _create_regulator_network()
     data = en.to_dgs_dict()
     (typ,) = (dict(zip(data["TypVoltreg"]["Attributes"], v, strict=True)) for v in data["TypVoltreg"]["Values"])
-    assert typ["config"] == 1  # Star, 3-phase
+    assert typ["config"] == 2  # Star, 3 x 1-phase
     assert typ["type"] == 0  # Type A
-    np.testing.assert_allclose(typ["Sb"], 8e3)
+    # The data of a unit: line-to-neutral rated voltage, base power Sb = Un·In = sn / 3
+    np.testing.assert_allclose(typ["Un"], 20 / np.sqrt(3))
+    np.testing.assert_allclose(typ["In"], 8e6 / (np.sqrt(3) * 20e3))
+    np.testing.assert_allclose(typ["Sb"], 8e3 / 3)
     np.testing.assert_allclose(typ["pcReg"], 10)
     (elm,) = (dict(zip(data["ElmVoltreg"]["Attributes"], v, strict=True)) for v in data["ElmVoltreg"]["Values"])
     assert elm["usetp"] == 1.02
@@ -225,6 +241,23 @@ def test_to_from_dgs_roundtrip_with_regulator():
         data = en.to_dgs_dict()
     en2 = rlfs.ElectricalNetwork.from_dgs_dict(data, use_name_as_id=True)
     assert en2.regulators["Regulator"].parameters.ym.m == 1e-6j
+
+
+def test_to_from_dgs_roundtrip_with_delta_regulator():
+    en = _create_regulator_network(config="closed-delta")
+    data = en.to_dgs_dict()
+    (typ,) = (dict(zip(data["TypVoltreg"]["Attributes"], v, strict=True)) for v in data["TypVoltreg"]["Values"])
+    assert typ["config"] == 3  # Closed delta, 3 x 1-phase
+    assert typ["cldeltacn"] == 0  # Lagging
+    np.testing.assert_allclose(typ["Sb"], 8e3 / np.sqrt(3))  # The base power of a unit, Un·In
+    np.testing.assert_allclose(typ["In"], 8e6 / (np.sqrt(3) * 20e3))
+
+    en2 = rlfs.ElectricalNetwork.from_dgs_dict(data, use_name_as_id=True)
+    assert_json_close(en2.to_dict(), en.to_dict())
+    rp, rp2 = en.regulators["Regulator"].parameters, en2.regulators["Regulator"].parameters
+    assert rp2.config == "closed-delta"
+    np.testing.assert_allclose(rp2.sn.m, rp.sn.m)
+    np.testing.assert_allclose(rp2.z2.m, rp.z2.m)
 
 
 def test_to_dgs_without_regulators():

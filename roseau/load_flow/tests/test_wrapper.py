@@ -96,6 +96,19 @@ def test_wraps():
     k2 = ureg_wraps((None,), ("meter", "centimeter", "meter", "centimeter"))(kfunc)
     assert k2(1 * ureg.meter, 2 * ureg.centimeter, 3 * ureg.meter, d=4 * ureg.centimeter) == (1, 2, 3, 4)
 
+    # A missing required argument raises the TypeError of Python, not a KeyError
+    def mfunc(a, *, b, c=3):
+        return a, b, c
+
+    m1 = ureg_wraps(None, (None, None, None))(mfunc)
+    assert m1(1, b=2) == (1, 2, 3)
+    with pytest.raises(TypeError, match=r"missing a required keyword-only argument: 'b'"):
+        m1(1)  # type: ignore
+    with pytest.raises(TypeError, match=r"missing a required keyword-only argument: 'b'"):
+        m1(1, c=4)  # type: ignore
+    with pytest.raises(TypeError, match=r"missing a required argument: 'a'"):
+        m1(b=2)  # type: ignore
+
     def lfunc(a):
         return a[0]
 

@@ -32,7 +32,7 @@ environment or code.
 - {gh-pr}`515` Add the **experimental** multi-phase voltage regulators `rlf.VoltageRegulator` and
   `rlf.RegulatorParameters`: a bank of single-phase autotransformers with on-load tap changers that
   keep the voltage of the load side at `u_ref`. The units are connected in wye or in closed delta
-  (`connection` parameter). The taps are available with `ElectricalNetwork.res_regulators_taps` and
+  (`config` parameter). The taps are available with `ElectricalNetwork.res_regulators_taps` and
   the other results with `ElectricalNetwork.res_regulators`. The step-voltage regulators of
   PowerFactory DGS files are also imported, and `RegulatorParameters.from_power_factory` creates
   regulator parameters from a PowerFactory step-voltage regulator type. See the

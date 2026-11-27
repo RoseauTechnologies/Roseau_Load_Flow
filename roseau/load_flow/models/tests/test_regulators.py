@@ -9,12 +9,13 @@ import pytest
 import roseau.load_flow as rlf
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
 from roseau.load_flow.testing import assert_json_close
+from roseau.load_flow.typing import RegulatorConfig
 
 UN = 400.0
 
 
 def create_network(
-    connection: str = "wye",
+    config: RegulatorConfig = "wye",
     *,
     phases: str | None = None,
     u_src: tuple[float, float, float] = (370.0, 370.0, 370.0),
@@ -29,42 +30,46 @@ def create_network(
     bus1 = rlf.Bus("Bus1", phases="abcn", nominal_voltage=UN)
     bus2 = rlf.Bus("Bus2", phases="abcn", nominal_voltage=UN)
     rlf.GroundConnection(ground=ground, element=bus1)
-    if connection != "wye":
+    if config != "wye":
         # A wye regulator carries the neutral through: the neutral of Bus2 is already grounded
         rlf.GroundConnection(id="GC2", ground=ground, element=bus2)
     rlf.PotentialRef("PRef", element=ground)
     rlf.VoltageSource("Src", bus1, voltages=np.array(u_src) / rlf.SQRT3 * rlf.PositiveSequence)
-    rp = rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=z2, ym=ym, u_range=u_range, connection=connection)
+    rp = rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=z2, ym=ym, u_range=u_range, config=config)
     rlf.VoltageRegulator("Reg", bus1, bus2, parameters=rp, u_ref=u_ref, phases=phases)
     rlf.PowerLoad("Load", bus2, powers=powers)
     return rlf.ElectricalNetwork.from_element(bus1)
 
 
 def test_regulator_parameters():
-    rp = rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=1e-4j)
-    assert rp.connection == "wye"
+    # The config is required: "wye" and "closed-delta" give different results
+    with pytest.raises(TypeError, match=r"missing a required (keyword-only )?argument: 'config'"):
+        rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=1e-4j)  # type: ignore
+
+    rp = rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=1e-4j, config="wye")
+    assert rp.config == "wye"
     assert rp.sn.m == 1e6
     assert rp.un.m == UN
     assert rp.z2.m == 1e-4
     assert rp.ym.m == 1e-4j
     assert rp.u_range == 0.1
     assert rp.alpha == 1000.0
-    assert "connection='wye'" in repr(rp)
+    assert "config='wye'" in repr(rp)
 
-    rp = rlf.RegulatorParameters("RP2", sn=1e6, un=UN, z2=1e-4, ym=0, connection="delta")
-    assert rp.connection == "delta"
+    rp = rlf.RegulatorParameters("RP2", sn=1e6, un=UN, z2=1e-4, ym=0, config="closed-delta")
+    assert rp.config == "closed-delta"
 
     # Serialization
     rp2 = rlf.RegulatorParameters.from_dict(rp.to_dict())
     assert rp2.to_dict() == rp.to_dict()
 
     # Bad values
-    for connection in ("delta_positive_rotation", "delta_negative_rotation"):
+    for config in ("delta_positive_rotation", "delta_negative_rotation"):
         with pytest.raises(RoseauLoadFlowException) as e:
-            rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=0, connection=connection)  # type: ignore
-        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION
+            rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=0, config=config)  # type: ignore
+        assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONFIG
     for kwargs in ({"u_range": 0.0}, {"u_range": 1.0}, {"alpha": 0.0}, {"z2": 0.0}, {"sn": 0.0}, {"un": -1.0}):
-        params = {"sn": 1e6, "un": UN, "z2": 1e-4, "ym": 0} | kwargs
+        params = {"sn": 1e6, "un": UN, "z2": 1e-4, "ym": 0, "config": "wye"} | kwargs
         with pytest.raises(RoseauLoadFlowException) as e:
             rlf.RegulatorParameters("RP", **params)
         assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS
@@ -73,8 +78,8 @@ def test_regulator_parameters():
 def test_regulator_phases():
     bus1 = rlf.Bus("Bus1", phases="abcn")
     bus2 = rlf.Bus("Bus2", phases="abcn")
-    rp_wye = rlf.RegulatorParameters("RP-wye", sn=1e6, un=UN, z2=1e-4, ym=0)
-    rp_delta = rlf.RegulatorParameters("RP-delta", sn=1e6, un=UN, z2=1e-4, ym=0, connection="delta")
+    rp_wye = rlf.RegulatorParameters("RP-wye", sn=1e6, un=UN, z2=1e-4, ym=0, config="wye")
+    rp_delta = rlf.RegulatorParameters("RP-delta", sn=1e6, un=UN, z2=1e-4, ym=0, config="closed-delta")
 
     # Default phases
     reg = rlf.VoltageRegulator("Reg1", bus1, bus2, parameters=rp_wye)
@@ -86,11 +91,11 @@ def test_regulator_phases():
     reg = rlf.VoltageRegulator("Reg3", bus1, bus2, parameters=rp_wye, phases="cn")
     assert reg.tap_phases == ["cn"]
 
-    # Incompatible phases and connection
+    # Incompatible phases and config
     with pytest.raises(RoseauLoadFlowException) as e:
         rlf.VoltageRegulator("Reg4", bus1, bus2, parameters=rp_wye, phases="abc")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
-    assert "not compatible with the connection 'wye'" in e.value.msg
+    assert "not compatible with the config 'wye'" in e.value.msg
     with pytest.raises(RoseauLoadFlowException) as e:
         rlf.VoltageRegulator("Reg5", bus1, bus2, parameters=rp_delta, phases="abcn")
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
@@ -103,7 +108,7 @@ def test_regulator_phases():
         rlf.VoltageRegulator("Reg7", bus1, bus3, parameters=rp_wye)  # No neutral in bus3
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PHASE
 
-    # Changing the parameters to an incompatible connection
+    # Changing the parameters to an incompatible config
     reg = rlf.VoltageRegulator("Reg8", bus1, bus2, parameters=rp_wye)
     with pytest.raises(RoseauLoadFlowException) as e:
         reg.parameters = rp_delta
@@ -113,7 +118,7 @@ def test_regulator_phases():
     # Single-phase parameters
     import roseau.load_flow_single as rlfs
 
-    rp_single = rlfs.RegulatorParameters("RP-single", sn=1e6, un=UN, z2=1e-4, ym=0)
+    rp_single = rlfs.RegulatorParameters("RP-single", sn=1e6, un=UN, z2=1e-4, ym=0, config="wye")
     with pytest.raises(RoseauLoadFlowException):
         rlf.VoltageRegulator("Reg9", bus1, bus2, parameters=rp_single)  # type: ignore
 
@@ -121,7 +126,7 @@ def test_regulator_phases():
 def test_regulator_u_ref():
     bus1 = rlf.Bus("Bus1", phases="abcn")
     bus2 = rlf.Bus("Bus2", phases="abcn")
-    rp = rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=0)
+    rp = rlf.RegulatorParameters("RP", sn=1e6, un=UN, z2=1e-4, ym=0, config="wye")
     reg = rlf.VoltageRegulator("Reg", bus1, bus2, parameters=rp)
     assert reg.u_ref.m == 1.0
     reg.u_ref = 1.02
@@ -144,14 +149,14 @@ def test_update_parameters():
     en = create_network("wye")
     reg = en.regulators["Reg"]
 
-    # Same connection and range, other impedances: the C++ model is updated in place
+    # Same config and range, other impedances: the C++ model is updated in place
     cy_element = reg._cy_element
-    reg.parameters = rlf.RegulatorParameters("RP2", sn=1e6, un=1.01 * UN, z2=1e-3, ym=0)
+    reg.parameters = rlf.RegulatorParameters("RP2", sn=1e6, un=1.01 * UN, z2=1e-3, ym=0, config="wye")
     assert reg._cy_element is cy_element
     assert set(en._parameters["regulator"]) == {"RP2"}
 
     # Another range: the C++ model is rebuilt
-    reg.parameters = rlf.RegulatorParameters("RP3", sn=1e6, un=UN, z2=1e-3, ym=0, u_range=0.05)
+    reg.parameters = rlf.RegulatorParameters("RP3", sn=1e6, un=UN, z2=1e-3, ym=0, u_range=0.05, config="wye")
     assert reg._cy_element is not cy_element
     assert set(en._parameters["regulator"]) == {"RP3"}
 
@@ -192,10 +197,10 @@ def test_results(all_elements_network_with_results, tmp_path):
     path = tmp_path / "network.json"
     en.to_json(path)
     data = json.loads(path.read_text())
-    assert data["regulators_params"][0]["connection"] == "delta"
+    assert data["regulators_params"][0]["config"] == "closed-delta"
     en2 = rlf.ElectricalNetwork.from_json(path)
     reg2 = en2.regulators["reg0"]
-    assert reg2.parameters.connection == "delta"
+    assert reg2.parameters.config == "closed-delta"
     assert reg2.u_ref.m == 1.025
     npt.assert_allclose(reg2.res_taps, reg.res_taps)
     npt.assert_allclose(en2.buses["bus7"].res_potentials.m, en.buses["bus7"].res_potentials.m)
@@ -223,7 +228,7 @@ def test_from_power_factory():
         rlf.RegulatorParameters.from_power_factory("B", un=20, in_=300, pc_reg=10, uk=1, pcu=2000, kind="Type B")
     assert len(records) == 1
     rp = rlf.RegulatorParameters.from_power_factory("rp", un=20, in_=300, pc_reg=10, uk=1, pcu=2000)
-    assert rp.connection == "wye"
+    assert rp.config == "wye"
     assert math.isclose(rp.sn.m, 10392.3e3, rel_tol=1e-6)
     assert rp.un.m == 20e3
     assert math.isclose(rp.u_range, 0.1)
@@ -237,7 +242,7 @@ def test_from_power_factory():
     # three-phase 20 kV, 300 A one, with a third of the copper losses each
     three_phase = rlf.RegulatorParameters.from_power_factory("3ph", un=20, in_=300, pc_reg=10, uk=1, pcu=3000)
     units = rlf.RegulatorParameters.from_power_factory(
-        "3x1ph", un=20 / math.sqrt(3), in_=300, pc_reg=10, uk=1, pcu=1000, configuration="Star, 3 x 1-phase"
+        "3x1ph", un=20 / math.sqrt(3), in_=300, pc_reg=10, uk=1, pcu=1000, config="Star, 3 x 1-phase"
     )
     assert math.isclose(units.sn.m, three_phase.sn.m)
     assert math.isclose(units.un.m, three_phase.un.m)
@@ -247,9 +252,9 @@ def test_from_power_factory():
     # units, uk = 1 %, pcu = 2 kW each, whose export gives Sb = 6000 kVA (one unit) and
     # r1pu/x1pu = 0.000333/0.009994
     rp = rlf.RegulatorParameters.from_power_factory(
-        "delta", un=20, in_=300, pc_reg=10, uk=1, pcu=2000, configuration="Closed delta, 3 x 1-phase"
+        "closed-delta", un=20, in_=300, pc_reg=10, uk=1, pcu=2000, config="Closed delta, 3 x 1-phase"
     )
-    assert rp.connection == "delta"
+    assert rp.config == "closed-delta"
     assert rp.un.m == 20e3
     z_pu = rp.z2.m / (20e3**2 / 6e6)  # The impedance base is a single unit's
     assert math.isclose(z_pu.real, 0.000333, abs_tol=1e-6)
@@ -258,9 +263,9 @@ def test_from_power_factory():
     # Errors
     with pytest.raises(RoseauLoadFlowException) as e:
         rlf.RegulatorParameters.from_power_factory(
-            "rp", un=20, in_=300, pc_reg=10, uk=1, pcu=2000, configuration="Open delta, 2 x 1-phase"
+            "rp", un=20, in_=300, pc_reg=10, uk=1, pcu=2000, config="Open delta, 2 x 1-phase"
         )
-    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION
+    assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONFIG
     with pytest.raises(RoseauLoadFlowException) as e:
         rlf.RegulatorParameters.from_power_factory("rp", un=20, in_=300, pc_reg=10, uk=1, pcu=1e6)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS

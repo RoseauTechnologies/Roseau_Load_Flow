@@ -192,7 +192,7 @@ def generate_all_element_network() -> None:
 
     # Voltage regulator between bus0 and bus7
     rp0 = rlf.RegulatorParameters(
-        id="rp0", sn=1e6, un=20e3, z2=0.01, ym=1e-5j, u_range=0.12, connection="delta", alpha=150
+        id="rp0", sn=1e6, un=20e3, z2=0.01, ym=1e-5j, u_range=0.12, config="closed-delta", alpha=150
     )
     reg0 = rlf.VoltageRegulator(id="reg0", bus1=bus0, bus2=bus7, parameters=rp0, u_ref=1.025, max_loading=1.5)
     load8 = rlf.PowerLoad(id="load8", bus=bus7, powers=rlf.Q_([50 + 10j, 40 + 5j, 60 + 15j], "kVA"), phases="abc")

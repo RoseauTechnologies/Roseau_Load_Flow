@@ -50,14 +50,14 @@ align: center
 
 ## Connections
 
-How the units are connected is given by the `connection` of the
+How the units are connected is given by the `config` of the
 {class}`~roseau.load_flow.RegulatorParameters` (the regulators' counterpart of the vector group of a
 transformer). The phases of the regulator, common to both of its sides, must be compatible with it:
 
-| Connection | Phases                           | Common terminal of the unit of phase $p$   | Regulated voltage |
-| ---------- | -------------------------------- | ------------------------------------------ | ----------------- |
-| `"wye"`    | `"an"`, `"bn"`, `"cn"`, `"abcn"` | The neutral, carried through the regulator | Phase-to-neutral  |
-| `"delta"`  | `"abc"`                          | The load-side terminal of the next phase   | Phase-to-phase    |
+| Config           | Phases                           | Common terminal of the unit of phase $p$   | Regulated voltage |
+| ---------------- | -------------------------------- | ------------------------------------------ | ----------------- |
+| `"wye"`          | `"an"`, `"bn"`, `"cn"`, `"abcn"` | The neutral, carried through the regulator | Phase-to-neutral  |
+| `"closed-delta"` | `"abc"`                          | The load-side terminal of the next phase   | Phase-to-phase    |
 
 The `"wye"` connection is a star of single-phase units: each unit is connected between a phase and
 the neutral, the neutral being carried through the regulator from one side to the other. A wye
@@ -71,9 +71,9 @@ align: center
 ---
 ```
 
-The `"delta"` connection is a closed delta with a positive rotation: a ring in which the common
-terminal of each unit is the load-side terminal of the next phase (A → B → C → A). At no load, the
-unit of phase $p$ whose common terminal is the load-side terminal of phase $q$ outputs
+The `"closed-delta"` connection is a closed delta with a positive rotation: a ring in which the
+common terminal of each unit is the load-side terminal of the next phase (A → B → C → A). At no
+load, the unit of phase $p$ whose common terminal is the load-side terminal of phase $q$ outputs
 
 ```{math}
 \underline{V_{2,p}} = \underline{V_{2,q}} + a_p \left( \underline{V_{1,p}} - \underline{V_{2,q}} \right)
@@ -139,8 +139,8 @@ The {class}`~roseau.load_flow.RegulatorParameters` define:
 - `un`: the nominal (phase-to-phase) voltage of the regulator (V);
 - `z2`: the series impedance of the series winding of each unit ($\Omega$), non-zero;
 - `ym`: the magnetising admittance of the shunt winding of each unit (S);
+- `config`: how the units are connected, `"wye"` or `"closed-delta"`;
 - `u_range`: the voltage regulation range as a fraction, $\pm 10\,\%$ (`0.1`) by default;
-- `connection`: how the units are connected, `"wye"` by default;
 - `alpha`: the steepness of the softplus functions smoothing the tap bounds, `1000` by default.
 
 The parameters can also be created from the data of a DIgSILENT PowerFactory step-voltage
@@ -176,9 +176,9 @@ deprecated in the future. The new interface is to use `<side>.res_*` presented b
 ```
 
 The `tap_phases` of a regulator are the pairs of terminals its units are connected between:
-`"an"`, `"bn"` and `"cn"` for a `"wye"` connection, `"ab"`, `"bc"` and `"ca"` for a `"delta"`
-connection. A tap of `1.05` means that the unit boosts its output voltage by 5 %, a tap of `0.95`
-that it bucks it by 5 %.
+`"an"`, `"bn"` and `"cn"` for a `"wye"` connection, `"ab"`, `"bc"` and `"ca"` for a
+`"closed-delta"` connection. A tap of `1.05` means that the unit boosts its output voltage by 5 %, a
+tap of `0.95` that it bucks it by 5 %.
 
 Additionally, the following results are available on each side of the regulator accessible with
 `<side>.` prefix where `<side>` is either `side1` or `side2`:
@@ -241,7 +241,7 @@ line = rlf.Line(id="line", bus1=bus0, bus2=bus1, parameters=lp, length=0.5)
 
 # A wye voltage regulator (one unit per phase, the neutral is carried through)
 rp = rlf.RegulatorParameters(
-    id="rp", sn=250e3, un=400, z2=0.002 + 0.008j, ym=0, u_range=0.1, connection="wye"
+    id="rp", sn=250e3, un=400, z2=0.002 + 0.008j, ym=0, u_range=0.1, config="wye"
 )
 regulator = rlf.VoltageRegulator(
     id="regulator", bus1=bus1, bus2=bus2, parameters=rp, u_ref=1.0
