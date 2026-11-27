@@ -30,8 +30,8 @@ def voltreg_to_regulators(
     """Generate the regulator parameters and the voltage regulators of the network.
 
     The regulator types (``TypVoltreg``) are read as for multi-phase networks (see
-    :meth:`roseau.load_flow.RegulatorParameters.from_power_factory`), restricted to the star
-    configurations: a single-phase network has no closed-delta regulator. Every regulator
+    :meth:`roseau.load_flow.RegulatorParameters.from_power_factory`): the star configurations give
+    ``"wye"`` parameters and the closed-delta configuration ``"closed-delta"`` ones. Every regulator
     (``ElmVoltreg``) regulates the voltage of its load side at the setpoint ``usetp`` (p.u.).
 
     Args:
@@ -68,7 +68,14 @@ def voltreg_to_regulators(
         )
     regulator_params = {
         fid: RegulatorParameters(
-            id=rp.id, sn=rp._sn, un=rp._un, z2=rp._z2, ym=rp._ym, u_range=rp._u_range, alpha=rp._alpha
+            id=rp.id,
+            sn=rp._sn,
+            un=rp._un,
+            z2=rp._z2,
+            ym=rp._ym,
+            config=rp._config,
+            u_range=rp._u_range,
+            alpha=rp._alpha,
         )
         for fid, rp in regulator_params_m.items()
     }
@@ -106,10 +113,12 @@ TAP_STEPS = 16
 def rp_to_typ_voltreg(regulator_params: Iterable[RegulatorParameters], fid_counter: Iterator[str]) -> DGSData:
     """Generate the "TypVoltreg" data of the regulator parameters.
 
-    The parameters are written as "Star, 3-phase" Type A regulator types, whose circuit base power
-    ``Sb = √3·Un·In`` is the rated power ``sn`` of the parameters. The magnetising admittance and
-    the steepness ``alpha``, which PowerFactory does not model, are stored in the description of the
-    type (``desc:0``).
+    The parameters are written as Type A regulator types of three independent single-phase units,
+    whose rated voltage ``Un``, circuit base power ``Sb = Un·In`` and copper losses are those of one
+    unit: "Star, 3 x 1-phase" types for the ``"wye"`` parameters (line-to-neutral ``Un``,
+    ``Sb = sn / 3``) and lagging "Closed delta, 3 x 1-phase" types for the ``"closed-delta"`` ones
+    (line-to-line ``Un``, ``Sb = sn / √3``). The magnetising admittance and the steepness ``alpha``,
+    which PowerFactory does not model, are stored in the description of the type (``desc:0``).
     """
     attributes: list[str] = [
         "FID",  # Unique identifier for DGS file
@@ -147,8 +156,10 @@ def rp_to_typ_voltreg(regulator_params: Iterable[RegulatorParameters], fid_count
                 f"PowerFactory's step-voltage regulator does not model: it is only kept for the DGS "
                 f"import of roseau-load-flow."
             )
-        sb = rp._sn  # VA
-        z_pu = rp._z2 / (rp._un**2 / sb)
+        delta = rp._config == "closed-delta"
+        un = rp._un if delta else rp._un / SQRT3  # V, the voltage of a unit
+        sb = rp._sn / SQRT3 if delta else rp._sn / 3  # VA, the base power of a unit
+        z_pu = rp._z2 / (un**2 / sb)
         pc_reg = rp._u_range * 100.0
         desc0 = generate_extra_rlf_data({"ym": [rp._ym.real, rp._ym.imag], "alpha": rp._alpha})
         values.append(
@@ -158,12 +169,12 @@ def rp_to_typ_voltreg(regulator_params: Iterable[RegulatorParameters], fid_count
                 rp.id,  # loc_name
                 None,  # fold_id
                 0,  # type: Type A
-                1,  # config: Star, 3-phase
-                0,  # cldeltacn
+                3 if delta else 2,  # config: Closed delta, 3 x 1-phase or Star, 3 x 1-phase
+                0,  # cldeltacn: lagging
                 0,  # opdeltacn
                 50,  # frnom
-                rp._un / 1e3,  # Un
-                sb / (SQRT3 * rp._un),  # In
+                un / 1e3,  # Un
+                rp._sn / (SQRT3 * rp._un),  # In
                 sb * rp._u_range / 1e3,  # Sn
                 sb / 1e3,  # Sb
                 pc_reg,  # pcReg

@@ -121,7 +121,7 @@ def test_ground_connections():
     assert gc11.id == "switch 'sw' side (2) phase 'b' to ground 'ground1'"
 
     # Voltage regulators
-    rp = RegulatorParameters("rp", sn=1e6, un=400, z2=1e-4, ym=0)
+    rp = RegulatorParameters("rp", sn=1e6, un=400, z2=1e-4, ym=0, config="wye")
     reg = VoltageRegulator("reg", bus1=bus1, bus2=bus2, parameters=rp)
     with pytest.raises(RoseauLoadFlowException) as e:
         GroundConnection(ground=ground1, element=reg)  # type: ignore
@@ -165,7 +165,7 @@ def test_ground_connections_to_from_dict_roundtrip():
     load = PowerLoad("load", bus=bus2, phases="abcn", powers=3e3, connect_neutral=False)
     tp = TransformerParameters("tp", vg="Ynzn11", uhv=20e3, ulv=400, sn=160e3, z2=0.01, ym=0.01j)
     tr = Transformer("tr", bus_hv=bus1, bus_lv=bus2, parameters=tp)
-    rp = RegulatorParameters("rp", sn=1e6, un=400, z2=1e-4, ym=0)
+    rp = RegulatorParameters("rp", sn=1e6, un=400, z2=1e-4, ym=0, config="wye")
     reg = VoltageRegulator("reg", bus1=bus2, bus2=bus3, parameters=rp)
     connections = [
         GroundConnection(element=bus1, ground=ground),

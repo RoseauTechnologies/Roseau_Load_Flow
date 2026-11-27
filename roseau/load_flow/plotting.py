@@ -402,7 +402,7 @@ _MAP_FIELDS: dict["MapElementType", dict[str, str]] = {
         "bus2_id": "L-Side Bus:",
         "rating": "Rating:",
         "parameters_id": "Parameters ID:",
-        "connection": "Connection:",
+        "config": "Config:",
         "u_ref": "Uref (%):",
         "u_range": "Urange (%):",
         "max_loading": "Max loading (%):",
@@ -1048,7 +1048,7 @@ def _get_regulators_data_for_map_plot(
         regs_data["bus2_id"].append(reg.bus2.id)
         regs_data["rating"].append(rp._rating_pretty())
         regs_data["parameters_id"].append(rp.id)
-        regs_data["connection"].append(rp._connection)
+        regs_data["config"].append(rp._config)
         regs_data["max_loading"].append(reg._max_loading * 100)  # Convert to percentage
         regs_data["u_ref"].append(reg._u_ref * 100)  # Convert to percentage
         regs_data["u_range"].append(f"±{_pp_num(rp._u_range * 100)}")  # Convert to percentage
@@ -1616,7 +1616,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         if isinstance(reg, VoltageRegulator):
             return {
                 "parameters_id": reg._parameters.id,
-                "connection": reg._parameters._connection,
+                "config": reg._parameters._config,
                 "sn": reg._parameters._sn / 1e3,  # Convert to kVA
                 "un": reg._parameters._un,
                 "u_ref": reg._u_ref * 100,  # Convert to percentage
@@ -1627,7 +1627,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
         else:
             return {
                 "parameters_id": reg._parameters.id,
-                "connection": None,
+                "config": None,
                 "sn": reg._parameters._sn / 1e3,  # Convert to kVA
                 "un": reg._parameters._un,
                 "u_ref": reg._u_ref * 100,  # Convert to percentage
@@ -1896,7 +1896,7 @@ class _VoltageProfile[NetT: ElectricalNetwork | rlfs.ElectricalNetwork, ModeT: L
                     + f"<b>Loading (%):      </b> {reg['loading']:.5g}<br>"
                     + f"<b>Loading limit (%):</b> {reg['max_loading']:.5g}<br>"
                     + f"<b>Parameters:       </b> {reg_info['parameters_id']}<br>"
-                    + f"<b>Connection:       </b> {reg_info['connection']}<br>" * is_multi_phase
+                    + f"<b>Config:           </b> {reg_info['config']}<br>" * is_multi_phase
                     + f"<b>Sn (kVA):         </b> {reg_info['sn']:.5g}<br>"
                     + f"<b>Un (V):           </b> {reg_info['un']:.5g}<br>"
                     + f"<b>Uref (%):         </b> {reg_info['u_ref']:.5g}<br>"

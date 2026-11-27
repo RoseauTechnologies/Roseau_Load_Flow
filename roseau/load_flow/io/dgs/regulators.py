@@ -85,10 +85,10 @@ def typ_voltreg_to_rp(
             Whether to use the type's ``loc_name`` as its ID or the FID.
 
         multi_phase:
-            Whether the parameters are read for a multi-phase network. A single-phase network only
-            has star regulators: the closed-delta configuration is then rejected.
+            Whether the parameters are read for a multi-phase network or for its single-line
+            equivalent.
     """
-    supported = (1, 2, 3) if multi_phase else (1, 2)
+    supported = (1, 2, 3)
     for fid in typ_voltreg.index:
         type_id = typ_voltreg.at[fid, "loc_name"] if use_name_as_id else fid
 
@@ -96,10 +96,9 @@ def typ_voltreg_to_rp(
         config = int(_get(typ_voltreg, fid, "config") or 1)  # type: ignore[arg-type]
         configuration = REGULATOR_CONFIGURATIONS.get(config)
         if configuration is None or config not in supported:
-            what = "star and closed-delta configurations (1, 2, 3)" if multi_phase else "star configurations (1, 2)"
             msg = (
                 f"The step-voltage regulator type {type_id!r} has the configuration {config}: only "
-                f"the {what} are supported."
+                f"the star and closed-delta configurations (1, 2, 3) are supported."
             )
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.DGS_NOT_SUPPORTED)
@@ -168,7 +167,7 @@ def typ_voltreg_to_rp(
             uk=float(uk),  # type: ignore[arg-type]
             pcu=float(pcu),  # type: ignore[arg-type]
             kind=kind,
-            configuration=configuration,
+            config=configuration,
         )
 
         # Extra data of roseau-load-flow (magnetising admittance and alpha)
@@ -182,8 +181,8 @@ def typ_voltreg_to_rp(
                 un=rp._un,
                 z2=rp._z2,
                 ym=ym,
+                config=rp._config,
                 u_range=rp._u_range,
-                connection=rp._connection,
                 alpha=float(extra.get("alpha", rp._alpha)),
             )
         regulator_params[fid] = rp
@@ -280,7 +279,7 @@ def elm_voltreg_to_regulators(
         parameters = regulator_params[type_id]
         bus1 = buses[sta_cubic.at[elm_voltreg.at[idx, "buss"], "cterm"]]
         bus2 = buses[sta_cubic.at[elm_voltreg.at[idx, "busl"], "cterm"]]
-        if parameters._connection == "delta":
+        if parameters._config == "closed-delta":
             phases = "abc"
         else:
             if "n" not in bus1.phases or "n" not in bus2.phases:
@@ -306,7 +305,7 @@ def elm_voltreg_to_regulators(
             geometry=geometry,
         )
         regulators[idx] = regulator
-        if parameters._connection == "wye" and _get(elm_voltreg, idx, "cgnd") != 1:
+        if parameters._config == "wye" and _get(elm_voltreg, idx, "cgnd") != 1:
             earthed_star_points.append(regulator)
     return earthed_star_points
 

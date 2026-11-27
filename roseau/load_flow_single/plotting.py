@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     from roseau.load_flow.plotting import FeatureMap, StyleColorCallback, StyleDict
 
-_MULTI_PHASE_ONLY_FIELDS = {"phases", "connection"}
+_MULTI_PHASE_ONLY_FIELDS = {"phases", "config"}
 _MAP_FIELDS = {
     et: {k: v for k, v in fields.items() if k not in _MULTI_PHASE_ONLY_FIELDS}
     for et, fields in _MAP_FIELDS_MULTI.items()

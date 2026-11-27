@@ -113,8 +113,7 @@ Please note that there are some limitations in the supported features:
   - _Terminal_ (`ElmTerm`)
   - _Cubicle_ (`StaCubic`)
 - **Ignored elements**: elements that are not mentioned in the table above are ignored;
-- **Ignored attributes**: functionality that is not yet available in `roseau-load-flow` is ignored.
-  This includes the state of the switches (switches are considered to be always closed);
+- **Ignored attributes**: functionality that is not yet available in `roseau-load-flow` is ignored;
 - **Earthing of the external grids**: when its terminal has a neutral, the star point of an
   external grid is earthed (`cgnd`) through the neutral of its terminal if it is connected to it
   (`iintgnd`), as in PowerFactory. Otherwise, the voltage source has its own floating neutral,
@@ -235,9 +234,9 @@ objects:
   phases `"abcn"`, which need a neutral on both of their terminals. The star point of the regulator
   is earthed (`cgnd`) through its source-side neutral. The single tap controller of the "Star,
   3-phase" configuration is read as three independent units, with a warning;
-- the "Closed delta, 3 x 1-phase" configuration gives `"delta"` regulators with the phases `"abc"`.
-  Only the lagging connection is modelled: a leading closed delta is imported as a lagging one, with
-  a warning;
+- the "Closed delta, 3 x 1-phase" configuration gives `"closed-delta"` regulators with the phases
+  `"abc"`. Only the lagging connection is modelled: a leading closed delta is imported as a lagging
+  one, with a warning;
 - every unit regulates its own voltage at the voltage setpoint (`usetp`), its tap being continuous.
   Ganged taps, discrete tap changers, line drop compensation and reverse power operation are not
   modelled (a warning is emitted). The open-delta configuration and the regulators without
@@ -257,7 +256,7 @@ method:
 ...     pc_reg=rlf.Q_(10, "%"),  # Voltage Regulation Range (+/-)
 ...     uk=rlf.Q_(1, "%"),  # Short-Circuit Voltage
 ...     pcu=rlf.Q_(2, "kW"),  # Copper Losses (of each unit)
-...     configuration="Closed delta, 3 x 1-phase",  # Configuration (lagging connection)
+...     config="Closed delta, 3 x 1-phase",  # Configuration (lagging connection)
 ... )
 ```
 
@@ -265,14 +264,14 @@ The voltages and taps of the imported regulators match PowerFactory's load flow 
 PowerFactory's own regulation tolerance.
 
 Single-phase networks ({class}`roseau.load_flow_single.ElectricalNetwork`) also import the
-step-voltage regulators of the star configurations as
+step-voltage regulators of the star and closed-delta configurations as
 {class}`roseau.load_flow_single.VoltageRegulator` objects, regulating the voltage of their load
-side at the voltage setpoint. The closed-delta configuration, which has no single-phase
-equivalent, is not supported.
+side at the voltage setpoint.
 
 The voltage regulators of single-phase networks are also exported to DGS
-({meth}`roseau.load_flow_single.ElectricalNetwork.to_dgs_file`) as "Star, 3-phase" Type A
-step-voltage regulators with a continuous tap changer controlling the positive-sequence voltage. The
+({meth}`roseau.load_flow_single.ElectricalNetwork.to_dgs_file`) as Type A step-voltage regulators
+of three independent units, "Star, 3 x 1-phase" or lagging "Closed delta, 3 x 1-phase", with a
+continuous tap changer. The
 magnetising admittance and the `alpha` parameter, which PowerFactory does not model, are stored in
 the description of the regulator types to be read back by `roseau-load-flow`.
 

@@ -26,7 +26,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
     A voltage regulator is a bank of single-phase units, each an autotransformer with an on-load
     tap changer, whose tap keeps its regulated voltage on the load side (``bus2``) at ``u_ref``.
     Every unit has its own tap, controlled independently. How the units are connected is defined by
-    the :attr:`~RegulatorParameters.connection` of the ``parameters``.
+    the :attr:`~RegulatorParameters.config` of the ``parameters``.
 
     See Also:
         :doc:`Voltage regulator model documentation </models/VoltageRegulator>`
@@ -38,7 +38,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
 
     - P-N or P-P-P-N: ``"an"``, ``"bn"``, ``"cn"``, ``"abcn"`` for the ``"wye"`` connection (one
       unit per phase);
-    - P-P-P: ``"abc"`` for the ``"delta"`` connection (three units).
+    - P-P-P: ``"abc"`` for the ``"closed-delta"`` connection (three units).
     """
 
     def __init__(
@@ -68,7 +68,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
 
             parameters:
                 Parameters defining the electrical model of the regulator. Can be shared across
-                multiple regulator instances. Its :attr:`~RegulatorParameters.connection` must be
+                multiple regulator instances. Its :attr:`~RegulatorParameters.config` must be
                 compatible with the phases of the regulator.
 
             u_ref:
@@ -95,10 +95,10 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
         self._initialized = False
         self._res_taps: FloatArray | None = None
         self._check_compatible_phase_tech(parameters, id=id)
-        if phases is None and parameters._connection == "delta":
+        if phases is None and parameters._config == "closed-delta":
             phases = "abc"
         phases = self._check_phases_common(id, bus1=bus1, bus2=bus2, phases=phases)
-        self._check_connection(id=id, phases=phases, parameters=parameters)
+        self._check_config(id=id, phases=phases, parameters=parameters)
         super().__init__(id=id, bus1=bus1, bus2=bus2, phases1=phases, phases2=phases, geometry=geometry)
         self._side1 = RegulatorSide(branch=self, side=1, bus=bus1, phases=phases, connect_neutral=None)
         self._side2 = RegulatorSide(branch=self, side=2, bus=bus2, phases=phases, connect_neutral=None)
@@ -112,9 +112,9 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
         self._connect(bus1, bus2)
 
     @classmethod
-    def _check_connection(cls, id: Id, phases: str, parameters: RegulatorParameters) -> None:
-        """Check that the phases of the regulator are compatible with the connection of its parameters."""
-        if parameters._connection == "delta":
+    def _check_config(cls, id: Id, phases: str, parameters: RegulatorParameters) -> None:
+        """Check that the phases of the regulator are compatible with its parameters' config."""
+        if parameters._config == "closed-delta":
             ok = phases == "abc"
             expected = "'abc'"
         else:
@@ -123,7 +123,7 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
         if not ok:
             msg = (
                 f"Phases {phases!r} of voltage regulator {id!r} are not compatible with the "
-                f"connection {parameters.connection!r} of its parameters {parameters.id!r}: "
+                f"config {parameters.config!r} of its parameters {parameters.id!r}: "
                 f"expected {expected}."
             )
             logger.error(msg)
@@ -158,14 +158,14 @@ class VoltageRegulator(AbstractBranch["RegulatorSide", "CyVoltageRegulator"]):
         self._check_compatible_phase_tech(value)
         old_parameters = self._parameters if self._initialized else None
         if old_parameters is not None:
-            self._check_connection(id=self.id, phases=self.phases, parameters=value)
+            self._check_config(id=self.id, phases=self.phases, parameters=value)
         self._update_network_parameters(old_parameters=old_parameters, new_parameters=value)
         self._invalidate_network_results()
         self._parameters = value
         if self._cy_initialized:
             assert old_parameters is not None
             if (
-                old_parameters._connection != value._connection
+                old_parameters._config != value._config
                 or old_parameters._u_range != value._u_range
                 or old_parameters._alpha != value._alpha
             ):

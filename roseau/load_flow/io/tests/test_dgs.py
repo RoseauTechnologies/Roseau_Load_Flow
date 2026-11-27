@@ -338,7 +338,7 @@ def test_dgs_regulator_shapes_and_earthing(dgs_regulators_networks_dir):
     en = read("Star_3x1_103")
     regulator = en.regulators["Step-Voltage Regulator"]
     assert regulator.phases == "abcn"
-    assert regulator.parameters.connection == "wye"
+    assert regulator.parameters.config == "wye"
     assert regulator.u_ref.m == 1.03
     assert regulator.parameters.id == "Step-Voltage Regulator Type"
     np.testing.assert_allclose(regulator.parameters.sn.m, np.sqrt(3) * 20e3 * 300, rtol=1e-6)  # Un is rounded
@@ -349,7 +349,7 @@ def test_dgs_regulator_shapes_and_earthing(dgs_regulators_networks_dir):
     en = read("Closed_Delta_Lagging_103")
     regulator = en.regulators["Step-Voltage Regulator"]
     assert regulator.phases == "abc"
-    assert regulator.parameters.connection == "delta"
+    assert regulator.parameters.config == "closed-delta"
     assert not en.ground_connections  # Three-wire network
 
     # A leading closed delta is read as a lagging one
@@ -357,7 +357,7 @@ def test_dgs_regulator_shapes_and_earthing(dgs_regulators_networks_dir):
         en = ElectricalNetwork.from_dgs_file(
             dgs_regulators_networks_dir / "multi" / "Closed_Delta_Leading_103.json", use_name_as_id=True
         )
-    assert en.regulators["Step-Voltage Regulator"].parameters.connection == "delta"
+    assert en.regulators["Step-Voltage Regulator"].parameters.config == "closed-delta"
 
     # `iintgnd = 1`: the external grid earths the neutral of its bus, the regulator its own
     # source-side neutral

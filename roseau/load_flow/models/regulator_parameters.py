@@ -1,14 +1,14 @@
 import logging
-from typing import TYPE_CHECKING, Final, Literal, NoReturn, Self, get_args
+from typing import TYPE_CHECKING, Final, Literal, NoReturn, Self
 
 import numpy as np
 
 from roseau.load_flow.constants import SQRT3
 from roseau.load_flow.exceptions import RoseauLoadFlowException, RoseauLoadFlowExceptionCode
-from roseau.load_flow.typing import Complex, Float, Id, JsonDict, QtyOrMag, RegulatorConnection
+from roseau.load_flow.typing import Complex, Float, Id, JsonDict, QtyOrMag, RegulatorConfig
 from roseau.load_flow.units import Q_, ureg_wraps
 from roseau.load_flow.utils import Identifiable, JsonMixin, pretty_unit, warn_external
-from roseau.load_flow_engine.cy_engine import CySingleVoltageRegulator, CyVoltageRegulator
+from roseau.load_flow_engine.cy_engine import CySingleVoltageRegulatorBase, CyVoltageRegulator
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -28,16 +28,73 @@ class _RegulatorParametersMixin:
 
     _un: float
     _u_range: float
+    _config: RegulatorConfig
 
-    def _create_cy_tap_calculator(self, u_ref: float) -> CyVoltageRegulator | CySingleVoltageRegulator:
+    def _create_cy_tap_calculator(self, u_ref: float) -> CyVoltageRegulator | CySingleVoltageRegulatorBase:
         """Create a C++ regulator unit used to compute the no-load tap ratios."""
         raise NotImplementedError
 
-    def _compute_tap(self, u_in: Float, cy_element: CyVoltageRegulator | CySingleVoltageRegulator) -> float:
+    @staticmethod
+    def _parse_power_factory_params(
+        id: Id,
+        *,
+        un: Float,
+        in_: Float,
+        pc_reg: Float,
+        uk: Float,
+        pcu: Float,
+        kind: PowerFactoryRegulatorType,
+        config: PowerFactoryRegulatorConfiguration,
+    ) -> tuple[float, float, complex, float, RegulatorConfig]:
+        """Convert the data of a PowerFactory ``TypVoltreg`` (``un`` in kV, ``pcu`` in W, the others
+        in A and %) to the ``(sn, un, z2, u_range, config)`` arguments of the regulator parameters."""
+        un = float(un) * 1e3  # V
+        in_ = float(in_)
+        rp_config: RegulatorConfig
+        if config == "Star, 3-phase":
+            un_ll, sb, rp_config = un, SQRT3 * un * in_, "wye"
+        elif config == "Star, 3 x 1-phase":
+            un_ll, sb, rp_config = un * SQRT3, un * in_, "wye"
+        elif config == "Closed delta, 3 x 1-phase":
+            un_ll, sb, rp_config = un, un * in_, "closed-delta"
+        else:
+            msg = (
+                f"The PowerFactory step-voltage regulator configuration {config!r} of the "
+                f"regulator parameters {id!r} is not supported."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONFIG)
+        if kind == "Type B":
+            warn_external(
+                f"The Type B step-voltage regulator {id!r} has a tap ratio 1/(1 - n·dutap), "
+                f"approximated by the Type A ratio 1 + n·dutap."
+            )
+        elif kind != "Type A":
+            msg = f"Invalid regulator type {kind!r} for regulator parameters {id!r}: expected 'Type A' or 'Type B'."
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
+        sn = SQRT3 * un_ll * in_  # VA, the throughput rating
+        zb = un * un / sb  # The base impedance of each unit (Ω)
+        r = float(pcu) / sb  # p.u.
+        z = float(uk) / 100.0  # p.u.
+        if r > z:
+            msg = (
+                f"The copper losses pcu={pcu} W of the regulator parameters {id!r} exceed what their "
+                f"short-circuit voltage uk={uk} % allows."
+            )
+            logger.error(msg)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
+        z2 = complex(r, np.sqrt(z * z - r * r)) * zb
+        return sn, un_ll, z2, float(pc_reg) / 100.0, rp_config
+
+    def _compute_tap(self, u_in: Float, cy_element: CyVoltageRegulator | CySingleVoltageRegulatorBase) -> float:
         return cy_element.compute_tap(float(u_in) / SQRT3)
 
     def _no_load_voltage_ratio(self, taps: np.ndarray) -> np.ndarray:
         """The ratio of the output to the input voltage magnitudes at no load for the given taps."""
+        if self._config == "closed-delta":
+            # The units act on each other's outputs: |a / (1 - (1 - a)·α²)|
+            return taps / np.sqrt(3.0 - 3.0 * taps + taps * taps)
         return taps
 
     def compute_tap(self, u_ref: Float, u_in: Float) -> float:
@@ -181,13 +238,13 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
 
     where ``softclamp`` is a clamp smoothed with softplus functions of steepness ``alpha``.
 
-    The ``connection`` gives how the units are connected (the regulators' counterpart of a
+    The ``config`` gives how the units are connected (the regulators' counterpart of a
     transformer's vector group):
 
     - ``"wye"``: a star, each unit is connected between a phase and the neutral, which is carried
       through the regulator. The phases of the regulator must contain the neutral (``"an"``,
       ``"abn"``, ``"abcn"``, etc.). Each unit regulates its phase-to-neutral voltage.
-    - ``"delta"``: a closed delta with a positive rotation (ANSI/PowerFactory "lagging"
+    - ``"closed-delta"``: a closed delta with a positive rotation (ANSI/PowerFactory "lagging"
       connection), the common terminal of each unit is the output of the next phase
       (A → B → C → A). The phases of the regulator must be ``"abc"``. Each unit regulates a
       line-to-line voltage.
@@ -198,8 +255,8 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
     """
 
     is_multi_phase: Final = True
-    allowed_connections: Final[frozenset[RegulatorConnection]] = frozenset(get_args(RegulatorConnection.__value__))
-    """The allowed connections of the regulator units: ``"wye"`` and ``"delta"``."""
+    allowed_configs: Final[frozenset[RegulatorConfig]] = frozenset({"wye", "closed-delta"})
+    """The allowed configurations of the regulator units: ``"wye"`` and ``"closed-delta"``."""
 
     @ureg_wraps(None, (None, None, "VA", "V", "ohm", "S", None, None, None))
     def __init__(
@@ -210,8 +267,8 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         un: QtyOrMag[Float],
         z2: QtyOrMag[Complex],
         ym: QtyOrMag[Complex],
+        config: RegulatorConfig,
         u_range: Float = 0.1,
-        connection: RegulatorConnection = "wye",
         alpha: Float = 1000.0,
     ) -> None:
         """RegulatorParameters constructor.
@@ -234,11 +291,11 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
             ym:
                 Magnetising admittance of the shunt winding of each unit (S).
 
+            config:
+                How the units of the regulator are connected: ``"wye"`` or ``"closed-delta"``.
+
             u_range:
                 Voltage regulation range as a fraction, e.g. ``0.1`` means ±10 %. Defaults to 0.1.
-
-            connection:
-                How the units of the regulator are connected: ``"wye"`` (default) or ``"delta"``.
 
             alpha:
                 Steepness of the softplus functions smoothing the tap bounds: the corners of the
@@ -266,19 +323,19 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
             msg = f"alpha must be positive, got {alpha!r}."
             logger.error(msg)
             raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
-        if connection not in self.allowed_connections:
+        if config not in self.allowed_configs:
             msg = (
-                f"Invalid connection {connection!r} for regulator parameters {id!r}. Allowed "
-                f"connections are: {sorted(self.allowed_connections)}."
+                f"Invalid config {config!r} for regulator parameters {id!r}. Allowed "
+                f"configs are: {sorted(self.allowed_configs)}."
             )
             logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION)
+            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONFIG)
         self._sn = float(sn)
         self._un = float(un)
         self._z2 = complex(z2)
         self._ym = complex(ym)
         self._u_range = float(u_range)
-        self._connection: RegulatorConnection = connection
+        self._config: RegulatorConfig = config
         self._alpha = float(alpha)
         self._elements: set = set()
 
@@ -294,7 +351,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         uk: QtyOrMag[Float],
         pcu: QtyOrMag[Float],
         kind: PowerFactoryRegulatorType = "Type A",
-        configuration: PowerFactoryRegulatorConfiguration = "Star, 3-phase",
+        config: PowerFactoryRegulatorConfiguration = "Star, 3-phase",
     ) -> Self:
         """Create regulator parameters from the data of a DIgSILENT PowerFactory step-voltage
         regulator type (``TypVoltreg``).
@@ -332,57 +389,24 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
             kind:
                 The type of the regulator (``type``): ``"Type A"`` (default) or ``"Type B"``.
 
-            configuration:
+            config:
                 The configuration of the regulator (``config``): ``"Star, 3-phase"`` (default) and
                 ``"Star, 3 x 1-phase"`` give ``"wye"`` parameters, ``"Closed delta, 3 x 1-phase"``
-                gives ``"delta"`` parameters, those of a "lagging" closed delta. The open delta is
-                not supported.
+                gives ``"closed-delta"`` parameters, those of a "lagging" closed delta. The open
+                delta is not supported.
 
         Returns:
             The created regulator parameters.
         """
-        un = float(un) * 1e3  # V
-        in_ = float(in_)
-        if configuration == "Star, 3-phase":
-            un_ll, sb, connection = un, SQRT3 * un * in_, "wye"
-        elif configuration == "Star, 3 x 1-phase":
-            un_ll, sb, connection = un * SQRT3, un * in_, "wye"
-        elif configuration == "Closed delta, 3 x 1-phase":
-            un_ll, sb, connection = un, un * in_, "delta"
-        else:
-            msg = (
-                f"The PowerFactory step-voltage regulator configuration {configuration!r} of the "
-                f"regulator parameters {id!r} is not supported."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_CONNECTION)
-        if kind == "Type B":
-            warn_external(
-                f"The Type B step-voltage regulator {id!r} has a tap ratio 1/(1 - n·dutap), "
-                f"approximated by the Type A ratio 1 + n·dutap."
-            )
-        elif kind != "Type A":
-            msg = f"Invalid regulator type {kind!r} for regulator parameters {id!r}: expected 'Type A' or 'Type B'."
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
-        sn = SQRT3 * un_ll * in_  # VA, the throughput rating
-        zb = un * un / sb  # The base impedance of each unit (Ω)
-        r = float(pcu) / sb  # p.u.
-        z = float(uk) / 100.0  # p.u.
-        if r > z:
-            msg = (
-                f"The copper losses pcu={pcu} W of the regulator parameters {id!r} exceed what their "
-                f"short-circuit voltage uk={uk} % allows."
-            )
-            logger.error(msg)
-            raise RoseauLoadFlowException(msg=msg, code=RoseauLoadFlowExceptionCode.BAD_REGULATOR_PARAMETERS)
-        z2 = complex(r, np.sqrt(z * z - r * r)) * zb
-        return cls(id, sn=sn, un=un_ll, z2=z2, ym=0.0, u_range=float(pc_reg) / 100.0, connection=connection)
+        sn, un_ll, z2, u_range, rp_config = cls._parse_power_factory_params(
+            id, un=un, in_=in_, pc_reg=pc_reg, uk=uk, pcu=pcu, kind=kind, config=config
+        )
+        return cls(id, sn=sn, un=un_ll, z2=z2, ym=0.0, u_range=u_range, config=rp_config)
 
     def __repr__(self) -> str:
         return (
             f"<{type(self).__name__}: id={self.id!r}, sn={self._sn}, un={self._un}, z2={self._z2}, "
-            f"ym={self._ym}, u_range={self._u_range}, connection={self._connection!r}, alpha={self._alpha}>"
+            f"ym={self._ym}, config={self._config!r}, u_range={self._u_range}, alpha={self._alpha}>"
         )
 
     @property
@@ -411,9 +435,9 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         return self._u_range
 
     @property
-    def connection(self) -> RegulatorConnection:
+    def config(self) -> RegulatorConfig:
         """How the units of the regulator are connected."""
-        return self._connection
+        return self._config
 
     @property
     def alpha(self) -> float:
@@ -424,7 +448,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
         """Create the C++ model of a regulator with `n` ports per side using these parameters."""
         return CyVoltageRegulator(
             n=n,
-            connection=self._connection,
+            config=self._config,
             z2=self._z2,
             ym=self._ym,
             u_ref=self._un * u_ref / SQRT3,
@@ -435,20 +459,14 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
     def _create_cy_tap_calculator(self, u_ref: float) -> CyVoltageRegulator:
         # With balanced voltages, all the units have the same tap
         return CyVoltageRegulator(
-            n=3 if self._connection == "delta" else 2,
-            connection=self._connection,
+            n=3 if self._config == "closed-delta" else 2,
+            config=self._config,
             z2=self._z2,
             ym=self._ym,
             u_ref=self._un * u_ref / SQRT3,
             u_range=self._u_range,
             alpha=self._alpha,
         )
-
-    def _no_load_voltage_ratio(self, taps: np.ndarray) -> np.ndarray:
-        if self._connection == "delta":
-            # The units act on each other's outputs: |a / (1 - (1 - a)·α²)|
-            return taps / np.sqrt(3.0 - 3.0 * taps + taps * taps)
-        return taps
 
     def _rating_pretty(self) -> str:
         """Return a pretty string representation of the regulator rating."""
@@ -461,8 +479,8 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
             "un": self._un,
             "z2": [self._z2.real, self._z2.imag],
             "ym": [self._ym.real, self._ym.imag],
+            "config": self._config,
             "u_range": self._u_range,
-            "connection": self._connection,
             "alpha": self._alpha,
         }
 
@@ -479,7 +497,7 @@ class RegulatorParameters(_RegulatorParametersMixin, Identifiable, JsonMixin):
             un=data["un"],
             z2=complex(*data["z2"]),
             ym=complex(*data["ym"]),
+            config=data["config"],
             u_range=data["u_range"],
-            connection=data.get("connection", "wye"),
             alpha=data["alpha"],
         )

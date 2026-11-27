@@ -255,17 +255,11 @@ def network_from_rlf(  # noqa: C901
         )
         switches[sw_s.id] = sw_s
 
-    # Convert regulators (wye only, the single-phase equivalent of a closed delta does not exist)
+    # Convert regulators
     rg_params_s: dict[Id, RegulatorParameters] = {}
     regulators: dict[Id, VoltageRegulator] = {}
     for rg_m in en_m.regulators.values():
         rp_m = rg_m.parameters
-        if rp_m._connection == "delta":
-            msg = (
-                f"Voltage regulator {rg_m.id!r} has the connection {rp_m.connection!r}, only 'wye' "
-                f"regulators are supported"
-            )
-            raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
         if "abc" not in rg_m.phases:
             msg = f"Voltage regulator {rg_m.id!r} is not three-phase, phases={rg_m.phases!r}"
             raise rlf.RoseauLoadFlowException(msg, code=rlf.RoseauLoadFlowExceptionCode.INVALID_FOR_SINGLE_PHASE)
@@ -276,6 +270,7 @@ def network_from_rlf(  # noqa: C901
                 un=rp_m._un,
                 z2=rp_m._z2,
                 ym=rp_m._ym,
+                config=rp_m._config,
                 u_range=rp_m._u_range,
                 alpha=rp_m._alpha,
             )

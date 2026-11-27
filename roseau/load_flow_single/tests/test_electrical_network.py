@@ -1009,7 +1009,7 @@ def test_propagate_nominal_voltages(all_elements_network):
     bus1 = Bus(id="bus1")
     bus2 = Bus(id="bus2")
     VoltageSource(id="vs", bus=bus1, voltage=21e3)
-    rp = RegulatorParameters(id="r1", un=20.5e3, sn=100e3, z2=1e-2, ym=1e-3j)
+    rp = RegulatorParameters(id="r1", un=20.5e3, sn=100e3, z2=1e-2, ym=1e-3j, config="wye")
     VoltageRegulator(id="r1", bus1=bus1, bus2=bus2, parameters=rp)
     en = ElectricalNetwork.from_element(bus1)
     nominal_voltages = en._get_nominal_voltages()
@@ -1681,8 +1681,8 @@ def test_duplicate_regulator_parameters_id():
     bus1 = Bus("Bus 1")
     bus2 = Bus("Bus 2")
     VoltageSource("Source", bus=bus1, voltage=20e3)
-    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j)
-    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j)
+    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j, config="wye")
+    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j, config="wye")
     reg1 = VoltageRegulator("Reg 1", bus1=bus1, bus2=bus2, parameters=rp1)
     reg2 = VoltageRegulator("Reg 2", bus1=bus1, bus2=bus2, parameters=rp2)
     assert rp1._elements == {reg1}
@@ -1695,10 +1695,10 @@ def test_duplicate_regulator_parameters_id():
     bus1 = Bus("Bus 1")
     bus2 = Bus("Bus 2")
     VoltageSource("Source", bus=bus1, voltage=20e3)
-    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j)
+    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j, config="wye")
     reg1 = VoltageRegulator("Reg 1", bus1=bus1, bus2=bus2, parameters=rp1)
     en = ElectricalNetwork.from_element(bus1)
-    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j)
+    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j, config="wye")
     with pytest.raises(RoseauLoadFlowException) as e:
         VoltageRegulator("Reg 2", bus1=bus1, bus2=bus2, parameters=rp2)
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
@@ -1709,13 +1709,13 @@ def test_duplicate_regulator_parameters_id():
     bus1 = Bus("Bus 1")
     bus2 = Bus("Bus 2")
     VoltageSource("Source", bus=bus1, voltage=20e3)
-    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j)
+    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j, config="wye")
     reg1 = VoltageRegulator("Reg 1", bus1=bus1, bus2=bus2, parameters=rp1)
     reg2 = VoltageRegulator("Reg 2", bus1=bus1, bus2=bus2, parameters=rp1)
     assert rp1._elements == {reg1, reg2}
     en = ElectricalNetwork.from_element(bus1)
     assert en._parameters["regulator"] == {rp1.id: rp1}
-    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j)
+    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j, config="wye")
     with pytest.raises(RoseauLoadFlowException) as e:
         reg2.parameters = rp2
     assert e.value.code == RoseauLoadFlowExceptionCode.BAD_PARAMETERS_ID
@@ -1727,12 +1727,12 @@ def test_duplicate_regulator_parameters_id():
     bus1 = Bus("Bus 1")
     bus2 = Bus("Bus 2")
     VoltageSource("Source", bus=bus1, voltage=20e3)
-    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j)
+    rp1 = RegulatorParameters("RP", un=20e3, sn=100e3, z2=0.1, ym=0.1j, config="wye")
     reg1 = VoltageRegulator("Reg 1", bus1=bus1, bus2=bus2, parameters=rp1)
     assert rp1._elements == {reg1}
     en = ElectricalNetwork.from_element(bus1)
     assert en._parameters["regulator"] == {rp1.id: rp1}
-    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j)
+    rp2 = RegulatorParameters("RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j, config="wye")
     reg1.parameters = rp2
     assert rp1._elements == set()
     assert rp2._elements == {reg1}
@@ -1759,7 +1759,7 @@ def test_propagate_voltages_voltage_regulators():
     bus1 = Bus(id="Bus1")
     bus2 = Bus(id="Bus2")
     VoltageSource(id="Source", bus=bus1, voltage=20e3)
-    rp = RegulatorParameters(id="RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j)
+    rp = RegulatorParameters(id="RP", un=20e3, sn=160e3, z2=0.01, ym=0.01j, config="wye")
     VoltageRegulator(id="Reg", bus1=bus1, bus2=bus2, parameters=rp, u_ref=1.05)
     ElectricalNetwork.from_element(bus1)
     npt.assert_allclose(bus1.initial_voltage.m, 20e3)

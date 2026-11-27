@@ -168,6 +168,9 @@ def _parse_wrap_args(args: Iterable[str | Unit | None]) -> Callable:
         # pack kwargs
         for i, param_name in enumerate(sig.parameters):
             if i >= len_initial_values:
+                if param_name not in kw:
+                    # A required argument is missing: raise Python's TypeError, not a KeyError
+                    sig.bind(*values[:len_initial_values], **kw)
                 values.append(kw[param_name])
 
         # convert arguments
